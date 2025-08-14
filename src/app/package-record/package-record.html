@@ -8,6 +8,9 @@
       <button type="button" (click)="exportData()" [disabled]="packageRecords.length === 0" class="export-btn">
         📊 Export CSV
       </button>
+      <button type="button" (click)="backToDashboard()" class="back-btn">
+        ← Back to Dashboard
+      </button>
     </div>
   </div>
 
@@ -94,28 +97,6 @@
         </div>
         
         <div class="input-group">
-          <label for="startDateInput">Start Date:</label>
-          <input 
-            id="startDateInput"
-            type="datetime-local" 
-            [(ngModel)]="startDate" 
-            class="form-input"
-            (change)="onFilterChange()"
-          >
-        </div>
-        
-        <div class="input-group">
-          <label for="endDateInput">End Date:</label>
-          <input 
-            id="endDateInput"
-            type="datetime-local" 
-            [(ngModel)]="endDate" 
-            class="form-input"
-            (change)="onFilterChange()"
-          >
-        </div>
-        
-        <div class="input-group">
           <label for="takeInput">Max Records:</label>
           <input 
             id="takeInput"
@@ -160,6 +141,30 @@
             </option>
           </select>
         </div>
+
+        <div class="filter-item">
+          <label>Weight Display</label>
+          <div class="weight-options">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="showActualWeight" 
+                (change)="onWeightPreferenceChange()"
+              >
+              <span class="checkmark"></span>
+              Actual Net Weight
+            </label>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="showPrintedWeight" 
+                (change)="onWeightPreferenceChange()"
+              >
+              <span class="checkmark"></span>
+              Printed Net Weight
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -168,13 +173,17 @@
         <span class="label">Last Updated:</span>
         <span class="value">{{lastUpdateTime}}</span>
       </div>
-      <div class="status-item">
-        <span class="label">Records:</span>
-        <span class="value">{{packageRecords.length}}</span>
+      <div class="status-item" *ngIf="getCalculatedStartDate()">
+        <span class="label">Start Date:</span>
+        <span class="value">{{getCalculatedStartDate()}} ({{getTimezoneInfo()}})</span>
+      </div>
+      <div class="status-item" *ngIf="getCalculatedEndDate()">
+        <span class="label">End Date:</span>
+        <span class="value">{{getCalculatedEndDate()}} ({{getTimezoneInfo()}})</span>
       </div>
       <div class="status-item" *ngIf="selectedRefreshInterval > 0">
         <span class="label">Auto Refresh:</span>
-        <span class="value live-indicator">🟢 Active</span>
+        <span class="value live-indicator">🟢 Active {{getRefreshCountdownText()}}</span>
       </div>
     </div>
   </section>
@@ -202,35 +211,36 @@
     <div class="chart-container">
       <canvas id="weightChart"></canvas>
     </div>
+
+    <!-- Compact Statistics -->
+    <div class="compact-stats" *ngIf="packageRecords.length > 0">
+      <div class="compact-stat-card">
+        <div class="compact-stat-value">{{packageRecords.length}}</div>
+        <div class="compact-stat-label"># of Records</div>
+      </div>
+      <div class="compact-stat-card">
+        <div class="compact-stat-value">{{getAverageWeight() | number:'1.1-1'}} {{getDefaultWeightUnit()}}</div>
+        <div class="compact-stat-label">Avg Weight</div>
+      </div>
+      <div class="compact-stat-card">
+        <div class="compact-stat-value">{{getMaxWeight() | number:'1.1-1'}} {{getDefaultWeightUnit()}}</div>
+        <div class="compact-stat-label">Max Weight</div>
+      </div>
+      <div class="compact-stat-card">
+        <div class="compact-stat-value">{{getMinWeight() | number:'1.1-1'}} {{getDefaultWeightUnit()}}</div>
+        <div class="compact-stat-label">Min Weight</div>
+      </div>
+      <div class="compact-stat-card">
+        <div class="compact-stat-value">{{getTotalWeight() | number:'1.1-1'}} {{getDefaultWeightUnit()}}</div>
+        <div class="compact-stat-label">Total Weight</div>
+      </div>
+    </div>
     
     <div class="no-data" *ngIf="!isLoading && packageRecords.length === 0">
       <div class="no-data-content">
         <span class="no-data-icon">📦</span>
         <h4>No package records found</h4>
         <p>Try adjusting your filters or check back later for new data.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Statistics Summary -->
-  <section class="stats-section" *ngIf="packageRecords.length > 0">
-    <h3>Summary Statistics</h3>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value">{{getAverageWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
-        <div class="stat-label">Average Weight</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{getMaxWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
-        <div class="stat-label">Maximum Weight</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{getMinWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
-        <div class="stat-label">Minimum Weight</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">{{getTotalWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
-        <div class="stat-label">Total Weight</div>
       </div>
     </div>
   </section>
@@ -257,12 +267,71 @@
                 {{record.packageType || 'Unknown'}}
               </span>
             </td>
-            <td class="weight-cell">{{record.weight}} {{getWeightUnit(record)}}</td>
+            <td class="weight-cell">{{getFormattedWeight(record, getActiveWeightType())}} {{getWeightUnit(record, getActiveWeightType())}}</td>
             <td>{{record.location}}</td>
             <td>{{record.operator}}</td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- API Response Debug Window -->
+  <section class="debug-section">
+    <h3>🔧 API Response Debug</h3>
+    <div class="debug-container">
+      <div class="debug-tabs">
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'records'"
+          (click)="activeDebugTab = 'records'"
+        >
+          Package Records Response
+        </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'devices'"
+          (click)="activeDebugTab = 'devices'"
+        >
+          Devices Response
+        </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'types'"
+          (click)="activeDebugTab = 'types'"
+        >
+          Package Types Response
+        </button>
+      </div>
+      
+      <div class="debug-content">
+        <div *ngIf="activeDebugTab === 'records'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Latest Package Records API Response</h4>
+            <small>{{packageRecords.length}} records loaded</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.packageRecords | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'devices'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Devices API Response</h4>
+            <small>{{devices.length}} devices loaded</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.devices | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'types'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Package Types API Response</h4>
+            <small>{{packageTypes.length}} types loaded</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.packageTypes | json}}</pre>
+        </div>
+      </div>
     </div>
   </section>
 </div>
