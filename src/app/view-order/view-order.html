@@ -1,0 +1,52 @@
+<div class="view-order-container">
+  <div class="page-header">
+    <h2>🔍 View Order Details</h2>
+    <button class="btn btn-back" (click)="goBack()">← Back to Orders</button>
+  </div>
+  
+  <div class="order-form">
+    <div class="form-group">
+      <label for="orderNumber">Order Number:</label>
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="orderNumber" 
+          [(ngModel)]="orderNumber"
+          placeholder="Enter order number (e.g., 1, 123, etc.)"
+          [disabled]="isLoading"
+          class="order-input"
+          (keyup.enter)="viewOrder()"
+        >
+        <button 
+          class="btn btn-primary" 
+          (click)="viewOrder()" 
+          [disabled]="isLoading || !orderNumber.trim()"
+        >
+          @if (isLoading) {
+            Loading...
+          } @else {
+            Search Order
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="error-message">
+      <h4>❌ Error</h4>
+      <p>{{ errorMessage }}</p>
+    </div>
+  }
+  
+  <!-- Order Data Display -->
+  @if (orderData) {
+    <div class="order-details">
+      <h3>📋 Order Details for #{{ orderNumber }}</h3>
+      <div class="order-info">
+        <pre>{{ orderData | json }}</pre>
+      </div>
+    </div>
+  }
+</div>

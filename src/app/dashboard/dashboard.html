@@ -1,0 +1,71 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>🚀 Brain2 API Demo Application</h1>
+    <p class="welcome-message">Comprehensive demonstration of all Brain2 API endpoints and capabilities</p>
+    <button class="btn btn-outline logout-btn" (click)="logout()">
+      🚪 Logout
+    </button>
+  </header>
+
+  <div class="dashboard-grid">
+    <!-- Data Maintenance Section -->
+    <div class="dashboard-card" (click)="navigateToDataMaintenance()">
+      <div class="card-icon">🗄️</div>
+      <h3>Data Maintenance</h3>
+      <p>Manage master data, configurations, and system settings</p>
+      <div class="card-features">
+        <span class="feature-tag">Master Data</span>
+        <span class="feature-tag">Configurations</span>
+        <span class="feature-tag">Settings</span>
+      </div>
+      <div class="card-action">
+        <span class="action-text">Coming Soon</span>
+      </div>
+    </div>
+
+    <!-- Order Management Section -->
+    <div class="dashboard-card active" (click)="navigateToOrderManagement()">
+      <div class="card-icon">📋</div>
+      <h3>Order Management</h3>
+      <p>Complete order processing with BRAIN2 API integration</p>
+      <div class="card-features">
+        <span class="feature-tag">Process Orders</span>
+        <span class="feature-tag">Monitor Status</span>
+        <span class="feature-tag">API Integration</span>
+      </div>
+      <div class="card-action">
+        <span class="action-text">Available ✅</span>
+      </div>
+    </div>
+
+    <!-- Capture Section -->
+    <div class="dashboard-card active" (click)="navigateToCapture()">
+      <div class="card-icon">📸</div>
+      <h3>Capture</h3>
+      <p>Data capture, scanning, and input management</p>
+      <div class="card-features">
+        <span class="feature-tag">Package Records</span>
+        <span class="feature-tag">Data Entry</span>
+        <span class="feature-tag">Search & Filter</span>
+      </div>
+      <div class="card-action">
+        <span class="action-text">Available ✅</span>
+      </div>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="dashboard-card" (click)="navigateToActions()">
+      <div class="card-icon">⚡</div>
+      <h3>Actions</h3>
+      <p>Automated workflows, triggers, and business logic</p>
+      <div class="card-features">
+        <span class="feature-tag">Workflows</span>
+        <span class="feature-tag">Automation</span>
+        <span class="feature-tag">Business Rules</span>
+      </div>
+      <div class="card-action">
+        <span class="action-text">Coming Soon</span>
+      </div>
+    </div>
+  </div>
+</div>

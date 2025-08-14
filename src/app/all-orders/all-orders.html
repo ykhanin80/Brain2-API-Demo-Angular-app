@@ -1,0 +1,252 @@
+<div class="all-orders-container">
+  <div class="page-header">
+    <h2>📋 All Orders from SQL Database</h2>
+    <div class="header-actions">
+      <button 
+        type="button" 
+        class="btn btn-secondary"
+        (click)="refreshOrders()"
+        [disabled]="isLoading"
+      >
+        🔄 Refresh
+      </button>
+      <button 
+        type="button" 
+        class="btn-back" 
+        (click)="goBack()"
+      >
+        ← Back to Orders
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-section">
+      <div class="loading-spinner">⏳</div>
+      <p>Loading orders from SQL database...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (errorMessage && !isLoading) {
+    <div class="error-section">
+      <h3>❌ Error Loading Orders</h3>
+      <p>{{ errorMessage }}</p>
+      <button 
+        type="button" 
+        class="btn btn-primary"
+        (click)="refreshOrders()"
+      >
+        🔄 Try Again
+      </button>
+    </div>
+  }
+
+  <!-- Orders Table -->
+  @if (orders.length > 0 && !isLoading && !errorMessage) {
+    <div class="orders-section">
+      <div class="orders-header">
+        <h3>📦 All Orders ({{ filteredOrders.length }} of {{ orders.length }} total)</h3>
+        <p>Data from: [BIZERBA_BRAIN2_Process].[dbo].[OrderProcessingOrder]</p>
+      </div>
+      
+      <div class="orders-table-container">
+        <table class="orders-table">
+          <thead>
+            <!-- Filter Row -->
+            <tr class="filter-row">
+              <th class="filter-cell">
+                <input 
+                  type="text" 
+                  [(ngModel)]="orderNumber" 
+                  (input)="applyFilters()"
+                  placeholder="Filter order..."
+                  class="filter-input-compact"
+                >
+              </th>
+              <th class="filter-cell">
+                <input 
+                  type="text" 
+                  [(ngModel)]="articleNumber" 
+                  (input)="applyFilters()"
+                  placeholder="Filter article..."
+                  class="filter-input-compact"
+                >
+              </th>
+              <th class="filter-cell">
+                <input 
+                  type="text" 
+                  [(ngModel)]="customerNumber" 
+                  (input)="applyFilters()"
+                  placeholder="Filter customer..."
+                  class="filter-input-compact"
+                >
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Display Text -->
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Line Group -->
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Order Qty -->
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Box Qty -->
+              </th>
+              <th class="filter-cell">
+                <select 
+                  [(ngModel)]="status" 
+                  (change)="applyFilters()"
+                  class="filter-select-compact"
+                >
+                  <option [ngValue]="null">All</option>
+                  <option [ngValue]="0">Proposed</option>
+                  <option [ngValue]="2">Finished [2]</option>
+                  <option [ngValue]="3">Interrupted</option>
+                  <option [ngValue]="4">Cancelled</option>
+                  <option [ngValue]="5">Finished [5]</option>
+                </select>
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for LOT -->
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Price -->
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Date2 -->
+              </th>
+              <th class="filter-cell">
+                <input 
+                  type="date" 
+                  [(ngModel)]="creationDateFrom" 
+                  (input)="applyFilters()"
+                  class="filter-input-compact"
+                  title="From date"
+                >
+              </th>
+              <th class="filter-cell">
+                <!-- No filter for Created By -->
+              </th>
+              <th class="filter-cell">
+                <button 
+                  type="button" 
+                  class="btn-clear-compact"
+                  (click)="clearFilters()"
+                  title="Clear all filters"
+                >
+                  🗑️
+                </button>
+              </th>
+            </tr>
+            <!-- Header Row -->
+            <tr class="header-row">
+              <th class="sortable-header" (click)="sortBy('orderNumber')">
+                Order # {{ getSortIcon('orderNumber') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('articleNumber')">
+                Article # {{ getSortIcon('articleNumber') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('customerNumber')">
+                Customer # {{ getSortIcon('customerNumber') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('displayText')">
+                Display Text {{ getSortIcon('displayText') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('lineGroupName')">
+                Line Group {{ getSortIcon('lineGroupName') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('orderQuantityValue')">
+                Order Qty {{ getSortIcon('orderQuantityValue') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('boxQuantityValue')">
+                Box Qty {{ getSortIcon('boxQuantityValue') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('status')">
+                Status {{ getSortIcon('status') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('lotCode')">
+                LOT {{ getSortIcon('lotCode') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('basePrice')">
+                Price {{ getSortIcon('basePrice') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('dateField2')">
+                Date2 {{ getSortIcon('dateField2') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('creationDate')">
+                Creation Date {{ getSortIcon('creationDate') }}
+              </th>
+              <th class="sortable-header" (click)="sortBy('creationUser')">
+                Created By {{ getSortIcon('creationUser') }}
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody class="table-body-scrollable">
+            @for (order of filteredOrders; track order.id) {
+              <tr>
+                <td class="order-number">{{ order.orderNumber }}</td>
+                <td class="article-number">{{ order.articleNumber }}</td>
+                <td class="customer-number">{{ order.customerNumber }}</td>
+                <td class="display-text" [title]="order.displayText">{{ order.displayText }}</td>
+                <td>{{ order.lineGroupName }}</td>
+                <td class="quantity">
+                  {{ order.orderQuantityValue }} {{ order.orderQuantityUnit }}
+                </td>
+                <td class="quantity">
+                  {{ order.boxQuantityValue }} {{ order.boxQuantityUnit }}
+                </td>
+                <td>
+                  <span class="status-badge" [class]="getStatusClass(order.status)">
+                    {{ getStatusText(order.status) }}
+                  </span>
+                </td>
+                <td class="transfer-value">{{ getLotCode(order) }}</td>
+                <td class="transfer-value">{{ getBasePrice(order) }}</td>
+                <td class="transfer-value">{{ getDateField2(order) }}</td>
+                <td class="creation-date">{{ order.creationDate | date:'short' }}</td>
+                <td class="user">{{ order.creationUser }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-info"
+                      (click)="viewOrderDetails(order)"
+                    >
+                      👁️ View
+                    </button>
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-warning"
+                      (click)="editOrder(order)"
+                    >
+                      ✏️ Edit
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- No Orders State -->
+  @if (orders.length === 0 && !isLoading && !errorMessage) {
+    <div class="no-orders-section">
+      <h3>📭 No Orders Found</h3>
+      <p>No orders were found in the database table [BIZERBA_BRAIN2_Process].[dbo].[OrderProcessingOrder]</p>
+      <button 
+        type="button" 
+        class="btn btn-primary"
+        (click)="refreshOrders()"
+      >
+        🔄 Refresh
+      </button>
+    </div>
+  }
+</div>

@@ -1,0 +1,507 @@
+<div class="order-container">
+  <header class="order-header">
+    <h2>📋 Order Management</h2>
+    <button class="btn btn-outline back-btn" (click)="navigateToHome()">
+      🏠 Back to Dashboard
+    </button>
+  </header>
+  
+  <!-- Quick Actions Section -->
+  <div class="quick-actions">
+    <h3>🚀 Quick Actions</h3>
+    <div class="quick-actions-grid">
+      <button class="btn btn-primary quick-btn" (click)="navigateToCreateOrder()">
+        ➕ Create New Order
+      </button>
+      <button class="btn btn-info quick-btn" (click)="navigateToAllOrders()">
+        📋 See All Orders
+      </button>
+    </div>
+  </div>
+
+  <!-- Order Information Section -->
+  <div class="order-section">
+    <h3>🔍 Order Information</h3>
+    <div class="input-group">
+      <label for="orderNumberInput">Order Number:</label>
+      <input 
+        id="orderNumberInput"
+        type="text" 
+        [(ngModel)]="orderNumber" 
+        placeholder="Enter order number (e.g., A0521007)"
+        class="form-input"
+      >
+    </div>
+    <div class="input-group">
+      <label for="lineNameInput">Line Name (for line-specific operations):</label>
+      <input 
+        id="lineNameInput"
+        type="text" 
+        [(ngModel)]="lineName" 
+        placeholder="Enter line name (e.g., KMD, Production Line A)"
+        class="form-input"
+      >
+    </div>
+    
+    <div class="action-group">
+      <button class="btn btn-outline" (click)="getOrderDetails()" [disabled]="!orderNumber">
+        📄 Get Order Details
+      </button>
+      <button class="btn btn-outline" (click)="getOrderResults()" [disabled]="!orderNumber">
+        📊 Get Order Results
+      </button>
+      <button class="btn btn-outline" (click)="getOrderStatus()" [disabled]="!orderNumber">
+        📈 Get Order Status
+      </button>
+      <button class="btn btn-outline" (click)="getOrderTransferValues()" [disabled]="!orderNumber">
+        🔄 Get Transfer Values
+      </button>
+      <button class="btn btn-secondary" (click)="openModifyOrderDialog()" [disabled]="!orderNumber">
+        ✏️ Edit Order Details
+      </button>
+    </div>
+  </div>
+
+  <!-- Order Processing Section -->
+  <div class="order-section">
+    <h3>⚙️ Order Processing Operations</h3>
+    <div class="action-group">
+      <button class="btn btn-success" (click)="startOrder()" [disabled]="!orderNumber || !lineName">
+        ▶️ Start Order
+      </button>
+      <button class="btn btn-warning" (click)="interruptOrder()" [disabled]="!orderNumber || !lineName">
+        ⏸️ Interrupt Order
+      </button>
+      <button class="btn btn-primary" (click)="finishOrder()" [disabled]="!orderNumber || !lineName">
+        ✅ Finish Order
+      </button>
+      <button class="btn btn-danger" (click)="cancelOrder()" [disabled]="!orderNumber || !lineName">
+        ❌ Cancel Order
+      </button>
+    </div>
+    <div class="action-group">
+      <button class="btn btn-outline" (click)="getOrderStatusByLine()" [disabled]="!orderNumber || !lineName">
+        📈 Get Status (Line-Specific)
+      </button>
+    </div>
+
+    <!-- Processing Operation Response -->
+    @if (shouldShowProcessingResponse()) {
+      <div class="processing-response" [class.error]="processingResponse.isError">
+        <h4>
+          @if (processingResponse.isError) {
+            ❌ {{ processingResponse.operation }} Failed
+          } @else {
+            ✅ {{ processingResponse.operation }} Success
+          }
+        </h4>
+        <div class="response-meta">
+          <div class="meta-row">
+            <span class="meta-label">Operation:</span>
+            <span class="meta-value">{{ processingResponse.operation }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Order:</span>
+            <span class="meta-value">{{ orderNumber }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Line:</span>
+            <span class="meta-value">{{ lineName }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Timestamp:</span>
+            <span class="meta-value">{{ formatTimestamp(processingResponse.timestamp.toISOString()) }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Status:</span>
+            @if (processingResponse.isError) {
+              <span class="status-badge error">❌ Error {{ processingResponse.errorStatus }}</span>
+            } @else {
+              <span class="status-badge success">✅ Success</span>
+            }
+          </div>
+        </div>
+        <div class="response-data">
+          <h5>Response Data:</h5>
+          <pre class="response-json">{{ processingResponse.response | json }}</pre>
+        </div>
+        <button class="btn btn-sm btn-secondary" (click)="processingResponse = null">
+          🗑️ Clear Response
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Order Results Table -->
+  @if (orderResults && orderResults.length > 0) {
+    <div class="order-section">
+      <h3>📊 Order Results ({{ orderResults.length }} records)</h3>
+      @if (orderInfo) {
+        <div class="order-info">
+          <strong>Order Number:</strong> {{ orderInfo.orderNumber }} | 
+          <strong>Article Number:</strong> {{ orderInfo.articleNumber }}
+        </div>
+      }
+      <div class="table-container">
+        <table class="records-table order-results-table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="sortTable('packageType')">
+                Package Type {{ getSortIcon('packageType') }}
+              </th>
+              <th class="sortable" (click)="sortTable('netWeight')">
+                Net Weight {{ getSortIcon('netWeight') }}
+              </th>
+              <th class="sortable" (click)="sortTable('numberOfPacks')">
+                Number of Packs {{ getSortIcon('numberOfPacks') }}
+              </th>
+              <th class="sortable" (click)="sortTable('packageNumerator')">
+                Package # {{ getSortIcon('packageNumerator') }}
+              </th>
+              <th class="sortable" (click)="sortTable('total1Numerator')">
+                Total 1 # {{ getSortIcon('total1Numerator') }}
+              </th>
+              <th class="sortable" (click)="sortTable('total2Numerator')">
+                Total 2 # {{ getSortIcon('total2Numerator') }}
+              </th>
+              <th class="sortable" (click)="sortTable('total3Numerator')">
+                Total 3 # {{ getSortIcon('total3Numerator') }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (result of orderResults; track $index) {
+              <tr [class.summary-row]="result.packageType.includes('total') && result.packageType !== 'total1'">
+                <td>
+                  <span class="package-type-badge" [class]="result.packageType">
+                    {{ result.packageType }}
+                  </span>
+                </td>
+                <td class="weight-cell">
+                  {{ result.netWeight?.value }} {{ result.netWeight?.unit }}
+                </td>
+                <td class="number-cell">{{ result.numberOfPacks }}</td>
+                <td class="number-cell">{{ result.packageNumerator }}</td>
+                <td class="number-cell">{{ result.total1Numerator }}</td>
+                <td class="number-cell">{{ result.total2Numerator }}</td>
+                <td class="number-cell">{{ result.total3Numerator }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Empty Order Results State -->
+  @if (shouldShowOrderEmptyState()) {
+    <div class="order-section">
+      <div class="empty-results-content">
+        <div class="empty-icon">📭</div>
+        <h3>No Order Results Found</h3>
+        <p>The order results query returned 0 records.</p>
+        <div class="empty-suggestions">
+          <h4>Suggestions:</h4>
+          <ul>
+            <li>Verify the order number exists</li>
+            <li>Check if the order has been processed</li>
+            <li>Ensure you have proper access permissions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Order Details Form -->
+  @if (shouldShowOrderDetails()) {
+    <div class="order-details-form">
+      <header class="form-header">
+        <h2>📄 {{ orderDetails.orderNumber }}</h2>
+      </header>
+
+      <!-- General Section -->
+      <div class="form-section">
+        <h3 class="section-header">General</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Order Number:</label>
+            <input type="text" [value]="orderDetails.orderNumber" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Text:</label>
+            <input type="text" [value]="orderDetails.text || ''" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Line group:</label>
+            <input type="text" [value]="orderDetails.lineGroupName || ''" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Customer Number:</label>
+            <input type="text" [value]="orderDetails.customerNumber || ''" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Creation Date:</label>
+            <input type="text" [value]="formatCreationDate(orderDetails.creationDate)" readonly class="form-input readonly">
+          </div>
+        </div>
+      </div>
+
+      <!-- Position Section -->
+      <div class="form-section">
+        <h3 class="section-header">Position</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Article Number:</label>
+            <input type="text" [value]="orderDetails.articleNumber || ''" readonly class="form-input readonly article-number">
+          </div>
+          <div class="form-group">
+            <label>Transfer Values:</label>
+            <div class="transfer-values-table">
+              @if (orderDetails.transferValues && orderDetails.transferValues.length > 0) {
+                <table class="mini-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Device Type</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (tv of orderDetails.transferValues; track tv.name) {
+                      <tr>
+                        <td>{{ tv.name }}</td>
+                        <td>{{ tv.deviceType }}</td>
+                        <td>{{ tv.value }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <span class="no-data">No transfer values</span>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Quantity:</label>
+            <div class="quantity-section">
+              <div class="quantity-field">
+                <label class="quantity-label">Order Quantity:</label>
+                <div class="quantity-input-group">
+                  <span class="quantity-type">Boxes</span>
+                  <input type="text" [value]="orderDetails.orderQuantity?.value || ''" readonly class="form-input readonly small">
+                  <span class="quantity-unit">pcs</span>
+                </div>
+              </div>
+              <div class="quantity-field">
+                <label class="quantity-label">Pieces per Box:</label>
+                <div class="quantity-input-group">
+                  <span class="quantity-type">Pieces</span>
+                  <input type="text" [value]="orderDetails.boxQuantity?.value || ''" readonly class="form-input readonly small">
+                  <span class="quantity-unit">pcs</span>
+                </div>
+              </div>
+              <div class="quantity-field">
+                <label class="quantity-label">Pallet Quantity:</label>
+                <div class="quantity-input-group">
+                  <span class="quantity-type">Boxes</span>
+                  <input type="text" [value]="orderDetails.palletQuantity?.value || ''" readonly class="form-input readonly small">
+                  <span class="quantity-unit">pcs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Section -->
+      <div class="form-section">
+        <h3 class="section-header">Settings</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Total 1 Label Count:</label>
+            <input type="text" [value]="orderDetails.total1LabelCount || '0'" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Total 2 Label Count:</label>
+            <input type="text" [value]="orderDetails.total2LabelCount || '0'" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Total 3 Label Count:</label>
+            <input type="text" [value]="orderDetails.total3LabelCount || '0'" readonly class="form-input readonly">
+          </div>
+          <div class="form-group">
+            <label>Start conveyor:</label>
+            <input type="text" [value]="orderDetails.startConveyor || ''" readonly class="form-input readonly">
+          </div>
+          <div class="form-group full-width">
+            <label>Print Options:</label>
+            <div class="print-options">
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnPrimary" disabled>
+                <label>Print label on Primary</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnSecondary1" disabled>
+                <label>Print label on Secondary 1</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnSecondary2" disabled>
+                <label>Print label on Secondary 2</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnSecondary3" disabled>
+                <label>Print label on Secondary 3</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnSecondary4" disabled>
+                <label>Print label on Secondary 4</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnSecondary5" disabled>
+                <label>Print label on Secondary 5</label>
+              </div>
+              <div class="checkbox-group">
+                <input type="checkbox" [checked]="orderDetails.printLabelOnSecondary6" disabled>
+                <label>Print label on Secondary 6</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Order Status Display -->
+  @if (shouldShowOrderStatus()) {
+    <div class="order-status-display">
+      <header class="status-header">
+        <h2>📊 Order Status: {{ orderStatus.orderNumber }}</h2>
+      </header>
+
+      <!-- Current Status Section -->
+      <div class="current-status-section">
+        <div class="status-card">
+          <div class="status-icon">{{ getStatusIcon(orderStatus.status) }}</div>
+          <div class="status-info">
+            <h3>Current Status</h3>
+            <span class="status-badge" [class]="getStatusClass(orderStatus.status)">
+              {{ orderStatus.status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log Book Entries Section -->
+      <div class="logbook-section">
+        <h3 class="section-header">📋 Log Book Entries ({{ orderStatus.logBookEntries?.length || 0 }} entries)</h3>
+        
+        @if (orderStatus.logBookEntries && orderStatus.logBookEntries.length > 0) {
+          <div class="logbook-timeline">
+            @for (entry of orderStatus.logBookEntries; track $index) {
+              <div class="timeline-entry">
+                <div class="timeline-marker">
+                  <span class="marker-icon">{{ getStatusIcon(entry.status) }}</span>
+                </div>
+                <div class="timeline-content">
+                  <div class="entry-header">
+                    <span class="entry-status" [class]="getStatusClass(entry.status)">
+                      {{ entry.status }}
+                    </span>
+                    <span class="entry-timestamp">
+                      {{ formatTimestamp(entry.timestamp) }}
+                    </span>
+                  </div>
+                  @if (entry.message) {
+                    <div class="entry-message">
+                      <strong>Message:</strong> {{ entry.message }}
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="no-entries">
+            <div class="empty-icon">📝</div>
+            <p>No log book entries found</p>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Response Section -->
+  @if (responseData && !orderResults.length && !shouldShowOrderDetails() && !shouldShowOrderStatus()) {
+    <div class="response-section">
+      <h3>📤 API Response</h3>
+      <div class="response-info">
+        <strong>Endpoint:</strong> <code>{{ lastEndpoint }}</code><br>
+        <strong>Method:</strong> <span class="method-badge" [class]="lastMethod.toLowerCase()">{{ lastMethod }}</span><br>
+        <strong>Status:</strong> <span class="status-badge" [class.success]="isSuccess" [class.error]="!isSuccess">{{ responseStatus }}</span>
+      </div>
+      <div class="response-content">
+        <pre>{{ responseData | json }}</pre>
+      </div>
+      <button class="btn btn-sm btn-secondary" (click)="clearResponse()">Clear Response</button>
+    </div>
+  }
+
+  <!-- Loading Indicator -->
+  @if (isLoading) {
+    <div class="loading-section">
+      <div class="spinner">🔄</div>
+      <p>Processing request...</p>
+    </div>
+  }
+
+  <!-- Error Section -->
+  @if (errorMessage) {
+    <div class="error-section">
+      <h3>❌ Error</h3>
+      <p>{{ errorMessage }}</p>
+      <button class="btn btn-sm btn-secondary" (click)="clearError()">Clear Error</button>
+    </div>
+  }
+
+  <!-- Raw JSON Response Section -->
+  @if (responseData) {
+    <div class="json-section">
+      <div class="json-header">
+        <h3>🔍 Raw API Response</h3>
+        <div class="json-controls">
+          <button class="btn btn-sm btn-outline" (click)="toggleJsonExpanded()">
+            {{ isJsonExpanded ? '📦 Collapse' : '📋 Expand' }} JSON
+          </button>
+          <button class="btn btn-sm btn-outline" (click)="copyJsonToClipboard()">
+            📋 Copy JSON
+          </button>
+        </div>
+      </div>
+      
+      @if (isJsonExpanded) {
+        <div class="json-content">
+          <div class="json-meta">
+            <span class="meta-item">
+              <strong>Endpoint:</strong> {{ lastEndpoint }}
+            </span>
+            <span class="meta-item">
+              <strong>Method:</strong> {{ lastMethod }}
+            </span>
+            <span class="meta-item">
+              <strong>Status:</strong> {{ responseStatus }}
+            </span>
+            @if (shouldShowOrderEmptyState()) {
+              <span class="meta-item">
+                <strong>Order Records:</strong> {{ orderResults.length }}
+              </span>
+            }
+          </div>
+          
+          <div class="json-data">
+            <pre class="json-pre">{{ responseData | json }}</pre>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

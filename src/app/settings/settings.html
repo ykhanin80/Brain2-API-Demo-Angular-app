@@ -1,0 +1,204 @@
+<div class="settings-container">
+  <div class="page-header">
+    <h2>🔧 Database Connection Settings</h2>
+    <button 
+      type="button" 
+      class="btn-back" 
+      (click)="goBack()"
+    >
+      ← Back to Orders
+    </button>
+  </div>
+
+  <div class="settings-form">
+    <!-- Connection Information Section -->
+    <div class="form-section">
+      <h3>📡 Server Information</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="serverName">Server Name / IP Address *</label>
+          <input 
+            type="text" 
+            id="serverName" 
+            [(ngModel)]="connectionSettings.serverName"
+            placeholder="e.g., localhost, 192.168.1.100, SQLSERVER01"
+            class="form-input"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="instanceName">Instance Name (Optional)</label>
+          <input 
+            type="text" 
+            id="instanceName" 
+            [(ngModel)]="connectionSettings.instanceName"
+            placeholder="e.g., SQLEXPRESS, MSSQLSERVER"
+            class="form-input"
+          >
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="databaseName">Database Name *</label>
+        <input 
+          type="text" 
+          id="databaseName" 
+          [(ngModel)]="connectionSettings.databaseName"
+          placeholder="e.g., ProcessDatabase, Production"
+          class="form-input"
+        >
+      </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div class="form-section">
+      <h3>🔐 Authentication</h3>
+      
+      <div class="auth-type-selection">
+        <label class="radio-label">
+          <input 
+            type="radio" 
+            name="authType"
+            [value]="AuthenticationType.Windows"
+            [(ngModel)]="connectionSettings.authenticationType"
+          >
+          <span class="radio-text">
+            <strong>Windows Authentication</strong>
+            <small>Use current Windows user credentials</small>
+          </span>
+        </label>
+        
+        <label class="radio-label">
+          <input 
+            type="radio" 
+            name="authType"
+            [value]="AuthenticationType.SQL"
+            [(ngModel)]="connectionSettings.authenticationType"
+          >
+          <span class="radio-text">
+            <strong>SQL Server Authentication</strong>
+            <small>Use SQL Server username and password</small>
+          </span>
+        </label>
+      </div>
+      
+      <!-- SQL Authentication Fields -->
+      @if (isSqlAuthentication) {
+        <div class="sql-auth-fields">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="username">Username *</label>
+              <input 
+                type="text" 
+                id="username" 
+                [(ngModel)]="connectionSettings.username"
+                placeholder="SQL Server username"
+                class="form-input"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="password">Password *</label>
+              <input 
+                type="password" 
+                id="password" 
+                [(ngModel)]="connectionSettings.password"
+                placeholder="SQL Server password"
+                class="form-input"
+              >
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Connection String Preview -->
+    <div class="form-section">
+      <h3>📋 Connection String Preview</h3>
+      <div class="connection-preview">
+        <code>{{ connectionStringPreview }}</code>
+      </div>
+    </div>
+
+    <!-- Test Connection Section -->
+    <div class="form-section">
+      <h3>🧪 Test Connection</h3>
+      
+      <div class="test-section">
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          (click)="testConnection()"
+          [disabled]="isTestingConnection || !connectionSettings.serverName || !connectionSettings.databaseName"
+        >
+          @if (isTestingConnection) {
+            Testing Connection...
+          } @else {
+            🔍 Validate Connection String
+          }
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn btn-info"
+          (click)="showTroubleshootingSteps()"
+          style="margin-left: 0.5rem;"
+        >
+          🛠️ Troubleshooting Steps
+        </button>
+        
+        @if (testResult) {
+          <div class="test-result" [class.success]="testResult.success" [class.error]="!testResult.success">
+            @if (testResult.success) {
+              <span class="result-icon">✅</span>
+            } @else {
+              <span class="result-icon">❌</span>
+            }
+            {{ testResult.message }}
+          </div>
+        }
+        
+        @if (showTroubleshooting) {
+          <div class="troubleshooting-guide">
+            <h4>🛠️ SQL Server Connection Troubleshooting</h4>
+            <ol>
+              <li><strong>Check SQL Server Service:</strong> Ensure SQL Server (SQLEXPRESS) service is running in Services.msc</li>
+              <li><strong>SQL Server Browser:</strong> Start the "SQL Server Browser" service for named instances</li>
+              <li><strong>TCP/IP Protocol:</strong> Enable TCP/IP in SQL Server Configuration Manager</li>
+              <li><strong>Windows Firewall:</strong> Add exception for SQL Server (port 1433) or disable temporarily</li>
+              <li><strong>Test with SSMS:</strong> Try connecting with SQL Server Management Studio first</li>
+              <li><strong>Connection String:</strong> Current format: <code>{{ connectionStringPreview }}</code></li>
+            </ol>
+            <p><strong>Quick Test Commands (Run in Command Prompt):</strong></p>
+            <div class="code-block">
+              <code>sqlcmd -S {{ connectionSettings.serverName }}{{ connectionSettings.instanceName ? '\\' + connectionSettings.instanceName : '' }} -E</code>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Save Settings -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        class="btn btn-primary"
+        (click)="saveSettings()"
+        [disabled]="isSaving || !connectionSettings.serverName || !connectionSettings.databaseName"
+      >
+        @if (isSaving) {
+          Saving...
+        } @else {
+          💾 Save Settings
+        }
+      </button>
+      
+      @if (saveMessage) {
+        <div class="save-message">
+          {{ saveMessage }}
+        </div>
+      }
+    </div>
+  </div>
+</div>

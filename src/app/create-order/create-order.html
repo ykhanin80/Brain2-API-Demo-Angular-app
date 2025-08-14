@@ -1,0 +1,376 @@
+<div class="create-order-container">
+  <div class="page-header">
+    <h2>📝 Create New Order</h2>
+    <button class="btn btn-back" (click)="goBack()">← Back to Orders</button>
+  </div>
+  
+  <div class="order-form">
+    <!-- Basic Order Information -->
+    <div class="form-section">
+      <h3>📋 Basic Information</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="orderNumber">Order Number *</label>
+          <input 
+            type="text" 
+            id="orderNumber" 
+            [(ngModel)]="orderData.orderNumber"
+            placeholder="e.g., A0521010"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="lineGroupName">Line Group Name</label>
+          <input 
+            type="text" 
+            id="lineGroupName" 
+            [(ngModel)]="orderData.lineGroupName"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="displayText">Display Text</label>
+          <input 
+            type="text" 
+            id="displayText" 
+            [(ngModel)]="orderData.displayText"
+            placeholder="e.g., Work Order A0521004"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="articleNumber">Article Number *</label>
+          @if (isLoadingArticles) {
+            <div class="loading-indicator">Loading articles...</div>
+          } @else if (articlesError) {
+            <div class="error-indicator">{{ articlesError }}</div>
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-sm" 
+              (click)="loadArticles()"
+              style="margin-top: 0.5rem;"
+            >
+              Retry
+            </button>
+          } @else {
+            <select 
+              id="articleNumber" 
+              [(ngModel)]="orderData.articleNumber"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+              <option value="">Select an article...</option>
+              @for (article of articles; track article.number) {
+                <option [value]="article.number">{{ article.number }} - {{ article.name }}</option>
+              }
+            </select>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Quantities Section -->
+    <div class="form-section">
+      <h3>📦 Quantities</h3>
+      
+      <div class="quantity-group">
+        <h4>Order Quantity</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="orderQuantityValue">Value</label>
+            <input 
+              type="number" 
+              id="orderQuantityValue" 
+              [(ngModel)]="orderData.orderQuantity.value"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          </div>
+          <div class="form-group">
+            <label for="orderQuantityUnit">Unit</label>
+            <input 
+              type="text" 
+              id="orderQuantityUnit" 
+              [(ngModel)]="orderData.orderQuantity.unit"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          </div>
+          <div class="form-group">
+            <label for="orderQuantityType">Type</label>
+            <input 
+              type="text" 
+              id="orderQuantityType" 
+              [(ngModel)]="orderData.orderQuantity.type"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          </div>
+        </div>
+      </div>
+      
+      <div class="quantity-group">
+        <h4>Trays in the Box</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="boxQuantityValue">Value</label>
+            <input 
+              type="number" 
+              id="boxQuantityValue" 
+              [(ngModel)]="orderData.boxQuantity.value"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          </div>
+          <div class="form-group">
+            <label for="boxQuantityUnit">Unit</label>
+            <input 
+              type="text" 
+              id="boxQuantityUnit" 
+              [(ngModel)]="orderData.boxQuantity.unit"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          </div>
+          <div class="form-group">
+            <label for="boxQuantityType">Type</label>
+            <input 
+              type="text" 
+              id="boxQuantityType" 
+              [(ngModel)]="orderData.boxQuantity.type"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="form-section">
+      <h3>⚙️ Settings</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startBeltOnOrderStart">Start Belt on Order Start</label>
+          <select 
+            id="startBeltOnOrderStart" 
+            [(ngModel)]="orderData.settings.startBeltOnOrderStart"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+            <option [value]="StartBeltOptions.ONLY_IF_STARTED_BEFORE_LOCK">Only If Started Before Lock</option>
+            <option [value]="StartBeltOptions.ALWAYS">Always</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="checkbox-group">
+        <h4>Print Labels</h4>
+        <div class="checkbox-row">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="orderData.settings.printLabelPrimary"
+              [disabled]="isLoading"
+            >
+            Primary
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="orderData.settings.printLabelSecondary1"
+              [disabled]="isLoading"
+            >
+            Secondary 1
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="orderData.settings.printLabelSecondary2"
+              [disabled]="isLoading"
+            >
+            Secondary 2
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transfer Values Section -->
+    <div class="form-section">
+      <h3>🔄 Transfer Values</h3>
+      
+      <!-- User-Friendly Base Price Field -->
+      <div class="form-group">
+        <label for="userFriendlyBasePrice">Base Price (USD) *</label>
+        <input 
+          type="number" 
+          id="userFriendlyBasePrice" 
+          [(ngModel)]="userFriendlyBasePrice"
+          step="0.01"
+          min="0"
+          placeholder="e.g., 9.99"
+          [disabled]="isLoading"
+          class="form-input"
+        >
+        <small class="form-hint">Will be formatted as: {{ formatBasePriceForAPI(userFriendlyBasePrice) }}</small>
+      </div>
+
+      <!-- User-Friendly Date Field -->
+      <div class="form-group">
+        <label for="userFriendlyDate">Date Field 2 *</label>
+        <input 
+          type="date" 
+          id="userFriendlyDate" 
+          [(ngModel)]="userFriendlyDateString"
+          [disabled]="isLoading"
+          class="form-input"
+        >
+        <small class="form-hint">Will be formatted as: {{ getDatePreview() }}</small>
+      </div>
+      
+      <!-- Other Transfer Values -->
+      @for (transferValue of orderData.transferValues; track $index) {
+        @if (transferValue.name !== 'basePrice' && transferValue.name !== 'dateField2') {
+          <div class="transfer-value-item">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Name</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="transferValue.name"
+                  [disabled]="isLoading"
+                  class="form-input"
+                >
+              </div>
+              <div class="form-group">
+                <label>Value</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="transferValue.value"
+                  [disabled]="isLoading"
+                  class="form-input"
+                >
+              </div>
+              <div class="form-group">
+                <button 
+                  type="button" 
+                  class="btn btn-danger btn-sm" 
+                  (click)="removeTransferValue($index)"
+                  [disabled]="isLoading"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      }
+      
+      <button 
+        type="button" 
+        class="btn btn-secondary btn-sm" 
+        (click)="addTransferValue()"
+        [disabled]="isLoading"
+      >
+        + Add Transfer Value
+      </button>
+    </div>
+
+    <!-- Common Fields Section -->
+    <div class="form-section">
+      <h3>📝 Common Fields</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="commonText1">Common Text 1</label>
+          <input 
+            type="text" 
+            id="commonText1" 
+            [(ngModel)]="orderData.commonText1"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="commonText2">Common Text 2</label>
+          <input 
+            type="text" 
+            id="commonText2" 
+            [(ngModel)]="orderData.commonText2"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="commonNumber1">Common Number 1</label>
+          <input 
+            type="number" 
+            id="commonNumber1" 
+            [(ngModel)]="orderData.commonNumber1"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+        
+        <div class="form-group">
+          <label for="commonNumber2">Common Number 2</label>
+          <input 
+            type="number" 
+            id="commonNumber2" 
+            [(ngModel)]="orderData.commonNumber2"
+            [disabled]="isLoading"
+            class="form-input"
+          >
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      <button 
+        class="btn btn-primary" 
+        (click)="createOrder()" 
+        [disabled]="isLoading || !orderData.orderNumber.trim() || !orderData.articleNumber.trim()"
+      >
+        @if (isLoading) {
+          Creating Order...
+        } @else {
+          Create Order
+        }
+      </button>
+    </div>
+  </div>
+  
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="error-message">
+      <h4>❌ Error</h4>
+      <p>{{ errorMessage }}</p>
+    </div>
+  }
+  
+  <!-- Success Message -->
+  @if (createdOrder) {
+    <div class="success-message">
+      <h3>✅ Order Created Successfully!</h3>
+      <p>Your order has been created and submitted to the system.</p>
+      <div class="order-response">
+        <h4>Order Response:</h4>
+        <pre>{{ createdOrder | json }}</pre>
+      </div>
+    </div>
+  }
+</div>

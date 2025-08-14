@@ -1,0 +1,17 @@
+<div class="order-container">
+  <h2>Order Management</h2>
+  <div class="success-message">
+    <h3>✅ Authentication Successful!</h3>
+    <p>You are now logged in and ready to manage orders.</p>
+    <p>Bearer token has been obtained and will be automatically attached to API requests.</p>
+  </div>
+  
+  <div class="order-actions">
+    <button class="btn btn-primary" (click)="navigateToCreateOrder()">
+      📝 Create New Order
+    </button>
+    <button class="btn btn-secondary" (click)="navigateToViewOrder()">
+      🔍 View Order #
+    </button>
+  </div>
+</div>

@@ -1,0 +1,117 @@
+.app-header {
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+  padding: 0;
+  
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    
+    h1 {
+      margin: 0;
+      color: #333;
+      font-size: 1.5rem;
+    }
+    
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      
+      .system-status-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        
+        .status-item {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          font-size: 0.8rem;
+          
+          .status-label {
+            color: #6c757d;
+            font-weight: 500;
+          }
+          
+          .status-value {
+            font-weight: 600;
+            
+            &.connected {
+              color: #28a745;
+            }
+            
+            &.active {
+              color: #17a2b8;
+            }
+          }
+        }
+      }
+      
+      span {
+        color: #666;
+        font-size: 0.9rem;
+      }
+      
+      .settings-btn {
+        padding: 0.5rem 1rem;
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        
+        &:hover {
+          background-color: #138496;
+        }
+      }
+      
+      .logout-btn {
+        padding: 0.5rem 1rem;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        
+        &:hover {
+          background-color: #c82333;
+        }
+      }
+    }
+  }
+}
+
+.app-content {
+  min-height: calc(100vh - 80px);
+  background-color: #f8f9fa;
+}
+
+// Responsive design for header
+@media (max-width: 768px) {
+  .app-header nav {
+    flex-direction: column;
+    gap: 1rem;
+    
+    .nav-actions {
+      flex-wrap: wrap;
+      justify-content: center;
+      
+      .system-status-header {
+        order: -1;
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}

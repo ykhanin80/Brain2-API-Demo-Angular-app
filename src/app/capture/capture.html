@@ -1,0 +1,305 @@
+<div class="capture-container">
+  <header class="capture-header">
+    <h2>📸 Capture - Package Records</h2>
+    <button class="btn btn-outline back-btn" (click)="navigateToHome()">
+      🏠 Back to Dashboard
+    </button>
+  </header>
+  
+  <div class="success-message">
+    <h3>✅ Package Records Management</h3>
+    <p>Search and view package records captured by devices.</p>
+    <p>Use filters to narrow down your search results.</p>
+    <p><strong>Note:</strong> Please ensure you are logged in before making API requests.</p>
+  </div>
+
+  <!-- Search Filters Section -->
+  <div class="capture-section">
+    <h3>🔍 Search Filters</h3>
+    
+    <div class="filters-grid">
+      <div class="input-group">
+        <label for="articleNumberInput">Article Number:</label>
+        <input 
+          id="articleNumberInput"
+          type="text" 
+          [(ngModel)]="articleNumber" 
+          placeholder="Enter article number"
+          class="form-input"
+        >
+      </div>
+      
+      <div class="input-group">
+        <label for="articleNameInput">Article Name:</label>
+        <input 
+          id="articleNameInput"
+          type="text" 
+          [(ngModel)]="articleName" 
+          placeholder="Enter article name"
+          class="form-input"
+        >
+      </div>
+      
+      <div class="input-group">
+        <label for="batchNumberInput">Batch Number:</label>
+        <input 
+          id="batchNumberInput"
+          type="text" 
+          [(ngModel)]="batchNumber" 
+          placeholder="Enter batch number"
+          class="form-input"
+        >
+      </div>
+      
+      <div class="input-group">
+        <label for="orderNumberInput">Order Number:</label>
+        <input 
+          id="orderNumberInput"
+          type="text" 
+          [(ngModel)]="orderNumber" 
+          placeholder="Enter order number"
+          class="form-input"
+        >
+      </div>
+      
+      <div class="input-group">
+        <label for="deviceNameSelect">Device Name:</label>
+        <div class="select-wrapper">
+          <div class="device-input-container">
+            @if (isLoadingDevices) {
+              <select id="deviceNameSelect" class="form-input" disabled>
+                <option>Loading devices...</option>
+              </select>
+            } @else {
+              <select 
+                id="deviceNameSelect"
+                [(ngModel)]="deviceName" 
+                class="form-input"
+              >
+                <option value="">All Devices</option>
+                @for (device of devices; track device.id) {
+                  <option [value]="device.name || device.id">
+                    {{ device.name || device.id }}
+                    @if (device.name && device.id && device.name !== device.id) {
+                      ({{ device.id }})
+                    }
+                  </option>
+                }
+                @if (devices.length === 0 && !isLoadingDevices) {
+                  <option disabled>No devices available</option>
+                }
+              </select>
+            }
+            <button 
+              type="button"
+              class="btn btn-sm btn-outline refresh-btn" 
+              (click)="refreshDevices()"
+              [disabled]="isLoadingDevices"
+              title="Refresh device list"
+            >
+              {{ isLoadingDevices ? '⏳' : '🔄' }}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="startDateInput">Start Date:</label>
+        <input 
+          id="startDateInput"
+          type="datetime-local" 
+          [(ngModel)]="startDate" 
+          class="form-input"
+        >
+      </div>
+      
+      <div class="input-group">
+        <label for="endDateInput">End Date:</label>
+        <input 
+          id="endDateInput"
+          type="datetime-local" 
+          [(ngModel)]="endDate" 
+          class="form-input"
+        >
+      </div>
+      
+      <div class="input-group">
+        <label for="takeInput">Max Records:</label>
+        <input 
+          id="takeInput"
+          type="number" 
+          [(ngModel)]="take" 
+          min="1"
+          max="1000"
+          placeholder="100"
+          class="form-input"
+        >
+      </div>
+    </div>
+    
+    <div class="action-group">
+      <button class="btn btn-primary" (click)="getPackageRecords()">
+        📦 Get Package Records
+      </button>
+      <button class="btn btn-secondary" (click)="clearResponse()">
+        🧹 Clear Results
+      </button>
+    </div>
+  </div>
+
+  <!-- Package Records Table -->
+  @if (packageRecords && packageRecords.length > 0) {
+    <div class="records-section">
+      <h3>📦 Package Records ({{ packageRecords.length }} found)</h3>
+      <div class="table-container">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="sortTable('timestamp')">
+                Timestamp {{ getSortIcon('timestamp') }}
+              </th>
+              <th class="sortable" (click)="sortTable('article')">
+                Article {{ getSortIcon('article') }}
+              </th>
+              <th class="sortable" (click)="sortTable('batch')">
+                Batch {{ getSortIcon('batch') }}
+              </th>
+              <th class="sortable" (click)="sortTable('order')">
+                Order {{ getSortIcon('order') }}
+              </th>
+              <th class="sortable" (click)="sortTable('device')">
+                Device {{ getSortIcon('device') }}
+              </th>
+              <th class="sortable" (click)="sortTable('grossWeight')">
+                Gross Weight {{ getSortIcon('grossWeight') }}
+              </th>
+              <th class="sortable" (click)="sortTable('netWeight')">
+                Net Weight {{ getSortIcon('netWeight') }}
+              </th>
+              <th class="sortable" (click)="sortTable('packageType')">
+                Package Type {{ getSortIcon('packageType') }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (record of packageRecords; track record.identity) {
+              <tr>
+                <td class="timestamp-cell">{{ formatDate(record.timestamp) }}</td>
+                <td>
+                  <div class="article-info">
+                    <strong>{{ record.articleNumber }}</strong>
+                    <small>{{ record.articleName }}</small>
+                  </div>
+                </td>
+                <td>{{ record.batchNumber }}</td>
+                <td>{{ record.orderNumber }}</td>
+                <td>{{ record.device?.name || record.device?.id }}</td>
+                <td class="weight-cell">{{ formatWeight(record.grossWeight) }}</td>
+                <td class="weight-cell">{{ formatWeight(record.actualNetWeight) }}</td>
+                <td>
+                  <span class="package-type-badge">{{ record.packageType }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Empty Results State -->
+  @if (shouldShowEmptyState()) {
+    <div class="empty-results-section">
+      <div class="empty-results-content">
+        <div class="empty-icon">📭</div>
+        <h3>No Package Records Found</h3>
+        <p>Your search returned 0 records. Try adjusting your search filters or expanding the date range.</p>
+        <div class="empty-suggestions">
+          <h4>Suggestions:</h4>
+          <ul>
+            <li>Clear some search filters to broaden your search</li>
+            <li>Check if the date range includes relevant time periods</li>
+            <li>Verify the device name or article information</li>
+            <li>Try searching with fewer specific criteria</li>
+          </ul>
+        </div>
+        <button class="btn btn-outline" (click)="clearResponse()">
+          🔄 Clear Filters & Try Again
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Response Section -->
+  @if (responseData && !packageRecords.length) {
+    <div class="response-section">
+      <h3>📤 API Response</h3>
+      <div class="response-info">
+        <strong>Endpoint:</strong> <code>{{ lastEndpoint }}</code><br>
+        <strong>Method:</strong> <span class="method-badge" [class]="lastMethod.toLowerCase()">{{ lastMethod }}</span><br>
+        <strong>Status:</strong> <span class="status-badge" [class.success]="isSuccess" [class.error]="!isSuccess">{{ responseStatus }}</span>
+      </div>
+      <div class="response-content">
+        <pre>{{ responseData | json }}</pre>
+      </div>
+      <button class="btn btn-sm btn-secondary" (click)="clearResponse()">Clear Response</button>
+    </div>
+  }
+
+  <!-- Loading Indicator -->
+  @if (isLoading) {
+    <div class="loading-section">
+      <div class="spinner">🔄</div>
+      <p>Fetching package records...</p>
+    </div>
+  }
+
+  <!-- Error Section -->
+  @if (errorMessage) {
+    <div class="error-section">
+      <h3>❌ Error</h3>
+      <p>{{ errorMessage }}</p>
+      <button class="btn btn-sm btn-secondary" (click)="clearError()">Clear Error</button>
+    </div>
+  }
+
+  <!-- Raw JSON Response Section -->
+  @if (responseData) {
+    <div class="json-section">
+      <div class="json-header">
+        <h3>🔍 Raw API Response</h3>
+        <div class="json-controls">
+          <button class="btn btn-sm btn-outline" (click)="toggleJsonExpanded()">
+            {{ isJsonExpanded ? '📦 Collapse' : '📋 Expand' }} JSON
+          </button>
+          <button class="btn btn-sm btn-outline" (click)="copyJsonToClipboard()">
+            📋 Copy JSON
+          </button>
+        </div>
+      </div>
+      
+      @if (isJsonExpanded) {
+        <div class="json-content">
+          <div class="json-meta">
+            <span class="meta-item">
+              <strong>Endpoint:</strong> {{ lastEndpoint }}
+            </span>
+            <span class="meta-item">
+              <strong>Method:</strong> {{ lastMethod }}
+            </span>
+            <span class="meta-item">
+              <strong>Status:</strong> {{ responseStatus }}
+            </span>
+            <span class="meta-item">
+              <strong>Records:</strong> {{ packageRecords.length }}
+            </span>
+          </div>
+          
+          <div class="json-data">
+            <pre class="json-pre">{{ responseData | json }}</pre>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

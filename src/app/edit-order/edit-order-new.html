@@ -1,0 +1,526 @@
+<div class="edit-order-container">
+  <div class="page-header">
+    <h2>✏️ Edit Order Details</h2>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="goBack()">← Back to Orders</button>
+    </div>
+  </div>
+  
+  <!-- Order Number Input -->
+  <div class="order-form">
+    <div class="form-group">
+      <label for="orderNumber">Order Number:</label>
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="orderNumber" 
+          [(ngModel)]="orderNumber"
+          placeholder="Enter order number to edit"
+          [disabled]="isLoadingOrder || isLoading"
+          class="order-input"
+          (keyup.enter)="loadOrderData()"
+        >
+        <button 
+          class="btn btn-primary" 
+          (click)="loadOrderData()" 
+          [disabled]="isLoadingOrder || !orderNumber.trim()"
+        >
+          @if (isLoadingOrder) {
+            Loading...
+          } @else {
+            Load Order
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error Message -->
+  @if (errorMessage) {
+    <div class="error-message">
+      <h4>❌ Error</h4>
+      <p>{{ errorMessage }}</p>
+      <button class="btn btn-sm btn-secondary" (click)="clearResponse()">Clear</button>
+    </div>
+  }
+  
+  <!-- Success Message -->
+  @if (successMessage) {
+    <div class="success-message">
+      <h4>✅ Success</h4>
+      <p>{{ successMessage }}</p>
+      <button class="btn btn-sm btn-secondary" (click)="clearResponse()">Clear</button>
+    </div>
+  }
+  
+  <!-- Order Edit Form -->
+  @if (originalOrderData && !isLoadingOrder) {
+    <div class="order-edit-form">
+      <!-- ORDER FIELDS SECTION -->
+      <form (ngSubmit)="saveOrderFields()">
+        <header class="form-header">
+          <h2>📝 Order #{{ orderData.orderNumber }}</h2>
+          <div class="changes-indicator">
+            @if (hasOrderChanges) {
+              <span class="changes-badge modified">● Order Changes Detected</span>
+            } @else {
+              <span class="changes-badge clean">● No Order Changes</span>
+            }
+          </div>
+        </header>
+
+        <!-- General Section -->
+        <div class="form-section">
+          <h3 class="section-header">General Information</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="displayText">Display Text:</label>
+              <input 
+                type="text" 
+                id="displayText" 
+                [(ngModel)]="orderData.displayText"
+                name="displayText"
+                placeholder="Enter display text"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="customerNumber">Customer Number:</label>
+              <input 
+                type="text" 
+                id="customerNumber" 
+                [(ngModel)]="orderData.customerNumber"
+                name="customerNumber"
+                placeholder="Enter customer number"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="articleNumber">Article Number:</label>
+              <input 
+                type="text" 
+                id="articleNumber" 
+                [(ngModel)]="orderData.articleNumber"
+                name="articleNumber"
+                placeholder="Enter article number"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Quantities Section -->
+        <div class="form-section">
+          <h3 class="section-header">Quantities</h3>
+          
+          <!-- Order Quantity -->
+          <div class="quantity-group">
+            <h4>Order Quantity</h4>
+            <div class="form-grid quantity-grid">
+              <div class="form-group">
+                <label for="orderQuantityValue">Value:</label>
+                <input 
+                  type="number" 
+                  id="orderQuantityValue" 
+                  [(ngModel)]="orderData.orderQuantity.value"
+                  name="orderQuantityValue"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="orderQuantityUnit">Unit:</label>
+                <input 
+                  type="text" 
+                  id="orderQuantityUnit" 
+                  [(ngModel)]="orderData.orderQuantity.unit"
+                  name="orderQuantityUnit"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="orderQuantityDecimalPlaces">Decimal Places:</label>
+                <input 
+                  type="number" 
+                  id="orderQuantityDecimalPlaces" 
+                  [(ngModel)]="orderData.orderQuantity.decimalPlaces"
+                  name="orderQuantityDecimalPlaces"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="orderQuantityType">Type:</label>
+                <input 
+                  type="text" 
+                  id="orderQuantityType" 
+                  [(ngModel)]="orderData.orderQuantity.type"
+                  name="orderQuantityType"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+            </div>
+          </div>
+          
+          <!-- Box Quantity -->
+          <div class="quantity-group">
+            <h4>Box Quantity</h4>
+            <div class="form-grid quantity-grid">
+              <div class="form-group">
+                <label for="boxQuantityValue">Value:</label>
+                <input 
+                  type="number" 
+                  id="boxQuantityValue" 
+                  [(ngModel)]="orderData.boxQuantity.value"
+                  name="boxQuantityValue"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="boxQuantityUnit">Unit:</label>
+                <input 
+                  type="text" 
+                  id="boxQuantityUnit" 
+                  [(ngModel)]="orderData.boxQuantity.unit"
+                  name="boxQuantityUnit"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="boxQuantityDecimalPlaces">Decimal Places:</label>
+                <input 
+                  type="number" 
+                  id="boxQuantityDecimalPlaces" 
+                  [(ngModel)]="orderData.boxQuantity.decimalPlaces"
+                  name="boxQuantityDecimalPlaces"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="boxQuantityType">Type:</label>
+                <input 
+                  type="text" 
+                  id="boxQuantityType" 
+                  [(ngModel)]="orderData.boxQuantity.type"
+                  name="boxQuantityType"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+            </div>
+          </div>
+          
+          <!-- Pallet Quantity -->
+          <div class="quantity-group">
+            <h4>Pallet Quantity</h4>
+            <div class="form-grid quantity-grid">
+              <div class="form-group">
+                <label for="palletQuantityValue">Value:</label>
+                <input 
+                  type="number" 
+                  id="palletQuantityValue" 
+                  [(ngModel)]="orderData.palletQuantity.value"
+                  name="palletQuantityValue"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="palletQuantityUnit">Unit:</label>
+                <input 
+                  type="text" 
+                  id="palletQuantityUnit" 
+                  [(ngModel)]="orderData.palletQuantity.unit"
+                  name="palletQuantityUnit"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="palletQuantityDecimalPlaces">Decimal Places:</label>
+                <input 
+                  type="number" 
+                  id="palletQuantityDecimalPlaces" 
+                  [(ngModel)]="orderData.palletQuantity.decimalPlaces"
+                  name="palletQuantityDecimalPlaces"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+              <div class="form-group">
+                <label for="palletQuantityType">Type:</label>
+                <input 
+                  type="text" 
+                  id="palletQuantityType" 
+                  [(ngModel)]="orderData.palletQuantity.type"
+                  name="palletQuantityType"
+                  [disabled]="isLoading"
+                  class="form-input"
+                  (ngModelChange)="onOrderFieldChange()"
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Common Fields Section -->
+        <div class="form-section">
+          <h3 class="section-header">Common Fields</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="commonText1">Common Text 1:</label>
+              <input 
+                type="text" 
+                id="commonText1" 
+                [(ngModel)]="orderData.commonText1"
+                name="commonText1"
+                placeholder="Enter common text 1"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="commonText2">Common Text 2:</label>
+              <input 
+                type="text" 
+                id="commonText2" 
+                [(ngModel)]="orderData.commonText2"
+                name="commonText2"
+                placeholder="Enter common text 2"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="commonNumber1">Common Number 1:</label>
+              <input 
+                type="number" 
+                id="commonNumber1" 
+                [(ngModel)]="orderData.commonNumber1"
+                name="commonNumber1"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+            
+            <div class="form-group">
+              <label for="commonNumber2">Common Number 2:</label>
+              <input 
+                type="number" 
+                id="commonNumber2" 
+                [(ngModel)]="orderData.commonNumber2"
+                name="commonNumber2"
+                [disabled]="isLoading"
+                class="form-input"
+                (ngModelChange)="onOrderFieldChange()"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Fields Actions -->
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isLoading || !hasOrderChanges"
+          >
+            @if (isLoading) {
+              Saving Order...
+            } @else {
+              💾 Save Order Changes
+            }
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="resetOrderFields()"
+            [disabled]="isLoading"
+          >
+            🔄 Reset Order Changes
+          </button>
+        </div>
+      </form>
+
+      <!-- TRANSFER VALUES SECTION -->
+      <div class="transfer-values-section">
+        <header class="form-header">
+          <h2>🔄 Transfer Values</h2>
+          <div class="changes-indicator">
+            @if (hasTransferValueChanges) {
+              <span class="changes-badge modified">● Transfer Values Changed</span>
+            } @else {
+              <span class="changes-badge clean">● No Transfer Value Changes</span>
+            }
+          </div>
+        </header>
+
+        <div class="form-section">
+          <h3 class="section-header">Transfer Values Management</h3>
+          <div class="transfer-values-container">
+            @if (orderData.transferValues.length > 0) {
+              @for (tv of orderData.transferValues; track $index) {
+                <div class="transfer-value-row">
+                  <div class="form-group">
+                    <label>Name:</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="tv.name"
+                      [name]="'tvName' + $index"
+                      [disabled]="isLoading"
+                      class="form-input"
+                      (ngModelChange)="onTransferValueChange()"
+                    >
+                  </div>
+                  <div class="form-group">
+                    <label>Device Type:</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="tv.deviceType"
+                      [name]="'tvDeviceType' + $index"
+                      [disabled]="isLoading"
+                      class="form-input"
+                      (ngModelChange)="onTransferValueChange()"
+                    >
+                  </div>
+                  <div class="form-group">
+                    <label>Value:</label>
+                    <input 
+                      type="text" 
+                      [(ngModel)]="tv.value"
+                      [name]="'tvValue' + $index"
+                      [disabled]="isLoading"
+                      class="form-input"
+                      (ngModelChange)="onTransferValueChange()"
+                    >
+                  </div>
+                  <div class="form-group">
+                    <button 
+                      type="button" 
+                      class="btn btn-sm btn-danger"
+                      (click)="removeTransferValue($index)"
+                      [disabled]="isLoading"
+                    >
+                      🗑️ Remove
+                    </button>
+                  </div>
+                </div>
+              }
+            }
+            @if (orderData.transferValues.length === 0) {
+              <div class="no-transfer-values">
+                <p>No transfer values configured. Click the button below to add some.</p>
+              </div>
+            }
+          </div>
+
+          <!-- Transfer Values Actions -->
+          <div class="form-actions transfer-actions">
+            <button 
+              type="button" 
+              class="btn btn-success"
+              (click)="addTransferValue()"
+              [disabled]="isLoading"
+            >
+              ➕ Add Transfer Value
+            </button>
+            
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="saveTransferValues()"
+              [disabled]="isLoading || !hasTransferValueChanges"
+            >
+              @if (isLoading) {
+                Saving Transfer Values...
+              } @else {
+                💾 Save Transfer Values
+              }
+            </button>
+            
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              (click)="resetTransferValues()"
+              [disabled]="isLoading"
+            >
+              🔄 Reset Transfer Values
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  
+  <!-- Modification Response -->
+  @if (modificationResponse) {
+    <div class="modification-response" [class.error]="modificationResponse.isError">
+      <h4>
+        @if (modificationResponse.isError) {
+          ❌ {{ modificationResponse.operation }} Failed
+        } @else {
+          ✅ {{ modificationResponse.operation }} Success
+        }
+      </h4>
+      <div class="response-meta">
+        <div class="meta-row">
+          <span class="meta-label">Operation:</span>
+          <span class="meta-value">{{ modificationResponse.operation }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Method:</span>
+          <span class="meta-value">{{ modificationResponse.method }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Timestamp:</span>
+          <span class="meta-value">{{ formatTimestamp(modificationResponse.timestamp.toISOString()) }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Status:</span>
+          @if (modificationResponse.isError) {
+            <span class="status-badge error">❌ Error {{ modificationResponse.errorStatus }}</span>
+          } @else {
+            <span class="status-badge success">✅ Success</span>
+          }
+        </div>
+      </div>
+      <div class="response-data">
+        <h5>Response Data:</h5>
+        <pre class="response-json">{{ modificationResponse.response | json }}</pre>
+      </div>
+      <button class="btn btn-sm btn-secondary" (click)="clearResponse()">
+        🗑️ Clear Response
+      </button>
+    </div>
+  }
+</div>
