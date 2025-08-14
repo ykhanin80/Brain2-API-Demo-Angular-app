@@ -10,6 +10,7 @@ import { Settings } from './settings/settings';
 import { AllOrders } from './all-orders/all-orders';
 import { authGuard } from './auth.guard';
 import { ActionsComponent } from './actions/actions';
+import { PackageRecordComponent } from './package-record/package-record';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -62,6 +63,11 @@ export const routes: Routes = [
   { 
     path: 'actions', 
     component: ActionsComponent,
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'package-record', 
+    component: PackageRecordComponent,
     canActivate: [authGuard]
   },
   { path: '**', redirectTo: '/dashboard' }

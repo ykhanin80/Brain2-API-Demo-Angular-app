@@ -30,6 +30,10 @@ export class Dashboard {
     this.router.navigate(['/actions']);
   }
 
+  navigateToPackageRecord(): void {
+    this.router.navigate(['/package-record']);
+  }
+
   // Quick access methods
   navigateToCreateOrder(): void {
     this.router.navigate(['/create-order']);

@@ -1,0 +1,268 @@
+<div class="package-record-wrapper">
+  <div class="page-header">
+    <h2>Package Record - Weight Tracking</h2>
+    <div class="header-actions">
+      <button type="button" (click)="manualRefresh()" [disabled]="isLoading" class="refresh-btn">
+        <span [class.spinning]="isLoading">🔄</span> Refresh
+      </button>
+      <button type="button" (click)="exportData()" [disabled]="packageRecords.length === 0" class="export-btn">
+        📊 Export CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters and Controls -->
+  <section class="controls-section">
+    <!-- Search Filters -->
+    <div class="search-filters">
+      <h3>🔍 Search Filters</h3>
+      <div class="filters-grid">
+        <div class="input-group">
+          <label for="articleNumberInput">Article Number:</label>
+          <input 
+            id="articleNumberInput"
+            type="text" 
+            [(ngModel)]="articleNumber" 
+            placeholder="Enter article number"
+            class="form-input"
+            (input)="onFilterChange()"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label for="articleNameInput">Article Name:</label>
+          <input 
+            id="articleNameInput"
+            type="text" 
+            [(ngModel)]="articleName" 
+            placeholder="Enter article name"
+            class="form-input"
+            (input)="onFilterChange()"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label for="batchNumberInput">Batch Number:</label>
+          <input 
+            id="batchNumberInput"
+            type="text" 
+            [(ngModel)]="batchNumber" 
+            placeholder="Enter batch number"
+            class="form-input"
+            (input)="onFilterChange()"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label for="orderNumberInput">Order Number:</label>
+          <input 
+            id="orderNumberInput"
+            type="text" 
+            [(ngModel)]="orderNumber" 
+            placeholder="Enter order number"
+            class="form-input"
+            (input)="onFilterChange()"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label for="deviceNameSelect">Device Name:</label>
+          <div class="select-wrapper">
+            <div class="device-input-container">
+              <select 
+                id="deviceNameSelect"
+                [(ngModel)]="deviceName" 
+                class="form-input"
+                (change)="onFilterChange()"
+              >
+                <option value="">All Devices</option>
+                <option *ngFor="let device of getDevices()" [value]="device.name">
+                  {{ device.name }}
+                </option>
+              </select>
+              <button 
+                type="button"
+                class="btn btn-sm btn-outline refresh-btn" 
+                (click)="refreshDevices()"
+                [disabled]="isLoadingDevices"
+                title="Refresh device list"
+              >
+                {{ isLoadingDevices ? '⏳' : '🔄' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="input-group">
+          <label for="startDateInput">Start Date:</label>
+          <input 
+            id="startDateInput"
+            type="datetime-local" 
+            [(ngModel)]="startDate" 
+            class="form-input"
+            (change)="onFilterChange()"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label for="endDateInput">End Date:</label>
+          <input 
+            id="endDateInput"
+            type="datetime-local" 
+            [(ngModel)]="endDate" 
+            class="form-input"
+            (change)="onFilterChange()"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label for="takeInput">Max Records:</label>
+          <input 
+            id="takeInput"
+            type="number" 
+            [(ngModel)]="take" 
+            min="1"
+            max="1000"
+            placeholder="100"
+            class="form-input"
+            (change)="onFilterChange()"
+          >
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <h4>Quick Filters</h4>
+      <div class="filter-group">
+        <div class="filter-item">
+          <label>Package Type</label>
+          <select [(ngModel)]="selectedPackageType" (change)="onFilterChange()">
+            <option value="All">All Types</option>
+            <option *ngFor="let type of packageTypes" [value]="type">{{type}}</option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label>Time Range</label>
+          <select [(ngModel)]="selectedTimeRange" (change)="onFilterChange()">
+            <option *ngFor="let option of timeRangeOptions" [value]="option.value">
+              {{option.label}}
+            </option>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label>Auto Refresh</label>
+          <select [(ngModel)]="selectedRefreshInterval" (change)="onRefreshIntervalChange()">
+            <option *ngFor="let option of refreshIntervalOptions" [value]="option.value">
+              {{option.label}}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-info">
+      <div class="status-item" *ngIf="lastUpdateTime">
+        <span class="label">Last Updated:</span>
+        <span class="value">{{lastUpdateTime}}</span>
+      </div>
+      <div class="status-item">
+        <span class="label">Records:</span>
+        <span class="value">{{packageRecords.length}}</span>
+      </div>
+      <div class="status-item" *ngIf="selectedRefreshInterval > 0">
+        <span class="label">Auto Refresh:</span>
+        <span class="value live-indicator">🟢 Active</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error Messages -->
+  <div class="error-section" *ngIf="errorMessage">
+    <div class="error-message">
+      <span class="error-icon">⚠️</span>
+      {{errorMessage}}
+    </div>
+  </div>
+
+  <!-- Chart Section -->
+  <section class="chart-section">
+    <div class="chart-header">
+      <h3>Weight Over Time</h3>
+      <div class="chart-info">
+        <span class="loading-indicator" *ngIf="isLoading">Loading...</span>
+        <span class="data-info" *ngIf="!isLoading && packageRecords.length > 0">
+          Showing {{packageRecords.length}} records
+        </span>
+      </div>
+    </div>
+    
+    <div class="chart-container">
+      <canvas id="weightChart"></canvas>
+    </div>
+    
+    <div class="no-data" *ngIf="!isLoading && packageRecords.length === 0">
+      <div class="no-data-content">
+        <span class="no-data-icon">📦</span>
+        <h4>No package records found</h4>
+        <p>Try adjusting your filters or check back later for new data.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Statistics Summary -->
+  <section class="stats-section" *ngIf="packageRecords.length > 0">
+    <h3>Summary Statistics</h3>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{getAverageWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
+        <div class="stat-label">Average Weight</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{getMaxWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
+        <div class="stat-label">Maximum Weight</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{getMinWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
+        <div class="stat-label">Minimum Weight</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{getTotalWeight() | number:'1.2-2'}} {{getDefaultWeightUnit()}}</div>
+        <div class="stat-label">Total Weight</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Records Table -->
+  <section class="table-section" *ngIf="packageRecords.length > 0">
+    <h3>Recent Records</h3>
+    <div class="table-container">
+      <table class="records-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Package Type</th>
+            <th>Weight</th>
+            <th>Location</th>
+            <th>Operator</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of getRecentRecords()">
+            <td>{{formatTime(record.timestamp)}}</td>
+            <td>
+              <span class="package-type-badge" [class]="'type-' + (record.packageType || 'unknown')?.toLowerCase()">
+                {{record.packageType || 'Unknown'}}
+              </span>
+            </td>
+            <td class="weight-cell">{{record.weight}} {{getWeightUnit(record)}}</td>
+            <td>{{record.location}}</td>
+            <td>{{record.operator}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
