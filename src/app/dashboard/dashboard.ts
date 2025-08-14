@@ -27,9 +27,7 @@ export class Dashboard {
   }
 
   navigateToActions(): void {
-    // TODO: Navigate to actions section
-    console.log('Navigate to Actions');
-    // this.router.navigate(['/actions']);
+    this.router.navigate(['/actions']);
   }
 
   // Quick access methods

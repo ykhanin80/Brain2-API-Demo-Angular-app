@@ -9,6 +9,7 @@ import { EditOrder } from './edit-order/edit-order';
 import { Settings } from './settings/settings';
 import { AllOrders } from './all-orders/all-orders';
 import { authGuard } from './auth.guard';
+import { ActionsComponent } from './actions/actions';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -56,6 +57,11 @@ export const routes: Routes = [
   { 
     path: 'settings', 
     component: Settings,
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'actions', 
+    component: ActionsComponent,
     canActivate: [authGuard]
   },
   { path: '**', redirectTo: '/dashboard' }

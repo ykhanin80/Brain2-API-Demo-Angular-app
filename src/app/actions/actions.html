@@ -1,0 +1,67 @@
+<div class="actions-wrapper">
+  <h2>Actions - Jobs</h2>
+
+  <section class="job-form">
+    <h3>Create Job</h3>
+    <div class="field-row">
+      <label>Job Type</label>
+      <input [(ngModel)]="newJob.jobType" placeholder="e.g. ExportOrders" />
+    </div>
+
+    <div class="parameters">
+      <h4>Parameters</h4>
+      <div class="param-add">
+        <input [(ngModel)]="parameterKey" placeholder="key" />
+        <input [(ngModel)]="parameterValue" placeholder="value" />
+        <button type="button" (click)="addParameter()" [disabled]="!parameterKey.trim()">Add</button>
+      </div>
+      <div class="param-list" *ngIf="newJob.parameters && (Object.keys(newJob.parameters).length > 0)">
+        <div class="param-item" *ngFor="let key of (newJob.parameters | keyvalue)">
+          <span class="k">{{key.key}}</span>=<span class="v">{{key.value}}</span>
+          <button type="button" (click)="removeParameter(key.key)">x</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="submitJob()" [disabled]="isSubmitting">Submit Job</button>
+      <button type="button" (click)="resetForm()" [disabled]="isSubmitting">Reset</button>
+    </div>
+
+    <div class="status-messages">
+      <div class="success" *ngIf="successMessage">{{successMessage}}</div>
+      <div class="error" *ngIf="errorMessage">{{errorMessage}}</div>
+    </div>
+  </section>
+
+  <section class="job-list">
+    <div class="list-header">
+      <h3>Jobs</h3>
+      <button type="button" (click)="refresh()" [disabled]="isLoadingJobs">Refresh</button>
+    </div>
+    <div *ngIf="isLoadingJobs">Loading jobs...</div>
+    <table *ngIf="!isLoadingJobs && jobs.length">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Started</th>
+          <th>Completed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let j of jobs">
+          <td>{{j.id}}</td>
+          <td>{{j.jobType}}</td>
+          <td>{{j.status}}</td>
+          <td>{{j.createdAt | date:'short'}}</td>
+          <td>{{j.startedAt ? (j.startedAt | date:'short') : '-'}}</td>
+          <td>{{j.completedAt ? (j.completedAt | date:'short') : '-'}}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="!isLoadingJobs && !jobs.length" class="empty">No jobs yet.</div>
+  </section>
+</div>

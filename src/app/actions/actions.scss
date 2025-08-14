@@ -1,0 +1,22 @@
+.actions-wrapper { padding: 1.25rem; display: flex; flex-direction: column; gap: 2rem; }
+.job-form, .job-list { background: #1e1f25; border: 1px solid #2a2c33; border-radius: 8px; padding: 1rem 1.25rem; }
+.job-form h3, .job-list h3 { margin-top: 0; }
+.field-row { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .75rem; }
+.field-row input { padding: .4rem .55rem; border: 1px solid #3a3d47; border-radius: 4px; background:#262830; color:#eee; }
+.parameters { margin-top: .5rem; }
+.param-add { display:flex; gap:.5rem; margin-bottom:.75rem; }
+.param-add input { flex:1; }
+.param-list { display: flex; flex-wrap: wrap; gap: .4rem; }
+.param-item { background:#2d3038; padding: .3rem .5rem; border-radius: 4px; font-size: .75rem; display:flex; align-items:center; gap:.3rem; }
+.param-item button { background: transparent; border:none; color:#ff6b6b; cursor:pointer; font-weight:bold; }
+.form-actions { display: flex; gap:.75rem; margin-top: .75rem; }
+button { cursor:pointer; padding:.5rem .9rem; background:#3a84ff; border:1px solid #3a84ff; color:#fff; border-radius:4px; font-size:.8rem; }
+button[disabled] { opacity:.5; cursor: default; }
+.status-messages { margin-top: .6rem; min-height:1.2rem; }
+.success { color: #4caf50; }
+.error { color: #ff5252; }
+.list-header { display:flex; align-items:center; justify-content: space-between; margin-bottom:.5rem; }
+.job-list table { width:100%; border-collapse: collapse; font-size:.75rem; }
+.job-list th, .job-list td { padding:.4rem .5rem; border-bottom:1px solid #2f323b; text-align:left; }
+.job-list th { background:#24262d; position: sticky; top:0; }
+.empty { font-style: italic; opacity:.75; }
