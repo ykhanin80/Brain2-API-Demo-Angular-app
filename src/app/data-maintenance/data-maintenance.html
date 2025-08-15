@@ -610,20 +610,19 @@
             </div>
           </div>
         </form>
-      </div>
       
-      <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
-        <button 
-          class="btn btn-primary" 
-          (click)="createArticle()"
-          [disabled]="!newArticle().number || !newArticle().name"
-        >
-          Create Article
-        </button>
-      </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="goToListPage()">Cancel</button>
+          <button 
+            class="btn btn-primary" 
+            (click)="createArticle()"
+            [disabled]="!newArticle().number || !newArticle().name"
+          >
+            Create Article
+          </button>
+        </div>
     </div>
-  </div>
+  </div> <!-- End Create Article Page -->
 
   <!-- Edit Article Modal -->
   <div *ngIf="showEditModal() && selectedArticle()" class="modal-overlay" (click)="closeEditModal()">
