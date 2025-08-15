@@ -1,21 +1,23 @@
 <div class="data-maintenance">
-  <!-- Header -->
-  <div class="header">
-    <div class="header-left">
-      <h1>Data Maintenance - Articles</h1>
-      <p class="subtitle">Manage labeler articles with CRUD operations</p>
+  <!-- List View -->
+  <div *ngIf="currentView() === 'list'">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>Data Maintenance - Articles</h1>
+        <p class="subtitle">Manage labeler articles with CRUD operations</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" (click)="goToDashboard()">
+          <i class="icon-arrow-left"></i>
+          Back to Dashboard
+        </button>
+        <button class="btn btn-primary" (click)="goToCreatePage()">
+          <i class="icon-plus"></i>
+          Create Article
+        </button>
+      </div>
     </div>
-    <div class="header-right">
-      <button class="btn btn-secondary" (click)="goToDashboard()">
-        <i class="icon-arrow-left"></i>
-        Back to Dashboard
-      </button>
-      <button class="btn btn-primary" (click)="openCreateModal()">
-        <i class="icon-plus"></i>
-        Create Article
-      </button>
-    </div>
-  </div>
 
   <!-- Search Section -->
   <div class="search-section">
@@ -179,19 +181,37 @@
       </table>
     </div>
   </div>
+  </div> <!-- End List View -->
 
-  <!-- Create Article Modal -->
-  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
-    <div class="modal comprehensive-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Create New Article</h2>
-        <button class="btn btn-text" (click)="closeCreateModal()">
-          <i class="icon-close"></i>
+  <!-- Create Article Page -->
+  <div *ngIf="currentView() === 'create'" class="create-article-page">
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Create New Article</h1>
+        <p class="subtitle">Add a new labeler article to the system</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" (click)="goToListPage()">
+          <i class="icon-arrow-left"></i>
+          Back to List
         </button>
       </div>
-      
-      <div class="modal-body comprehensive-form">
-        <form class="article-form">
+    </div>
+
+    <!-- API Response Feedback -->
+    <div *ngIf="apiResponse().type" class="api-response" [ngClass]="'api-response-' + apiResponse().type">
+      <div class="api-response-content">
+        <i [class]="apiResponse().type === 'success' ? 'icon-check' : 'icon-alert'"></i>
+        <span>{{ apiResponse().message }}</span>
+        <small *ngIf="apiResponse().timestamp" class="timestamp">
+          {{ apiResponse().timestamp | date:'medium' }}
+        </small>
+      </div>
+      <button class="btn-close" (click)="apiResponse.set({ type: null, message: '' })">×</button>
+    </div>
+
+    <div class="create-form-container">
+      <form class="article-form">
           
           <!-- General Article Information Section -->
           <div class="form-section">
@@ -322,6 +342,20 @@
                 </div>
                 
                 <div class="form-group">
+                  <label for="newCurrency">Currency Code</label>
+                  <select
+                    id="newCurrency"
+                    [value]="newArticle().gxPriceCurrencyCode || 'USD'"
+                    (change)="updateNewArticleField('gxPriceCurrencyCode', $event)"
+                  >
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="MXN">MXN - Mexican Peso</option>
+                  </select>
+                </div>
+                
+                <!-- Base Price Division - Hidden (hardcoded to 'perUnit') -->
+                <!-- <div class="form-group">
                   <label for="newBasePriceDivision">Base Price Division</label>
                   <select
                     id="newBasePriceDivision"
@@ -332,7 +366,7 @@
                     <option value="perKg">Per Kg</option>
                     <option value="perLb">Per Lb</option>
                   </select>
-                </div>
+                </div> -->
               </div>
               
               <div class="form-row">
@@ -365,7 +399,7 @@
               <h4 class="subsection-title">⚖️ Labeling (Weights & Mode)</h4>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="newFixedWeight">Fixed Weight Value</label>
+                  <label for="newFixedWeight">Fixed Weight {{ getWeightUnitLabel(newArticle()) }}</label>
                   <input
                     type="number"
                     id="newFixedWeight"
@@ -377,7 +411,7 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="newMinWeight">Min Weight Value</label>
+                  <label for="newMinWeight">Min Weight {{ getWeightUnitLabel(newArticle()) }}</label>
                   <input
                     type="number"
                     id="newMinWeight"
@@ -389,7 +423,7 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="newMaxWeight">Max Weight Value</label>
+                  <label for="newMaxWeight">Max Weight {{ getWeightUnitLabel(newArticle()) }}</label>
                   <input
                     type="number"
                     id="newMaxWeight"
@@ -403,7 +437,7 @@
               
               <div class="form-row">
                 <div class="form-group">
-                  <label for="newTareWeight">Tare Weight Value</label>
+                  <label for="newTareWeight">Tare Weight {{ getWeightUnitLabel(newArticle()) }}</label>
                   <input
                     type="number"
                     id="newTareWeight"
@@ -781,7 +815,7 @@
               <h4 class="subsection-title">⚖️ Labeling (Weights & Mode)</h4>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="editFixedWeight">Fixed Weight Value</label>
+                  <label for="editFixedWeight">Fixed Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
                   <input
                     type="number"
                     id="editFixedWeight"
@@ -794,7 +828,7 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="editMinWeight">Min Weight Value</label>
+                  <label for="editMinWeight">Min Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
                   <input
                     type="number"
                     id="editMinWeight"
@@ -807,7 +841,7 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="editMaxWeight">Max Weight Value</label>
+                  <label for="editMaxWeight">Max Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
                   <input
                     type="number"
                     id="editMaxWeight"
@@ -822,7 +856,7 @@
               
               <div class="form-row">
                 <div class="form-group">
-                  <label for="editTareWeight">Tare Weight Value</label>
+                  <label for="editTareWeight">Tare Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
                   <input
                     type="number"
                     id="editTareWeight"

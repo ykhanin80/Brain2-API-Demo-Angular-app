@@ -288,6 +288,16 @@ export class DataMaintenanceComponent implements OnInit {
   showEditModal = signal(false);
   showDeleteConfirm = signal(false);
 
+  // View states for full page navigation
+  currentView = signal<'list' | 'create' | 'edit'>('list');
+  
+  // API response feedback
+  apiResponse = signal<{
+    type: 'success' | 'error' | null;
+    message: string;
+    timestamp?: string;
+  }>({ type: null, message: '' });
+
   // Helper function to create empty ArticlePLU
   private createEmptyArticlePLU(): ArticlePLU {
     return {
@@ -594,6 +604,10 @@ export class DataMaintenanceComponent implements OnInit {
       article.articlePLU.basePriceDivision = 'perUnit';
     }
 
+    // Add required currency fields for labelers
+    article.gxPriceCurrencyCode = 'USD';
+    article.gxPriceDecimalPlaces = 2;
+
     this.isLoading.set(true);
     this.error.set(null);
 
@@ -603,7 +617,7 @@ export class DataMaintenanceComponent implements OnInit {
         'Content-Type': 'application/json'
       });
 
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number!)}/labeler`;
+      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
       const response = await this.http.post<LabelerArticle>(
         requestUrl,
         article,
@@ -621,15 +635,26 @@ export class DataMaintenanceComponent implements OnInit {
 
       if (response) {
         await this.loadArticles(); // Refresh the list
-        this.closeCreateModal();
+        this.apiResponse.set({
+          type: 'success',
+          message: `Article "${article.number}" created successfully!`,
+          timestamp: new Date().toISOString()
+        });
         this.resetNewArticleForm();
+        // Stay on create page to show success message
       }
     } catch (error: any) {
       console.error('Error creating article:', error);
-      this.error.set(error?.error?.title || 'Failed to create article');
+      const errorMessage = error?.error?.message || error?.error?.title || 'Failed to create article';
+      this.error.set(errorMessage);
+      this.apiResponse.set({
+        type: 'error',
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
       
       // Store error debug information
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number!)}/labeler`;
+      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
       this.debugApiResponses.createArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -769,19 +794,35 @@ export class DataMaintenanceComponent implements OnInit {
     this.loadArticles();
   }
 
-  // Modal methods
-  openCreateModal() {
+  // Navigation methods
+  goToCreatePage() {
     this.resetNewArticleForm();
-    this.showCreateModal.set(true);
+    this.apiResponse.set({ type: null, message: '' });
+    this.currentView.set('create');
+  }
+
+  goToListPage() {
+    this.currentView.set('list');
+    this.apiResponse.set({ type: null, message: '' });
+  }
+
+  goToEditPage(article: LabelerArticle) {
+    this.selectedArticle.set({ ...article });
+    this.apiResponse.set({ type: null, message: '' });
+    this.currentView.set('edit');
+  }
+
+  // Modal methods (kept for backwards compatibility)
+  openCreateModal() {
+    this.goToCreatePage();
   }
 
   closeCreateModal() {
-    this.showCreateModal.set(false);
+    this.goToListPage();
   }
 
   openEditModal(article: LabelerArticle) {
-    this.selectedArticle.set({ ...article });
-    this.showEditModal.set(true);
+    this.goToEditPage(article);
   }
 
   closeEditModal() {
@@ -1000,6 +1041,24 @@ export class DataMaintenanceComponent implements OnInit {
   // Navigation
   goToDashboard() {
     this.router.navigate(['/dashboard']);
+  }
+
+  // Helper methods
+  getWeightUnitLabel(article: LabelerArticle | Partial<LabelerArticle> | null): string {
+    if (!article) return '(kg)';
+    
+    const weightUnitMap: { [key: string]: string } = {
+      'kg': '(kg)',
+      'g': '(g)',
+      'lb': '(lb)',
+      'oz': '(oz)',
+      'pounds': '(lb)',
+      'grams': '(g)',
+      'kilograms': '(kg)',
+      'ounces': '(oz)'
+    };
+    
+    return weightUnitMap[article.weightUnit?.toLowerCase() || ''] || `(${article.weightUnit || 'kg'})`;
   }
 
   // Form updates
