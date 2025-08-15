@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 export class ViewOrder {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly baseUrl = 'http://usjpnt0000015:9997';
+  private readonly baseUrl = 'http://localhost:9997';
   
   orderNumber = '';
   orderData: any = null;

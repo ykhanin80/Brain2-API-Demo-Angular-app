@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 export class Order {
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://usjpnt0000015:9997';
+  private readonly baseUrl = 'http://localhost:9997';
   
   // Form properties
   orderNumber = '';

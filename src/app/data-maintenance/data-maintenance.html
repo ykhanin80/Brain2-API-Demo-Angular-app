@@ -1,0 +1,1172 @@
+<div class="data-maintenance">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>Data Maintenance - Articles</h1>
+      <p class="subtitle">Manage labeler articles with CRUD operations</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" (click)="goToDashboard()">
+        <i class="icon-arrow-left"></i>
+        Back to Dashboard
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="icon-plus"></i>
+        Create Article
+      </button>
+    </div>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-form">
+      <div class="form-group">
+        <label for="searchNumber">Article Number</label>
+        <input
+          type="text"
+          id="searchNumber"
+          [value]="searchParams().articleNumber || ''"
+          (input)="updateSearchArticleNumber($event)"
+          placeholder="Search by article number..."
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="searchName">Article Name</label>
+        <input
+          type="text"
+          id="searchName"
+          [value]="searchParams().articleName || ''"
+          (input)="updateSearchArticleName($event)"
+          placeholder="Search by article name..."
+        />
+      </div>
+      
+      <div class="search-actions">
+        <button class="btn btn-primary" (click)="onSearch()">
+          <i class="icon-search"></i>
+          Search
+        </button>
+        <button class="btn btn-secondary" (click)="clearSearch()">
+          <i class="icon-refresh"></i>
+          Clear
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading()" class="loading">
+    <div class="spinner"></div>
+    <span>Loading articles...</span>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error()" class="error-message">
+    <i class="icon-alert"></i>
+    {{ error() }}
+    <button class="btn btn-secondary" (click)="error.set(null)">Dismiss</button>
+  </div>
+
+  <!-- Articles Table -->
+  <div *ngIf="!isLoading()" class="table-section">
+    <div class="table-header">
+      <div class="table-info">
+        <span class="record-count">
+          {{ articles().length }} articles found
+        </span>
+      </div>
+      
+      <div class="pagination">
+        <button 
+          class="btn btn-secondary"
+          (click)="previousPage()"
+          [disabled]="(searchParams().skip || 0) === 0"
+        >
+          <i class="icon-chevron-left"></i>
+          Previous
+        </button>
+        
+        <span class="page-info">
+          {{ (searchParams().skip || 0) + 1 }} - {{ (searchParams().skip || 0) + articles().length }}
+        </span>
+        
+        <button 
+          class="btn btn-secondary"
+          (click)="nextPage()"
+          [disabled]="articles().length < (searchParams().take || 50)"
+        >
+          Next
+          <i class="icon-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="articles-table">
+        <thead>
+          <tr>
+            <th>Article Number</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Weight Unit</th>
+            <th>Enabled</th>
+            <th>Active</th>
+            <th>Approved</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let article of articles()" class="article-row">
+            <td class="article-number">{{ article.number }}</td>
+            <td class="article-name">{{ article.name || '-' }}</td>
+            <td class="article-description">{{ article.description || '-' }}</td>
+            <td class="weight-unit">{{ article.weightUnit }}</td>
+            <td class="enabled-status">
+              <span 
+                class="status-badge"
+                [class.status-enabled]="article.isEnabledForLabelers"
+                [class.status-disabled]="!article.isEnabledForLabelers"
+              >
+                {{ article.isEnabledForLabelers ? 'Enabled' : 'Disabled' }}
+              </span>
+            </td>
+            <td class="active-status">
+              <span 
+                class="status-badge"
+                [class.status-active]="article.active"
+                [class.status-inactive]="!article.active"
+              >
+                {{ article.active ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td class="approved-status">
+              <span 
+                class="status-badge"
+                [class.status-approved]="article.approved"
+                [class.status-pending]="!article.approved"
+              >
+                {{ article.approved ? 'Approved' : 'Pending' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button 
+                class="btn btn-small btn-secondary"
+                (click)="openEditModal(article)"
+                title="Edit Article"
+              >
+                <i class="icon-edit"></i>
+              </button>
+              <button 
+                class="btn btn-small btn-danger"
+                (click)="openDeleteConfirm(article)"
+                title="Delete Article"
+              >
+                <i class="icon-trash"></i>
+              </button>
+            </td>
+          </tr>
+          
+          <tr *ngIf="articles().length === 0" class="no-data">
+            <td colspan="8">
+              <div class="no-data-message">
+                <i class="icon-info"></i>
+                <span>No articles found. Try adjusting your search criteria or create a new article.</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Create Article Modal -->
+  <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal comprehensive-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Create New Article</h2>
+        <button class="btn btn-text" (click)="closeCreateModal()">
+          <i class="icon-close"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body comprehensive-form">
+        <form class="article-form">
+          
+          <!-- General Article Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">📋 General Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newNumber">Article Number *</label>
+                <input
+                  type="text"
+                  id="newNumber"
+                  [value]="newArticle().number"
+                  (input)="updateNewArticleField('number', $event)"
+                  placeholder="Enter article number"
+                  required
+                />
+              </div>
+              
+              <div class="form-group">
+                <label for="newName">Name *</label>
+                <input
+                  type="text"
+                  id="newName"
+                  [value]="newArticle().name"
+                  (input)="updateNewArticleField('name', $event)"
+                  placeholder="Enter article name"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="newDescription">Description</label>
+              <textarea
+                id="newDescription"
+                [value]="newArticle().description"
+                (input)="updateNewArticleField('description', $event)"
+                placeholder="Enter article description"
+                rows="3"
+              ></textarea>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="newWeightUnit">Weight Unit *</label>
+                <select
+                  id="newWeightUnit"
+                  [value]="newArticle().weightUnit"
+                  (change)="updateNewArticleField('weightUnit', $event)"
+                  required
+                >
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="lb">Pounds (lb)</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="newWeightDecimals">Weight Decimal Places</label>
+                <input
+                  type="number"
+                  id="newWeightDecimals"
+                  [value]="newArticle().weightDecimalPlaces"
+                  (input)="updateNewArticleField('weightDecimalPlaces', $event)"
+                  min="0"
+                  max="6"
+                />
+              </div>
+            </div>
+            
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="newArticle().active"
+                  (change)="updateNewArticleField('active', $event)"
+                />
+                <span>Active</span>
+              </label>
+              
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="newArticle().approved"
+                  (change)="updateNewArticleField('approved', $event)"
+                />
+                <span>Approved</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Labeler Configuration Section -->
+          <div class="form-section">
+            <h3 class="section-title">🏷️ Labeler Configuration</h3>
+            
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="newArticle().isEnabledForLabelers"
+                  (change)="updateNewArticleField('isEnabledForLabelers', $event)"
+                />
+                <span>Enabled for Labelers</span>
+              </label>
+              
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="newArticle().isEnabledForGxCheckWeighers"
+                  (change)="updateNewArticleField('isEnabledForGxCheckWeighers', $event)"
+                />
+                <span>Enabled for GX Checkweighers</span>
+              </label>
+            </div>
+
+            <!-- Labeler General Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">💰 General (Pricing & Shelf Life)</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newUnitPrice">Unit Price Value</label>
+                  <input
+                    type="number"
+                    id="newUnitPrice"
+                    [value]="newArticle().articlePLU?.unitPriceValue || 0"
+                    (input)="updateNewArticlePLUField('unitPriceValue', $event)"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newBasePriceDivision">Base Price Division</label>
+                  <select
+                    id="newBasePriceDivision"
+                    [value]="newArticle().articlePLU?.basePriceDivision || 'perUnit'"
+                    (change)="updateNewArticlePLUField('basePriceDivision', $event)"
+                  >
+                    <option value="perUnit">Per Unit</option>
+                    <option value="perKg">Per Kg</option>
+                    <option value="perLb">Per Lb</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newShelfLife1">Shelf Life Days 1</label>
+                  <input
+                    type="number"
+                    id="newShelfLife1"
+                    [value]="newArticle().articlePLU?.shelfLifeDays1 || 0"
+                    (input)="updateNewArticlePLUField('shelfLifeDays1', $event)"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newShelfLife2">Shelf Life Days 2</label>
+                  <input
+                    type="number"
+                    id="newShelfLife2"
+                    [value]="newArticle().articlePLU?.shelfLifeDays2 || 0"
+                    (input)="updateNewArticlePLUField('shelfLifeDays2', $event)"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Labeling Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">⚖️ Labeling (Weights & Mode)</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newFixedWeight">Fixed Weight Value</label>
+                  <input
+                    type="number"
+                    id="newFixedWeight"
+                    [value]="newArticle().articlePLU?.fixedWeightValue || 0"
+                    (input)="updateNewArticlePLUField('fixedWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newMinWeight">Min Weight Value</label>
+                  <input
+                    type="number"
+                    id="newMinWeight"
+                    [value]="newArticle().articlePLU?.minWeightValue || 0"
+                    (input)="updateNewArticlePLUField('minWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newMaxWeight">Max Weight Value</label>
+                  <input
+                    type="number"
+                    id="newMaxWeight"
+                    [value]="newArticle().articlePLU?.maxWeightValue || 0"
+                    (input)="updateNewArticlePLUField('maxWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newTareWeight">Tare Weight Value</label>
+                  <input
+                    type="number"
+                    id="newTareWeight"
+                    [value]="newArticle().articlePLU?.tareWeightValue || 0"
+                    (input)="updateNewArticlePLUField('tareWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newLabelingMode">Labeling Mode</label>
+                  <select
+                    id="newLabelingMode"
+                    [value]="newArticle().articlePLU?.labelingMode || 'fixedWeight'"
+                    (change)="updateNewArticlePLUField('labelingMode', $event)"
+                  >
+                    <option value="fixedWeight">Fixed Weight</option>
+                    <option value="variableWeight">Variable Weight</option>
+                    <option value="piece">Piece</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Device Parameters -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newLabelParameter">Label Parameter #</label>
+                  <input
+                    type="number"
+                    id="newLabelParameter"
+                    [value]="newArticle().articlePLU?.labelParameter || 0"
+                    (input)="updateNewArticlePLUField('labelParameter', $event)"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newAutoLabelParam">Auto Label Parameter</label>
+                  <input
+                    type="number"
+                    id="newAutoLabelParam"
+                    [value]="newArticle().articlePLU?.automaticLabelParameter || 0"
+                    (input)="updateNewArticlePLUField('automaticLabelParameter', $event)"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newWeightClass">Weight Class #</label>
+                  <input
+                    type="number"
+                    id="newWeightClass"
+                    [value]="newArticle().articlePLU?.weightClass || 0"
+                    (input)="updateNewArticlePLUField('weightClass', $event)"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Fields Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">📝 Texts (Static & General Texts)</h4>
+              <div class="form-group">
+                <label for="newStaticText">Static Text #</label>
+                <input
+                  type="number"
+                  id="newStaticText"
+                  [value]="newArticle().articlePLU?.staticText || 0"
+                  (input)="updateNewArticlePLUField('staticText', $event)"
+                  min="0"
+                />
+              </div>
+
+              <!-- Sample Text Fields (showing first few) -->
+              <div class="text-fields-grid">
+                <div class="form-group">
+                  <label for="newTextField1Num">Text Field 1 Number</label>
+                  <input
+                    type="number"
+                    id="newTextField1Num"
+                    [value]="newArticle().articlePLU?.textField1?.number || -1"
+                    (input)="updateNewArticleTextField('textField1', 'number', $event)"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="newTextField1Text">Text Field 1 Text</label>
+                  <textarea
+                    id="newTextField1Text"
+                    [value]="newArticle().articlePLU?.textField1?.text || ''"
+                    (input)="updateNewArticleTextField('textField1', 'text', $event)"
+                    rows="2"
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="newTextField2Num">Text Field 2 Number</label>
+                  <input
+                    type="number"
+                    id="newTextField2Num"
+                    [value]="newArticle().articlePLU?.textField2?.number || -1"
+                    (input)="updateNewArticleTextField('textField2', 'number', $event)"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="newTextField2Text">Text Field 2 Text</label>
+                  <textarea
+                    id="newTextField2Text"
+                    [value]="newArticle().articlePLU?.textField2?.text || ''"
+                    (input)="updateNewArticleTextField('textField2', 'text', $event)"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Codes Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">🔢 Codes (Code Structures & Substrings)</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newCodeField1">Code Structure # 1</label>
+                  <input
+                    type="number"
+                    id="newCodeField1"
+                    [value]="newArticle().articlePLU?.codeField1 || 0"
+                    (input)="updateNewArticlePLUField('codeField1', $event)"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newCodeString1">Code Substring 1</label>
+                  <input
+                    type="text"
+                    id="newCodeString1"
+                    [value]="newArticle().articlePLU?.codeString1 || ''"
+                    (input)="updateNewArticlePLUField('codeString1', $event)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Numbers and Logos Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">🔢 Numbers and Logos</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newGeneralNumber1">General Number 1</label>
+                  <input
+                    type="number"
+                    id="newGeneralNumber1"
+                    [value]="newArticle().articlePLU?.generalNumber1 || 0"
+                    (input)="updateNewArticlePLUField('generalNumber1', $event)"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newLogoField1">Logo # 1</label>
+                  <input
+                    type="number"
+                    id="newLogoField1"
+                    [value]="newArticle().articlePLU?.logoField1 || 0"
+                    (input)="updateNewArticlePLUField('logoField1', $event)"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button 
+          class="btn btn-primary" 
+          (click)="createArticle()"
+          [disabled]="!newArticle().number || !newArticle().name"
+        >
+          Create Article
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Article Modal -->
+  <div *ngIf="showEditModal() && selectedArticle()" class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal comprehensive-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Edit Article: {{ selectedArticle()?.number }}</h2>
+        <button class="btn btn-text" (click)="closeEditModal()">
+          <i class="icon-close"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body comprehensive-form">
+        <form class="article-form">
+          
+          <!-- General Article Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">📋 General Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editNumber">Article Number</label>
+                <input
+                  type="text"
+                  id="editNumber"
+                  [value]="selectedArticle()?.number"
+                  readonly
+                  class="readonly article-number-field"
+                  maxlength="20"
+                />
+              </div>
+              
+              <div class="form-group">
+                <label for="editName">Name *</label>
+                <input
+                  type="text"
+                  id="editName"
+                  [value]="selectedArticle()?.name"
+                  (input)="updateSelectedArticleField('name', $event)"
+                  placeholder="Enter article name"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="editDescription">Description</label>
+              <textarea
+                id="editDescription"
+                [value]="selectedArticle()?.description"
+                (input)="updateSelectedArticleField('description', $event)"
+                placeholder="Enter article description"
+                rows="3"
+              ></textarea>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editWeightUnit">Weight Unit *</label>
+                <select
+                  id="editWeightUnit"
+                  [value]="selectedArticle()?.weightUnit"
+                  (change)="updateSelectedArticleField('weightUnit', $event)"
+                  required
+                >
+                  <option value="kg">Kilograms (kg)</option>
+                  <option value="lb">Pounds (lb)</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="editWeightDecimals">Weight Decimal Places</label>
+                <input
+                  type="number"
+                  id="editWeightDecimals"
+                  [value]="selectedArticle()?.weightDecimalPlaces"
+                  (input)="updateSelectedArticleField('weightDecimalPlaces', $event)"
+                  min="0"
+                  max="6"
+                />
+              </div>
+            </div>
+            
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="selectedArticle()?.active"
+                  (change)="updateSelectedArticleField('active', $event)"
+                />
+                <span>Active</span>
+              </label>
+              
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="selectedArticle()?.approved"
+                  (change)="updateSelectedArticleField('approved', $event)"
+                />
+                <span>Approved</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Labeler Configuration Section -->
+          <div class="form-section">
+            <h3 class="section-title">🏷️ Labeler Configuration</h3>
+            
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="selectedArticle()?.isEnabledForLabelers"
+                  (change)="updateSelectedArticleField('isEnabledForLabelers', $event)"
+                />
+                <span>Enabled for Labelers</span>
+              </label>
+              
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="selectedArticle()?.isEnabledForGxCheckWeighers"
+                  (change)="updateSelectedArticleField('isEnabledForGxCheckWeighers', $event)"
+                />
+                <span>Enabled for GX Checkweighers</span>
+              </label>
+            </div>
+
+            <!-- Labeler General Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">💰 General (Pricing & Shelf Life)</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="editUnitPrice">Unit Price Value</label>
+                  <input
+                    type="number"
+                    id="editUnitPrice"
+                    [value]="selectedArticle()?.articlePLU?.unitPriceValue || 0"
+                    (input)="updateSelectedArticlePLUField('unitPriceValue', $event)"
+                    step="0.01"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editCurrency">Currency Code</label>
+                  <select
+                    id="editCurrency"
+                    [value]="selectedArticle()?.gxPriceCurrencyCode || 'USD'"
+                    (change)="updateSelectedArticleField('gxPriceCurrencyCode', $event)"
+                  >
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="MXN">MXN - Mexican Peso</option>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="editShelfLife1">Shelf Life Days 1</label>
+                  <input
+                    type="number"
+                    id="editShelfLife1"
+                    [value]="selectedArticle()?.articlePLU?.shelfLifeDays1 || 0"
+                    (input)="updateSelectedArticlePLUField('shelfLifeDays1', $event)"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editShelfLife2">Shelf Life Days 2</label>
+                  <input
+                    type="number"
+                    id="editShelfLife2"
+                    [value]="selectedArticle()?.articlePLU?.shelfLifeDays2 || 0"
+                    (input)="updateSelectedArticlePLUField('shelfLifeDays2', $event)"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Labeling Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">⚖️ Labeling (Weights & Mode)</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="editFixedWeight">Fixed Weight Value</label>
+                  <input
+                    type="number"
+                    id="editFixedWeight"
+                    [value]="selectedArticle()?.articlePLU?.fixedWeightValue || 0"
+                    (input)="updateSelectedArticlePLUField('fixedWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editMinWeight">Min Weight Value</label>
+                  <input
+                    type="number"
+                    id="editMinWeight"
+                    [value]="selectedArticle()?.articlePLU?.minWeightValue || 0"
+                    (input)="updateSelectedArticlePLUField('minWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editMaxWeight">Max Weight Value</label>
+                  <input
+                    type="number"
+                    id="editMaxWeight"
+                    [value]="selectedArticle()?.articlePLU?.maxWeightValue || 0"
+                    (input)="updateSelectedArticlePLUField('maxWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="editTareWeight">Tare Weight Value</label>
+                  <input
+                    type="number"
+                    id="editTareWeight"
+                    [value]="selectedArticle()?.articlePLU?.tareWeightValue || 0"
+                    (input)="updateSelectedArticlePLUField('tareWeightValue', $event)"
+                    step="0.01"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editLabelingMode">Labeling Mode</label>
+                  <select
+                    id="editLabelingMode"
+                    [value]="selectedArticle()?.articlePLU?.labelingMode || 'fixedWeight'"
+                    (change)="updateSelectedArticlePLUField('labelingMode', $event)"
+                  >
+                    <option value="weight">Weight</option>
+                    <option value="fixedPrice">Fixed Price</option>
+                    <option value="fixedWeight">Fixed Weight</option>
+                    <option value="fixedValue">Fixed Value</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Device Parameters -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="editLabelParameter">Label Parameter #</label>
+                  <input
+                    type="number"
+                    id="editLabelParameter"
+                    [value]="selectedArticle()?.articlePLU?.labelParameter || 0"
+                    (input)="updateSelectedArticlePLUField('labelParameter', $event)"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editAutoLabelParam">Auto Label Parameter</label>
+                  <input
+                    type="number"
+                    id="editAutoLabelParam"
+                    [value]="selectedArticle()?.articlePLU?.automaticLabelParameter || 0"
+                    (input)="updateSelectedArticlePLUField('automaticLabelParameter', $event)"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="editWeightClass">Weight Class #</label>
+                  <input
+                    type="number"
+                    id="editWeightClass"
+                    [value]="selectedArticle()?.articlePLU?.weightClass || 0"
+                    (input)="updateSelectedArticlePLUField('weightClass', $event)"
+                    min="0"
+                    class="number-field"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Fields Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">📝 Texts (Static & General Texts)</h4>
+              <div class="form-group">
+                <label for="editStaticText">Static Text #</label>
+                <input
+                  type="number"
+                  id="editStaticText"
+                  [value]="selectedArticle()?.articlePLU?.staticText || 0"
+                  (input)="updateSelectedArticlePLUField('staticText', $event)"
+                  min="0"
+                  class="number-field"
+                />
+              </div>
+
+              <!-- Dynamic Text Fields with non -1 values -->
+              <div class="dynamic-fields-container">
+                <h5 class="field-group-title">Text Fields (showing fields with number ≠ -1)</h5>
+                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle())" class="text-field-row">
+                  <div class="form-row">
+                    <div class="form-group field-number">
+                      <label [for]="'edit' + textField.key + 'Num'">Text Field {{ textField.index }} Number</label>
+                      <input
+                        type="number"
+                        [id]="'edit' + textField.key + 'Num'"
+                        [value]="textField.field.number"
+                        (input)="updateSelectedArticleTextFieldDynamic(textField.key, 'number', $event)"
+                        class="number-field"
+                      />
+                    </div>
+                    <div class="form-group field-text">
+                      <label [for]="'edit' + textField.key + 'Text'">Text Field {{ textField.index }} Text</label>
+                      <textarea
+                        [id]="'edit' + textField.key + 'Text'"
+                        [value]="textField.field.text || ''"
+                        (input)="updateSelectedArticleTextFieldDynamic(textField.key, 'text', $event)"
+                        rows="2"
+                        class="text-area-field"
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dynamic Simple Texts with non-empty values -->
+              <div class="dynamic-fields-container">
+                <h5 class="field-group-title">Simple Texts (showing non-empty fields)</h5>
+                <div *ngFor="let simpleText of getSimpleTextsWithValues(selectedArticle())" class="simple-text-row">
+                  <div class="form-group">
+                    <label [for]="'edit' + simpleText.key">Simple Text {{ simpleText.index }}</label>
+                    <input
+                      type="text"
+                      [id]="'edit' + simpleText.key"
+                      [value]="simpleText.value"
+                      (input)="updateSelectedArticlePLUFieldDynamic(simpleText.key, $event)"
+                      class="text-field"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Codes Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">🔢 Codes (Code Structures & Substrings)</h4>
+              
+              <!-- Dynamic Code Fields with non-zero values -->
+              <div class="dynamic-fields-container">
+                <h5 class="field-group-title">Code Fields (showing non-zero values)</h5>
+                <div *ngFor="let codeField of getCodeFieldsWithValues(selectedArticle())" class="code-field-row">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label [for]="'edit' + codeField.fieldKey">Code Structure # {{ codeField.index }}</label>
+                      <input
+                        type="number"
+                        [id]="'edit' + codeField.fieldKey"
+                        [value]="codeField.fieldValue"
+                        (input)="updateSelectedArticlePLUFieldDynamic(codeField.fieldKey, $event)"
+                        min="0"
+                        class="number-field"
+                      />
+                    </div>
+                    
+                    <div class="form-group">
+                      <label [for]="'edit' + codeField.stringKey">Code Substring {{ codeField.index }}</label>
+                      <input
+                        type="text"
+                        [id]="'edit' + codeField.stringKey"
+                        [value]="codeField.stringValue"
+                        (input)="updateSelectedArticlePLUFieldDynamic(codeField.stringKey, $event)"
+                        class="text-field"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Numbers and Logos Sub-section -->
+            <div class="form-subsection">
+              <h4 class="subsection-title">🔢 Numbers and Logos</h4>
+              
+              <!-- Dynamic General Numbers with non-zero values -->
+              <div class="dynamic-fields-container">
+                <h5 class="field-group-title">General Numbers (showing non-zero values)</h5>
+                <div class="numbers-grid">
+                  <div *ngFor="let generalNumber of getGeneralNumbersWithValues(selectedArticle())" class="form-group">
+                    <label [for]="'edit' + generalNumber.key">General Number {{ generalNumber.index }}</label>
+                    <input
+                      type="number"
+                      [id]="'edit' + generalNumber.key"
+                      [value]="generalNumber.value"
+                      (input)="updateSelectedArticlePLUFieldDynamic(generalNumber.key, $event)"
+                      class="number-field"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dynamic Logo Fields with non-zero values -->
+              <div class="dynamic-fields-container">
+                <h5 class="field-group-title">Logo Fields (showing non-zero values)</h5>
+                <div class="logos-grid">
+                  <div *ngFor="let logo of getLogosWithValues(selectedArticle())" class="form-group">
+                    <label [for]="'edit' + logo.key">Logo # {{ logo.index }}</label>
+                    <input
+                      type="number"
+                      [id]="'edit' + logo.key"
+                      [value]="logo.value"
+                      (input)="updateSelectedArticlePLUFieldDynamic(logo.key, $event)"
+                      min="0"
+                      class="number-field"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+        <button 
+          class="btn btn-primary" 
+          (click)="updateArticle(selectedArticle()!)"
+        >
+          Update Article
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteConfirm() && selectedArticle()" class="modal-overlay" (click)="closeDeleteConfirm()">
+    <div class="modal modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+        <button class="btn btn-text" (click)="closeDeleteConfirm()">
+          <i class="icon-close"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="delete-confirmation">
+          <div class="warning-icon">
+            <i class="icon-alert-triangle"></i>
+          </div>
+          <div class="delete-message">
+            <p>Are you sure you want to delete this article?</p>
+            <p class="article-info">
+              <strong>{{ selectedArticle()?.number }}</strong> - {{ selectedArticle()?.name }}
+            </p>
+            <p class="warning-text">This action cannot be undone.</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeDeleteConfirm()">Cancel</button>
+        <button 
+          class="btn btn-danger" 
+          (click)="deleteArticle(selectedArticle()!.number)"
+        >
+          Delete Article
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Response Debug Window -->
+  <section class="debug-section">
+    <h3>🔧 API Response Debug</h3>
+    <div class="debug-container">
+      <div class="debug-tabs">
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'list'"
+          (click)="activeDebugTab = 'list'"
+        >
+          List Articles Response
+        </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'get'"
+          (click)="activeDebugTab = 'get'"
+        >
+          Get Article Response
+        </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'create'"
+          (click)="activeDebugTab = 'create'"
+        >
+          Create Article Response
+        </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'update'"
+          (click)="activeDebugTab = 'update'"
+        >
+          Update Article Response
+        </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'delete'"
+          (click)="activeDebugTab = 'delete'"
+        >
+          Delete Article Response
+        </button>
+      </div>
+      
+      <div class="debug-content">
+        <div *ngIf="activeDebugTab === 'list'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Latest List Articles API Response</h4>
+            <small>{{articles().length}} articles loaded</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.listArticles | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'get'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Get Article by Number API Response</h4>
+            <small>Single article details</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.getArticle | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'create'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Create Article API Response</h4>
+            <small>POST request details</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.createArticle | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'update'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Update Article API Response</h4>
+            <small>PATCH request details</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.updateArticle | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'delete'" class="debug-panel">
+          <div class="debug-header">
+            <h4>Delete Article API Response</h4>
+            <small>DELETE request details</small>
+          </div>
+          <pre class="debug-json">{{debugApiResponses.deleteArticle | json}}</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

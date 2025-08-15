@@ -11,6 +11,7 @@ import { AllOrders } from './all-orders/all-orders';
 import { authGuard } from './auth.guard';
 import { ActionsComponent } from './actions/actions';
 import { PackageRecordComponent } from './package-record/package-record';
+import { DataMaintenanceComponent } from './data-maintenance/data-maintenance';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -68,6 +69,11 @@ export const routes: Routes = [
   { 
     path: 'package-record', 
     component: PackageRecordComponent,
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'data-maintenance', 
+    component: DataMaintenanceComponent,
     canActivate: [authGuard]
   },
   { path: '**', redirectTo: '/dashboard' }

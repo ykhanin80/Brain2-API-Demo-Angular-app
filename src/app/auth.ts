@@ -30,7 +30,7 @@ export interface User {
 export class Auth {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly baseUrl = 'http://usjpnt0000015:9997'; // Adjust this to match your API base URL
+  private readonly baseUrl = 'http://localhost:9997'; // Adjust this to match your API base URL
   
   private readonly TOKEN_KEY = 'auth_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';

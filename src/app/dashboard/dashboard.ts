@@ -13,9 +13,7 @@ export class Dashboard {
 
   // Navigation methods for each section
   navigateToDataMaintenance(): void {
-    // TODO: Navigate to data maintenance section
-    console.log('Navigate to Data Maintenance');
-    // this.router.navigate(['/data-maintenance']);
+    this.router.navigate(['/data-maintenance']);
   }
 
   navigateToOrderManagement(): void {

@@ -36,7 +36,7 @@ interface PackageRecord {
 })
 export class PackageRecordComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://usjpnt0000015:9997';
+  private readonly baseUrl = 'http://localhost:9997';
   
   // Chart instance
   private chart: Chart | null = null;

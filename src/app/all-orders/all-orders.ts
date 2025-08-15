@@ -63,7 +63,7 @@ export interface OrderFilters {
 export class AllOrders implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly baseUrl = 'http://usjpnt0000015:9997';
+  private readonly baseUrl = 'http://localhost:9997';
   
   orders: SqlOrder[] = [];
   filteredOrders: SqlOrder[] = [];

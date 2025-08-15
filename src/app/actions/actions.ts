@@ -31,7 +31,7 @@ interface ApiResponse {
 })
 export class ActionsComponent {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://usjpnt0000015:9997';
+  private readonly baseUrl = 'http://localhost:9997';
 
   // Form model
   newJob: JobRequest = { jobType: '', parameters: {} };

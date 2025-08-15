@@ -42,7 +42,7 @@ export class EditOrder implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly baseUrl = 'http://usjpnt0000015:9997';
+  private readonly baseUrl = 'http://localhost:9997';
 
   orderNumber = '';
   originalOrderData: any = null;
