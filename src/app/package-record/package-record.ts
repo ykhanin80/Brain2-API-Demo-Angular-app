@@ -76,16 +76,14 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     { value: 'last2hours', label: 'Last 2 Hours' },
     { value: 'last6hours', label: 'Last 6 Hours' },
     { value: 'last12hours', label: 'Last 12 Hours' },
-    { value: 'last24hours', label: 'Last 24 Hours' },
-    { value: 'custom', label: 'Custom Range' }
+    { value: 'last24hours', label: 'Last 24 Hours' }
   ];
   
   // Auto-refresh properties
   selectedRefreshInterval = 0;
   refreshIntervalOptions = [
     { value: 0, label: 'Disabled' },
-    { value: 5000, label: 'Every 5 seconds' },
-    { value: 10000, label: 'Every 10 seconds' },
+    
     { value: 30000, label: 'Every 30 seconds' },
     { value: 60000, label: 'Every minute' },
     { value: 300000, label: 'Every 5 minutes' }
