@@ -283,9 +283,7 @@ export class DataMaintenanceComponent implements OnInit {
     articleNumber: ''
   });
 
-  // Modal states
-  showCreateModal = signal(false);
-  showEditModal = signal(false);
+  // Legacy modal states (delete & confirmation retained)
   showDeleteConfirm = signal(false);
 
   // View states for full page navigation
@@ -464,9 +462,9 @@ export class DataMaintenanceComponent implements OnInit {
     commonNumber2: 0,
     
     // Labeler Configuration
-    isEnabledForLabelers: true,
-    weightUnit: 'kg',
-    weightDecimalPlaces: 3,
+  isEnabledForLabelers: true,
+  weightUnit: 'lb',
+  weightDecimalPlaces: 2,
     
     // GX Checkweigher Configuration
     isEnabledForGxCheckWeighers: false,
@@ -476,6 +474,7 @@ export class DataMaintenanceComponent implements OnInit {
 
   // Debug functionality
   activeDebugTab = 'list';
+  jsonCollapsed = signal(true); // collapse debug panels by default
   debugApiResponses = {
     listArticles: null as any,
     getArticle: null as any,
@@ -483,6 +482,15 @@ export class DataMaintenanceComponent implements OnInit {
     updateArticle: null as any,
     deleteArticle: null as any
   };
+
+  private readonly allowedLabelingModes = ['weight','fixedPrice','fixedWeight','fixedValue'];
+
+  // Raw input buffers to preserve user typing (avoid premature numeric coercion)
+  unitPriceInput = signal<string>('0');
+  selectedUnitPriceInput = signal<string>('');
+  // Buffered numeric inputs for textFieldX.number (create & edit)
+  rawTextFieldNumbersCreate: { [key: string]: string } = {};
+  rawTextFieldNumbersEdit: { [key: string]: string } = {};
 
   ngOnInit() {
     // Initialize with proper ArticlePLU structure
@@ -560,6 +568,26 @@ export class DataMaintenanceComponent implements OnInit {
       ).toPromise();
 
       this.selectedArticle.set(response || null);
+      // Normalize labeling mode if backend returned legacy values
+      if (response?.articlePLU) {
+        response.articlePLU.labelingMode = this.normalizeLabelingMode(response.articlePLU.labelingMode);
+      }
+      // Populate edit buffers for existing text field numbers
+      this.rawTextFieldNumbersEdit = {};
+      if (response?.articlePLU) {
+        for (let i = 1; i <= 20; i++) {
+          const key = `textField${i}` as keyof ArticlePLU;
+          const tf = response.articlePLU[key] as TextField;
+            if (tf && tf.number !== -1) {
+              this.rawTextFieldNumbersEdit[key] = tf.number.toString();
+            }
+        }
+      }
+      // Sync raw unit price buffer for edit view
+      const up = response?.articlePLU?.unitPriceValue;
+      this.selectedUnitPriceInput.set(
+        up === undefined || up === null ? '' : up.toString()
+      );
       
       // Store debug information
       this.debugApiResponses.getArticle = {
@@ -640,8 +668,11 @@ export class DataMaintenanceComponent implements OnInit {
           message: `Article "${article.number}" created successfully!`,
           timestamp: new Date().toISOString()
         });
-        this.resetNewArticleForm();
-        // Stay on create page to show success message
+        // Brief delay then return to list view
+        setTimeout(() => {
+          this.goToListPage();
+          this.resetNewArticleForm();
+        }, 1200);
       }
     } catch (error: any) {
       console.error('Error creating article:', error);
@@ -799,6 +830,9 @@ export class DataMaintenanceComponent implements OnInit {
     this.resetNewArticleForm();
     this.apiResponse.set({ type: null, message: '' });
     this.currentView.set('create');
+  // Reset raw buffer
+  this.unitPriceInput.set('0');
+  this.rawTextFieldNumbersCreate = {};
   }
 
   goToListPage() {
@@ -812,23 +846,11 @@ export class DataMaintenanceComponent implements OnInit {
     this.currentView.set('edit');
   }
 
-  // Modal methods (kept for backwards compatibility)
-  openCreateModal() {
-    this.goToCreatePage();
-  }
-
-  closeCreateModal() {
-    this.goToListPage();
-  }
-
-  openEditModal(article: LabelerArticle) {
-    this.goToEditPage(article);
-  }
-
-  closeEditModal() {
-    this.showEditModal.set(false);
-    this.selectedArticle.set(null);
-  }
+  // Backwards compatibility methods (previous modal triggers)
+  openCreateModal() { this.goToCreatePage(); }
+  closeCreateModal() { this.goToListPage(); }
+  openEditModal(article: LabelerArticle) { this.goToEditPage(article); }
+  closeEditModal() { this.goToListPage(); }
 
   openDeleteConfirm(article: LabelerArticle) {
     this.selectedArticle.set(article);
@@ -1028,14 +1050,21 @@ export class DataMaintenanceComponent implements OnInit {
   private resetNewArticleForm() {
     this.newArticle.set({
       isEnabledForLabelers: true,
-      weightUnit: 'kg',
-      weightDecimalPlaces: 3,
+      weightUnit: 'lb',
+      weightDecimalPlaces: 2,
       active: true,
       approved: false,
       number: '',
       name: '',
       description: ''
     });
+  this.unitPriceInput.set('0');
+    // Ensure PLU exists & labeling mode normalized
+    this.newArticle.update(a => ({
+      ...a,
+      articlePLU: a.articlePLU ? { ...a.articlePLU, labelingMode: this.normalizeLabelingMode(a.articlePLU.labelingMode as string) } : this.createEmptyArticlePLU()
+    }));
+  this.rawTextFieldNumbersCreate = {};
   }
 
   // Navigation
@@ -1090,22 +1119,57 @@ export class DataMaintenanceComponent implements OnInit {
   // Form updates - ArticlePLU Fields
   updateNewArticlePLUField(field: keyof ArticlePLU, event: Event) {
     const target = event.target as HTMLInputElement;
-    let value: any = target.value;
-    
-    // Convert values based on field type
-    if (field.includes('Number') || field.includes('Field') || field.includes('Value') || field.includes('Days') || 
-        field.includes('Rule') || field.includes('Control') || field.includes('Parameter') || field.includes('Language') ||
-        field.includes('Template') || field.includes('Class') || field.includes('Height') || field.includes('Length') ||
-        field.includes('LDI') || field.includes('LCE') || field.includes('Copies') || field.includes('Package')) {
-      value = parseFloat(value) || 0;
-    } else if (field.includes('Enabled') || field.includes('Label')) {
-      value = target.checked;
+    let raw = target.value;
+    let value: any = raw;
+
+    const numericExact = [
+      'unitPriceValue','specialUnitPriceValue','fixedWeightValue','minWeightValue','maxWeightValue','tareWeightValue',
+      'shelfLifeDays1','shelfLifeDays2','labelParameter','automaticLabelParameter','weightClass','staticText',
+      'generalNumber1','generalNumber2','generalNumber3','generalNumber4','generalNumber5','generalNumber6','generalNumber7','generalNumber8','generalNumber9','generalNumber10',
+      'generalNumber11','generalNumber12','generalNumber13','generalNumber14','generalNumber15','generalNumber16','generalNumber17','generalNumber18','generalNumber19','generalNumber20',
+      'logoField1','logoField2','logoField3','logoField4','logoField5','logoField6','logoField7','logoField8','logoField9','logoField10',
+      'codeField1','codeField2','codeField3','codeField4','codeField5','codeField6','codeField7'
+    ];
+    if (numericExact.includes(field as string)) {
+      const parsed = parseFloat(raw);
+      value = isNaN(parsed) ? 0 : parsed;
     }
     
     this.newArticle.update(article => ({
       ...article,
       articlePLU: article.articlePLU ? { ...article.articlePLU, [field]: value } : this.createEmptyArticlePLU()
     }));
+  }
+
+  // Specialized handlers for Unit Price to mirror stable behavior of fixed weight
+  onUnitPriceInput(event: Event) {
+    const raw = (event.target as HTMLInputElement).value;
+    // Allow only digits and one decimal point, up to 4 decimals while typing
+    if (/^\d*(\.?\d{0,4})?$/.test(raw)) {
+      this.unitPriceInput.set(raw);
+    }
+  }
+
+  commitUnitPrice() {
+    const raw = this.unitPriceInput();
+    const parsed = raw === '' || raw === '.' ? 0 : parseFloat(raw);
+    this.updateNewArticlePLUField('unitPriceValue', { target: { value: isNaN(parsed) ? '0' : parsed.toString() } } as any as Event);
+    // Normalize displayed format (preserve user precision)
+    this.unitPriceInput.set(isNaN(parsed) ? '0' : parsed.toString());
+  }
+
+  onSelectedUnitPriceInput(event: Event) {
+    const raw = (event.target as HTMLInputElement).value;
+    if (/^\d*(\.?\d{0,4})?$/.test(raw)) {
+      this.selectedUnitPriceInput.set(raw);
+    }
+  }
+
+  commitSelectedUnitPrice() {
+    const raw = this.selectedUnitPriceInput();
+    const parsed = raw === '' || raw === '.' ? 0 : parseFloat(raw);
+    this.updateSelectedArticlePLUField('unitPriceValue', { target: { value: isNaN(parsed) ? '0' : parsed.toString() } } as any as Event);
+    this.selectedUnitPriceInput.set(isNaN(parsed) ? '0' : parsed.toString());
   }
 
   // Form updates - TextField (with number and text properties)
@@ -1181,7 +1245,7 @@ export class DataMaintenanceComponent implements OnInit {
     
     this.selectedArticle.update(article => article ? {
       ...article,
-      articlePLU: article.articlePLU ? { ...article.articlePLU, [field]: value } : this.createEmptyArticlePLU()
+  articlePLU: article.articlePLU ? { ...article.articlePLU, [field]: field === 'labelingMode' ? this.normalizeLabelingMode(value) : value } : this.createEmptyArticlePLU()
     } : null);
   }
 
@@ -1342,6 +1406,38 @@ export class DataMaintenanceComponent implements OnInit {
     } : null);
   }
 
+  // Raw numeric validation for dynamic text field number inputs (edit mode)
+  onEditTextFieldNumberInput(fieldKey: string, event: Event) {
+    const raw = (event.target as HTMLInputElement).value.trim();
+    if (/^\d{0,10}$/.test(raw)) {
+      this.rawTextFieldNumbersEdit[fieldKey] = raw; // buffer only
+    }
+  }
+
+  commitEditTextFieldNumber(fieldKey: string) {
+    const raw = this.rawTextFieldNumbersEdit[fieldKey];
+    const value = raw === undefined || raw === '' ? '-1' : raw;
+    this.updateSelectedArticleTextFieldDynamic(fieldKey, 'number', { target: { value } } as any as Event);
+    // normalize buffer after commit
+    if (value === '-1') delete this.rawTextFieldNumbersEdit[fieldKey];
+    else this.rawTextFieldNumbersEdit[fieldKey] = value;
+  }
+
+  onCreateTextFieldNumberInput(fieldKey: string, event: Event) {
+    const raw = (event.target as HTMLInputElement).value.trim();
+    if (/^\d{0,10}$/.test(raw)) {
+      this.rawTextFieldNumbersCreate[fieldKey] = raw;
+    }
+  }
+
+  commitCreateTextFieldNumber(fieldKey: string) {
+    const raw = this.rawTextFieldNumbersCreate[fieldKey];
+    const value = raw === undefined || raw === '' ? '-1' : raw;
+    this.updateNewArticleTextField(fieldKey as keyof ArticlePLU, 'number', { target: { value } } as any as Event);
+    if (value === '-1') delete this.rawTextFieldNumbersCreate[fieldKey];
+    else this.rawTextFieldNumbersCreate[fieldKey] = value;
+  }
+
   updateSelectedArticlePLUFieldDynamic(fieldKey: string, event: Event) {
     const target = event.target as HTMLInputElement;
     let value: any = target.value;
@@ -1358,7 +1454,15 @@ export class DataMaintenanceComponent implements OnInit {
     
     this.selectedArticle.update(article => article ? {
       ...article,
-      articlePLU: article.articlePLU ? { ...article.articlePLU, [fieldKey]: value } : this.createEmptyArticlePLU()
+      articlePLU: article.articlePLU ? { ...article.articlePLU, [fieldKey]: fieldKey === 'labelingMode' ? this.normalizeLabelingMode(value) : value } : this.createEmptyArticlePLU()
     } : null);
+  }
+
+  private normalizeLabelingMode(mode: string | undefined): string {
+    if (!mode) return 'fixedWeight';
+    if (this.allowedLabelingModes.includes(mode)) return mode;
+    if (mode === 'variableWeight') return 'weight';
+    if (mode === 'piece') return 'fixedValue';
+    return 'fixedWeight';
   }
 }

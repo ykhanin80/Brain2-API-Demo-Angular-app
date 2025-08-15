@@ -1,6 +1,6 @@
-<div class="data-maintenance">
+<div class="data-maintenance order-like-container">
   <!-- List View -->
-  <div *ngIf="currentView() === 'list'">
+  <div *ngIf="currentView() === 'list'" class="dm-card">
     <!-- Header -->
     <div class="header">
       <div class="header-left">
@@ -105,66 +105,51 @@
     </div>
 
     <div class="table-container">
-      <table class="articles-table">
+  <table class="articles-table resizable-columns">
         <thead>
           <tr>
             <th>Article Number</th>
             <th>Name</th>
-            <th>Description</th>
-            <th>Weight Unit</th>
-            <th>Enabled</th>
-            <th>Active</th>
-            <th>Approved</th>
+            <th>Unit Price</th>
+            <th>Tare</th>
+            <th>Labeling Mode</th>
+            <th>Label Param #</th>
+            <th>Shelf Life 1</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let article of articles()" class="article-row">
+          <tr *ngFor="let article of articles()" class="article-row" [class.inactive-row]="!article.active">
             <td class="article-number">{{ article.number }}</td>
             <td class="article-name">{{ article.name || '-' }}</td>
-            <td class="article-description">{{ article.description || '-' }}</td>
-            <td class="weight-unit">{{ article.weightUnit }}</td>
-            <td class="enabled-status">
-              <span 
-                class="status-badge"
-                [class.status-enabled]="article.isEnabledForLabelers"
-                [class.status-disabled]="!article.isEnabledForLabelers"
-              >
-                {{ article.isEnabledForLabelers ? 'Enabled' : 'Disabled' }}
-              </span>
-            </td>
-            <td class="active-status">
-              <span 
-                class="status-badge"
-                [class.status-active]="article.active"
-                [class.status-inactive]="!article.active"
-              >
-                {{ article.active ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td class="approved-status">
-              <span 
-                class="status-badge"
-                [class.status-approved]="article.approved"
-                [class.status-pending]="!article.approved"
-              >
-                {{ article.approved ? 'Approved' : 'Pending' }}
-              </span>
-            </td>
+            <td class="unit-price">{{ article.articlePLU.unitPriceValue }} {{ article.gxPriceCurrencyCode || 'USD' }}</td>
+            <td class="tare">{{ article.articlePLU.tareWeightValue }} {{ article.weightUnit }}</td>
+            <td class="labeling-mode">{{ article.articlePLU.labelingMode || '-' }}</td>
+            <td class="label-param">{{ article.articlePLU.labelParameter }}</td>
+            <td class="shelf-life">{{ article.articlePLU.shelfLifeDays1 }}</td>
             <td class="actions">
               <button 
-                class="btn btn-small btn-secondary"
+                class="btn btn-small btn-icon btn-edit"
                 (click)="openEditModal(article)"
                 title="Edit Article"
+                aria-label="Edit Article"
               >
-                <i class="icon-edit"></i>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               </button>
               <button 
-                class="btn btn-small btn-danger"
+                class="btn btn-small btn-icon btn-copy" disabled
+                title="Copy Article (coming soon)"
+                aria-label="Copy Article"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+              </button>
+              <button 
+                class="btn btn-small btn-icon btn-delete"
                 (click)="openDeleteConfirm(article)"
                 title="Delete Article"
+                aria-label="Delete Article"
               >
-                <i class="icon-trash"></i>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
               </button>
             </td>
           </tr>
@@ -184,7 +169,7 @@
   </div> <!-- End List View -->
 
   <!-- Create Article Page -->
-  <div *ngIf="currentView() === 'create'" class="create-article-page">
+  <div *ngIf="currentView() === 'create'" class="article-page create-article-page dm-card">
     <div class="page-header">
       <div class="header-left">
         <h1>Create New Article</h1>
@@ -198,59 +183,49 @@
       </div>
     </div>
 
-    <!-- API Response Feedback -->
-    <div *ngIf="apiResponse().type" class="api-response" [ngClass]="'api-response-' + apiResponse().type">
-      <div class="api-response-content">
-        <i [class]="apiResponse().type === 'success' ? 'icon-check' : 'icon-alert'"></i>
-        <span>{{ apiResponse().message }}</span>
-        <small *ngIf="apiResponse().timestamp" class="timestamp">
-          {{ apiResponse().timestamp | date:'medium' }}
-        </small>
-      </div>
-      <button class="btn-close" (click)="apiResponse.set({ type: null, message: '' })">×</button>
-    </div>
 
     <div class="create-form-container">
-      <form class="article-form">
+  <form class="article-form compact-form">
           
           <!-- General Article Information Section -->
           <div class="form-section">
             <h3 class="section-title">📋 General Information</h3>
-            <div class="form-row">
+            <div class="form-row three-cols">
               <div class="form-group">
                 <label for="newNumber">Article Number *</label>
                 <input
                   type="text"
                   id="newNumber"
+                  maxlength="20"
                   [value]="newArticle().number"
                   (input)="updateNewArticleField('number', $event)"
                   placeholder="Enter article number"
                   required
                 />
               </div>
-              
               <div class="form-group">
                 <label for="newName">Name *</label>
                 <input
                   type="text"
                   id="newName"
+                  maxlength="64"
                   [value]="newArticle().name"
                   (input)="updateNewArticleField('name', $event)"
                   placeholder="Enter article name"
                   required
                 />
               </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="newDescription">Description</label>
-              <textarea
-                id="newDescription"
-                [value]="newArticle().description"
-                (input)="updateNewArticleField('description', $event)"
-                placeholder="Enter article description"
-                rows="3"
-              ></textarea>
+              <div class="form-group">
+                <label for="newDescription">Description</label>
+                <input
+                  type="text"
+                  id="newDescription"
+                  maxlength="64"
+                  [value]="newArticle().description"
+                  (input)="updateNewArticleField('description', $event)"
+                  placeholder="Enter description"
+                />
+              </div>
             </div>
             
             <div class="form-row">
@@ -330,14 +305,16 @@
               <h4 class="subsection-title">💰 General (Pricing & Shelf Life)</h4>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="newUnitPrice">Unit Price Value</label>
+                  <label for="newUnitPrice">Unit Price</label>
                   <input
                     type="number"
                     id="newUnitPrice"
-                    [value]="newArticle().articlePLU?.unitPriceValue || 0"
-                    (input)="updateNewArticlePLUField('unitPriceValue', $event)"
-                    step="0.01"
+                      [value]="unitPriceInput()"
+                      (input)="onUnitPriceInput($event)"
+                      (blur)="commitUnitPrice()"
+                    step="any"
                     min="0"
+                    class="number-field"
                   />
                 </div>
                 
@@ -405,7 +382,7 @@
                     id="newFixedWeight"
                     [value]="newArticle().articlePLU?.fixedWeightValue || 0"
                     (input)="updateNewArticlePLUField('fixedWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                   />
                 </div>
@@ -417,7 +394,7 @@
                     id="newMinWeight"
                     [value]="newArticle().articlePLU?.minWeightValue || 0"
                     (input)="updateNewArticlePLUField('minWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                   />
                 </div>
@@ -429,7 +406,7 @@
                     id="newMaxWeight"
                     [value]="newArticle().articlePLU?.maxWeightValue || 0"
                     (input)="updateNewArticlePLUField('maxWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                   />
                 </div>
@@ -443,7 +420,7 @@
                     id="newTareWeight"
                     [value]="newArticle().articlePLU?.tareWeightValue || 0"
                     (input)="updateNewArticlePLUField('tareWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                   />
                 </div>
@@ -455,9 +432,10 @@
                     [value]="newArticle().articlePLU?.labelingMode || 'fixedWeight'"
                     (change)="updateNewArticlePLUField('labelingMode', $event)"
                   >
+                    <option value="weight">Weight</option>
+                    <option value="fixedPrice">Fixed Price</option>
                     <option value="fixedWeight">Fixed Weight</option>
-                    <option value="variableWeight">Variable Weight</option>
-                    <option value="piece">Piece</option>
+                    <option value="fixedValue">Fixed Value</option>
                   </select>
                 </div>
               </div>
@@ -514,43 +492,55 @@
               </div>
 
               <!-- Sample Text Fields (showing first few) -->
-              <div class="text-fields-grid">
-                <div class="form-group">
-                  <label for="newTextField1Num">Text Field 1 Number</label>
-                  <input
-                    type="number"
-                    id="newTextField1Num"
-                    [value]="newArticle().articlePLU?.textField1?.number || -1"
-                    (input)="updateNewArticleTextField('textField1', 'number', $event)"
-                  />
+              <div class="inline-text-fields">
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField1Num">Text Field 1 #</label>
+                    <input
+                      type="text"
+                      id="newTextField1Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,10}"
+                      maxlength="10"
+                      [value]="rawTextFieldNumbersCreate['textField1'] || (newArticle().articlePLU?.textField1?.number === -1 ? '' : newArticle().articlePLU?.textField1?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField1', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField1')"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField1Text">Text Field 1 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField1Text"
+                      maxlength="64"
+                      [value]="newArticle().articlePLU?.textField1?.text || ''"
+                      (input)="updateNewArticleTextField('textField1', 'text', $event)"
+                    />
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="newTextField1Text">Text Field 1 Text</label>
-                  <textarea
-                    id="newTextField1Text"
-                    [value]="newArticle().articlePLU?.textField1?.text || ''"
-                    (input)="updateNewArticleTextField('textField1', 'text', $event)"
-                    rows="2"
-                  ></textarea>
-                </div>
-
-                <div class="form-group">
-                  <label for="newTextField2Num">Text Field 2 Number</label>
-                  <input
-                    type="number"
-                    id="newTextField2Num"
-                    [value]="newArticle().articlePLU?.textField2?.number || -1"
-                    (input)="updateNewArticleTextField('textField2', 'number', $event)"
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="newTextField2Text">Text Field 2 Text</label>
-                  <textarea
-                    id="newTextField2Text"
-                    [value]="newArticle().articlePLU?.textField2?.text || ''"
-                    (input)="updateNewArticleTextField('textField2', 'text', $event)"
-                    rows="2"
-                  ></textarea>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField2Num">Text Field 2 #</label>
+                    <input
+                      type="text"
+                      id="newTextField2Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,10}"
+                      maxlength="10"
+                      [value]="newArticle().articlePLU?.textField2?.number || -1"
+                      (input)="updateNewArticleTextField('textField2', 'number', $event)"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField2Text">Text Field 2 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField2Text"
+                      maxlength="64"
+                      [value]="newArticle().articlePLU?.textField2?.text || ''"
+                      (input)="updateNewArticleTextField('textField2', 'text', $event)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -620,27 +610,50 @@
           >
             Create Article
           </button>
+          <div *ngIf="apiResponse().type" class="api-response inline" [ngClass]="'api-response-' + apiResponse().type">
+            <div class="api-response-content">
+              <i [class]="apiResponse().type === 'success' ? 'icon-check' : 'icon-alert'"></i>
+              <span>{{ apiResponse().message }}</span>
+            </div>
+          </div>
         </div>
     </div>
   </div> <!-- End Create Article Page -->
 
-  <!-- Edit Article Modal -->
-  <div *ngIf="showEditModal() && selectedArticle()" class="modal-overlay" (click)="closeEditModal()">
-    <div class="modal comprehensive-modal" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>Edit Article: {{ selectedArticle()?.number }}</h2>
-        <button class="btn btn-text" (click)="closeEditModal()">
-          <i class="icon-close"></i>
+  <!-- Edit Article Page -->
+  <div *ngIf="currentView() === 'edit' && selectedArticle()" class="article-page edit-article-page dm-card">
+    <div class="page-header">
+      <div class="header-left">
+        <h1>Edit Article: {{ selectedArticle()?.number }}</h1>
+        <p class="subtitle">Modify labeler article properties</p>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" (click)="goToListPage()">
+          <i class="icon-arrow-left"></i>
+          Back to List
         </button>
       </div>
-      
-      <div class="modal-body comprehensive-form">
-        <form class="article-form">
+    </div>
+
+    <!-- API Response Feedback (reuse create styles) -->
+    <div *ngIf="apiResponse().type" class="api-response" [ngClass]="'api-response-' + apiResponse().type">
+      <div class="api-response-content">
+        <i [class]="apiResponse().type === 'success' ? 'icon-check' : 'icon-alert'"></i>
+        <span>{{ apiResponse().message }}</span>
+        <small *ngIf="apiResponse().timestamp" class="timestamp">
+          {{ apiResponse().timestamp | date:'medium' }}
+        </small>
+      </div>
+      <button class="btn-close" (click)="apiResponse.set({ type: null, message: '' })">×</button>
+    </div>
+
+    <div class="edit-form-container comprehensive-form">
+      <form class="article-form compact-form">
           
           <!-- General Article Information Section -->
           <div class="form-section">
             <h3 class="section-title">📋 General Information</h3>
-            <div class="form-row">
+            <div class="form-row three-cols">
               <div class="form-group">
                 <label for="editNumber">Article Number</label>
                 <input
@@ -652,43 +665,43 @@
                   maxlength="20"
                 />
               </div>
-              
               <div class="form-group">
                 <label for="editName">Name *</label>
                 <input
                   type="text"
                   id="editName"
+                  maxlength="64"
                   [value]="selectedArticle()?.name"
                   (input)="updateSelectedArticleField('name', $event)"
                   placeholder="Enter article name"
                   required
                 />
               </div>
-            </div>
-            
-            <div class="form-group">
-              <label for="editDescription">Description</label>
-              <textarea
-                id="editDescription"
-                [value]="selectedArticle()?.description"
-                (input)="updateSelectedArticleField('description', $event)"
-                placeholder="Enter article description"
-                rows="3"
-              ></textarea>
+              <div class="form-group">
+                <label for="editDescription">Description</label>
+                <input
+                  type="text"
+                  id="editDescription"
+                  maxlength="64"
+                  [value]="selectedArticle()?.description"
+                  (input)="updateSelectedArticleField('description', $event)"
+                  placeholder="Enter description"
+                />
+              </div>
             </div>
             
             <div class="form-row">
               <div class="form-group">
-                <label for="editWeightUnit">Weight Unit *</label>
+                <label for="editWeightUnit">Weight Unit</label>
                 <select
                   id="editWeightUnit"
                   [value]="selectedArticle()?.weightUnit"
                   (change)="updateSelectedArticleField('weightUnit', $event)"
                   required
                 >
+                    <option value="lb">Pounds (lb)</option>
                   <option value="kg">Kilograms (kg)</option>
-                  <option value="lb">Pounds (lb)</option>
-                </select>
+                   </select>
               </div>
               
               <div class="form-group">
@@ -758,9 +771,10 @@
                   <input
                     type="number"
                     id="editUnitPrice"
-                    [value]="selectedArticle()?.articlePLU?.unitPriceValue || 0"
-                    (input)="updateSelectedArticlePLUField('unitPriceValue', $event)"
-                    step="0.01"
+                      [value]="selectedUnitPriceInput() || (selectedArticle()?.articlePLU?.unitPriceValue ?? 0)"
+                      (input)="onSelectedUnitPriceInput($event)"
+                      (blur)="commitSelectedUnitPrice()"
+                    step="any"
                     min="0"
                     class="number-field"
                   />
@@ -820,7 +834,7 @@
                     id="editFixedWeight"
                     [value]="selectedArticle()?.articlePLU?.fixedWeightValue || 0"
                     (input)="updateSelectedArticlePLUField('fixedWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                     class="number-field"
                   />
@@ -833,7 +847,7 @@
                     id="editMinWeight"
                     [value]="selectedArticle()?.articlePLU?.minWeightValue || 0"
                     (input)="updateSelectedArticlePLUField('minWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                     class="number-field"
                   />
@@ -846,7 +860,7 @@
                     id="editMaxWeight"
                     [value]="selectedArticle()?.articlePLU?.maxWeightValue || 0"
                     (input)="updateSelectedArticlePLUField('maxWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                     class="number-field"
                   />
@@ -861,7 +875,7 @@
                     id="editTareWeight"
                     [value]="selectedArticle()?.articlePLU?.tareWeightValue || 0"
                     (input)="updateSelectedArticlePLUField('tareWeightValue', $event)"
-                    step="0.01"
+                    step="any"
                     min="0"
                     class="number-field"
                   />
@@ -945,11 +959,14 @@
                     <div class="form-group field-number">
                       <label [for]="'edit' + textField.key + 'Num'">Text Field {{ textField.index }} Number</label>
                       <input
-                        type="number"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="\\d{0,10}"
+                        maxlength="10"
                         [id]="'edit' + textField.key + 'Num'"
-                        [value]="textField.field.number"
-                        (input)="updateSelectedArticleTextFieldDynamic(textField.key, 'number', $event)"
-                        class="number-field"
+                        [value]="textField.field.number === -1 ? '' : textField.field.number"
+                        (input)="onEditTextFieldNumberInput(textField.key, $event)"
+                        class="number-field no-spinner"
                       />
                     </div>
                     <div class="form-group field-text">
@@ -1060,20 +1077,13 @@
               </div>
             </div>
           </div>
-        </form>
-      </div>
-      
-      <div class="modal-footer">
-        <button class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
-        <button 
-          class="btn btn-primary" 
-          (click)="updateArticle(selectedArticle()!)"
-        >
-          Update Article
-        </button>
+      </form>
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="goToListPage()">Cancel</button>
+        <button class="btn btn-primary" (click)="updateArticle(selectedArticle()!)">Update Article</button>
       </div>
     </div>
-  </div>
+  </div> <!-- End Edit Article Page -->
 
   <!-- Delete Confirmation Modal -->
   <div *ngIf="showDeleteConfirm() && selectedArticle()" class="modal-overlay" (click)="closeDeleteConfirm()">
@@ -1114,7 +1124,14 @@
 
   <!-- API Response Debug Window -->
   <section class="debug-section">
-    <h3>🔧 API Response Debug</h3>
+    <div class="debug-header-bar">
+      <h3>🔧 API Response Debug</h3>
+      <div class="debug-global-actions">
+        <button type="button" class="debug-tab" (click)="jsonCollapsed.set(!jsonCollapsed())">
+          {{ jsonCollapsed() ? 'Expand All' : 'Collapse All' }}
+        </button>
+      </div>
+    </div>
     <div class="debug-container">
       <div class="debug-tabs">
         <button 
@@ -1159,13 +1176,13 @@
         </button>
       </div>
       
-      <div class="debug-content">
+      <div class="debug-content" [class.collapsed]="jsonCollapsed()">
         <div *ngIf="activeDebugTab === 'list'" class="debug-panel">
           <div class="debug-header">
             <h4>Latest List Articles API Response</h4>
             <small>{{articles().length}} articles loaded</small>
           </div>
-          <pre class="debug-json">{{debugApiResponses.listArticles | json}}</pre>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json">{{debugApiResponses.listArticles | json}}</pre>
         </div>
 
         <div *ngIf="activeDebugTab === 'get'" class="debug-panel">
@@ -1173,7 +1190,7 @@
             <h4>Get Article by Number API Response</h4>
             <small>Single article details</small>
           </div>
-          <pre class="debug-json">{{debugApiResponses.getArticle | json}}</pre>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json">{{debugApiResponses.getArticle | json}}</pre>
         </div>
 
         <div *ngIf="activeDebugTab === 'create'" class="debug-panel">
@@ -1181,7 +1198,7 @@
             <h4>Create Article API Response</h4>
             <small>POST request details</small>
           </div>
-          <pre class="debug-json">{{debugApiResponses.createArticle | json}}</pre>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json">{{debugApiResponses.createArticle | json}}</pre>
         </div>
 
         <div *ngIf="activeDebugTab === 'update'" class="debug-panel">
@@ -1189,7 +1206,7 @@
             <h4>Update Article API Response</h4>
             <small>PATCH request details</small>
           </div>
-          <pre class="debug-json">{{debugApiResponses.updateArticle | json}}</pre>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json">{{debugApiResponses.updateArticle | json}}</pre>
         </div>
 
         <div *ngIf="activeDebugTab === 'delete'" class="debug-panel">
@@ -1197,7 +1214,7 @@
             <h4>Delete Article API Response</h4>
             <small>DELETE request details</small>
           </div>
-          <pre class="debug-json">{{debugApiResponses.deleteArticle | json}}</pre>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json">{{debugApiResponses.deleteArticle | json}}</pre>
         </div>
       </div>
     </div>
