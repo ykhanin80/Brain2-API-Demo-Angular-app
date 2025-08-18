@@ -12,11 +12,78 @@
           <i class="icon-arrow-left"></i>
           Back to Dashboard
         </button>
+        <button class="btn btn-secondary" (click)="openImportDialog()">
+          <i class="icon-upload"></i>
+          Import CSV
+        </button>
         <button class="btn btn-primary" (click)="goToCreatePage()">
           <i class="icon-plus"></i>
           Create Article
         </button>
       </div>
+    <!-- Full-width Import Panel (document flow, full-bleed) -->
+  <div class="import-inline full-bleed global-fixed" *ngIf="importState().open">
+      <div class="import-inline-header">
+        <strong>Import Articles</strong>
+        <div class="import-inline-tabs">
+          <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto Map</button>
+          <button class="btn btn-small" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()" *ngIf="importState().step==='mapping'">Preview</button>
+          <button class="btn btn-small" (click)="backToMapping()" *ngIf="importState().step==='preview'">Back</button>
+        </div>
+        <button class="btn btn-small" (click)="closeImportDialog()">×</button>
+      </div>
+      <div class="import-inline-body" *ngIf="importState().step === 'select'">
+        <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)" />
+        <div class="hint">Choose CSV (max 5000 rows preview).</div>
+      </div>
+      <div class="import-inline-body" *ngIf="importState().step === 'mapping'">
+        <table class="mapping-table wide">
+          <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let h of importHeaders()">
+              <td>{{ h }}</td>
+              <td>
+                <select (change)="updateImportMapping(h, $any($event.target).value)" [class.mapped]="importMapping()[h]">
+                  <option value="" [selected]="!importMapping()[h]">-- ignore --</option>
+                  <option *ngFor="let def of importFieldDefs" [value]="def.key" [selected]="importMapping()[h]===def.key">{{ def.label }}</option>
+                </select>
+              </td>
+              <td>{{ importRawRows()[0] ? importRawRows()[0][h] : '' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="import-inline-body" *ngIf="importState().step === 'preview'">
+        <div class="preview-head">
+          <span>{{ importRows().length }} rows (invalid {{ invalidImportRowCount() }})</span>
+          <div class="preview-actions">
+            <button class="btn btn-small" (click)="startImport()" [disabled]="importRows().length===0 || invalidImportRowCount()===importRows().length">Start Import</button>
+          </div>
+        </div>
+        <table class="preview-table wide">
+          <thead><tr><th>#</th><th *ngFor="let h of importHeaders()">{{ h }}</th><th>error</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of importRows().slice(0,100)">
+              <td>{{ r.line }}</td>
+              <td *ngFor="let h of importHeaders()">{{ r.original[h] }}</td>
+              <td class="err">{{ r.error }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="import-inline-body" *ngIf="importState().step === 'running'">
+        <div>{{ importProgress().processed }}/{{ importRows().length }} (ok {{ importProgress().success }}, failed {{ importProgress().failed }})</div>
+        <div class="progress-bar"><div class="bar" [style.width]="importProgress().percent + '%'" ></div></div>
+        <button class="btn btn-small" (click)="cancelImport()" [disabled]="importProgress().done">Cancel</button>
+      </div>
+      <div class="import-inline-body" *ngIf="importState().step === 'done'">
+        <div>Done: {{ importProgress().success }} created, {{ importProgress().failed }} failed.</div>
+        <div class="import-done-actions">
+          <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="importProgress().failed===0">Errors CSV</button>
+          <button class="btn btn-small btn-primary" (click)="closeImportDialog()">Close</button>
+        </div>
+      </div>
+    </div>
     </div>
 
   <!-- Search Section -->
@@ -167,6 +234,8 @@
     </div>
   </div>
   </div> <!-- End List View -->
+
+  
 
   <!-- Create Article Page -->
   <div *ngIf="currentView() === 'create'" class="article-page create-article-page dm-card">

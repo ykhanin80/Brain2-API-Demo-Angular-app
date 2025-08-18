@@ -5,6 +5,40 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+// Import mapping styles
+.mapping-table-wrapper {
+  max-height: 420px;
+  overflow: auto;
+  border:1px solid #e0e0e0;
+  border-radius:6px;
+  background:#fff;
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { padding:6px 8px; border-bottom:1px solid #f0f0f0; text-align:left; }
+  th { position:sticky; top:0; background:#f8f9fa; z-index:2; font-weight:600; }
+  select { min-width:180px; }
+  select.mapped { border-color:#2e7d32; background:#e9f7ec; }
+}
+
+// Inline import panel
+.import-inline { position:relative; margin:16px -40px 24px -40px; padding:14px 18px 18px 18px; background:#fff; border:1px solid #d9dee4; box-shadow:0 4px 18px rgba(0,0,0,.12); border-radius:10px; font-size:13px; display:flex; flex-direction:column; gap:14px; width:auto; }
+.import-inline.full-bleed { width:calc(100% + 80px); }
+.import-inline.global-fixed { position:fixed; top:60px; left:0; right:0; margin:0; width:100%; border-radius:0 0 12px 12px; padding:18px 40px 24px 40px; box-shadow:0 8px 28px rgba(0,0,0,.25); z-index:120; }
+body.has-import-open { padding-top:140px; }
+.header-right { position:relative; width:100%; display:flex; gap:12px; justify-content:flex-end; }
+.import-inline-header { display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #eceff3; padding-bottom:4px; }
+.import-inline-body { overflow:auto; }
+.import-inline .mapping-table-wrapper.small { max-height:400px; }
+.import-inline .preview-table-wrapper.mini { max-height:400px; overflow:auto; border:1px solid #ececec; border-radius:6px; background:#fff; }
+.import-inline table.preview-table { width:100%; border-collapse:collapse; font-size:12px; }
+.import-inline table.preview-table th, .import-inline table.preview-table td { padding:4px 6px; border-bottom:1px solid #f2f2f2; }
+.import-inline .progress-bar { height:6px; background:#eee; border-radius:4px; overflow:hidden; margin:6px 0; }
+.import-inline .progress-bar .bar { height:100%; background:linear-gradient(90deg,#1976d2,#42a5f5); transition:width .25s; }
+.import-inline .err { color:#c62828; font-size:11px; }
+.import-inline .mapping-actions { display:flex; gap:6px; margin-bottom:6px; }
+.import-inline .preview-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
+.import-inline .preview-actions { display:flex; gap:6px; }
+.import-inline .import-done-actions { display:flex; gap:6px; margin-top:6px; }
+
 // Header Section
 .header {
   display: flex;

@@ -1,0 +1,8 @@
+Number,Name,Labeling mode,Active,Description,Unit,Shelf life 1,Simple text 01,Simple text 02,Simple text 03,Static text parameter no.,Tare Weight,Unit Price,Special price,Unit Price - Unit,Unit Price - Value,Automatic labeler parameter set no.,Code number 1,Code number 2,Code number 3,Code substring 1,Code substring 2,Code substring 3,Date text field no. 1,Date text field no. 2,Fixed weight,General number 01,General number 02,General text field no. 1,General text field no. 2,General text field no. 3,General text field no. 4,General text field no. 5,General text field no. 6,General text field no. 7,General text field no. 8,General text field no. 9,General text field no. 10,Label parameter set no.,Logo 1,Logo 2,Maximum weight,Minimum weight,Pieces per package,Weight class no.
+19,Yevhen Recipe 19,FixedWeight,True,,lb,18,simple text 1,simple text2,st3,0,0.08 lb,9.99 USD,0.00 USD,USD,9.99,0,1,2,0,12345678901,codesubstr2,,,,1.75 lb,0,0,"^1;Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.","^Ac;^b+BNLS CNTR CUT
+^Ac; LOIN CHOPS ","^Ac;^114; Pork Loin Boneless Center Cut
+ ^Ac; Butterfly Chops",,,,,,,,0,0,0,2.50 lb,1.75 lb,0,0
+20,Butter Chicken 20,FixedWeight,True,,lb,0,,,,0,0.00 lb,0.00 USD,0.00 USD,USD,0,0,0,0,0,67053494909,,,,,1.75 lb,0,0,"^1;Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",string9,"^Ac;^114; Pork Loin Boneless Center Cut
+ ^Ac; Butterfly Chops",,,,,,,,0,0,0,0.00 lb,0.00 lb,0,0

@@ -4,6 +4,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../auth';
+// PapaParse will be lazy-loaded only when an import file is selected to avoid SSR/runtime issues.
+let PapaRef: any = null;
 
 export interface TextField {
   number: number;
@@ -492,6 +494,63 @@ export class DataMaintenanceComponent implements OnInit {
   rawTextFieldNumbersCreate: { [key: string]: string } = {};
   rawTextFieldNumbersEdit: { [key: string]: string } = {};
 
+  // Import feature state
+  importState = signal<{open: boolean; step: 'select'|'mapping'|'preview'|'running'|'done'}>({open:false, step:'select'});
+  importRows = signal<any[]>([]); // mapped rows with metadata
+  importRawRows = signal<any[]>([]); // raw rows from CSV prior to mapping
+  importHeaders = signal<string[]>([]); // original CSV headers
+  importMapping = signal<{[csvHeader:string]: string}>({}); // header -> internal field key
+  importProgress = signal<{processed:number; success:number; failed:number; percent:number; done:boolean}>({processed:0, success:0, failed:0, percent:0, done:false});
+  private importFieldDefinitions: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = this.buildImportFieldDefinitions();
+  private importRequiredKeys = ['number','name'];
+  // Expose field definitions to template
+  get importFieldDefs(){ return this.importFieldDefinitions; }
+
+  private buildImportFieldDefinitions(){
+    const defs: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = [];
+    const push=(key:string,label:string,synonyms:string[]=[],required=false)=>{ defs.push({key,label,required,synonyms}); };
+    // Article top-level
+    push('number','Article Number',['number','articlenumber','no','artno'],true);
+    push('name','Name',['name','articlename'],true);
+    push('description','Description',['description','desc']);
+    push('active','Active',['active','enabled','isactive']);
+    // PLU common
+    push('labelingMode','Labeling Mode',['labelingmode','mode']);
+    push('weightUnit','Weight Unit',['unit','weightunit','wtunit']);
+    push('unitPriceValue','Unit Price',['unitprice','unitpricevalue','price','pricevalue','unitpricevalue']);
+    push('specialUnitPriceValue','Special Unit Price',['specialprice','specialunitprice']);
+    push('tareWeightValue','Tare Weight',['tare','tareweight']);
+    push('fixedWeightValue','Fixed Weight',['fixedweight']);
+    push('minWeightValue','Minimum Weight',['minweight','minimumweight']);
+    push('maxWeightValue','Maximum Weight',['maxweight','maximumweight']);
+    push('shelfLifeDays1','Shelf Life Days 1',['shelflife1','shelflifedays1']);
+    push('shelfLifeDays2','Shelf Life Days 2',['shelflife2','shelflifedays2']);
+    push('labelParameter','Label Parameter',['labelparameter','labelparametersetno','labelparameterset']);
+    push('automaticLabelParameter','Automatic Label Parameter',['automaticlabelparameter']);
+    push('piecesPerPackage','Pieces Per Package',['piecesperpackage']);
+    push('numberOfSuccessiveLabels','Number Of Successive Labels',['numberofsuccessivelabels','successivelabels']);
+    push('numberOfLabelCopies','Number Of Label Copies',['numberoflabelcopies','labelcopies']);
+    push('weightClass','Weight Class',['weightclass','weightclassno']);
+    push('productGroupNumber','Product Group Number',['productgroupnumber']);
+    push('tendencyControl','Tendency Control',['tendencycontrol']);
+    push('staticText','Static Text Param #',['statictext','statictextparameter']);
+    // Numeric series helpers
+    for(let i=1;i<=10;i++) push(`logoField${i}`,`Logo ${i}`,[`logo${i}`,`logofield${i}`]);
+    for(let i=1;i<=7;i++) push(`codeField${i}`,`Code Field ${i}`,[`codenumber${i}`,`codefield${i}`]);
+    for(let i=1;i<=7;i++) push(`codeString${i}`,`Code String ${i}`,[`codestring${i}`,`codesubstring${i}`,`codesubstr${i}`]);
+    for(let i=1;i<=20;i++) push(`generalNumber${i}`,`General Number ${i}`,[`generalnumber${i.toString().padStart(2,'0')}`,`generalnumber${i}`]);
+    for(let i=1;i<=30;i++) push(`simpleText${i}`,`Simple Text ${i}`,[`simpletext${i.toString().padStart(2,'0')}`,`simpletext${i}`,`st${i}`]);
+    for(let i=1;i<=20;i++) push(`textField${i}Number`,`Text Field ${i} (number)`,[`textfield${i}`,`textfeld${i}`]);
+    for(let i=1;i<=20;i++) push(`textField${i}Text`,`Text Field ${i} (text)`,[`textfield${i}text`]);
+    for(let i=1;i<=3;i++) push(`dateTextField${i}Number`,`Date Text Field ${i} (number)`,[`datetextfieldno${i}`,`datetextfield${i}`]);
+    for(let i=1;i<=3;i++) push(`dateTextField${i}Text`,`Date Text Field ${i} (text)`,[`datetextfield${i}text`]);
+    return defs;
+  }
+  private importCancelled = false;
+  private importConcurrency = 3;
+  private activeImports = 0;
+  private importQueueIndex = 0;
+
   ngOnInit() {
     // Initialize with proper ArticlePLU structure
     this.newArticle.update(article => ({
@@ -500,6 +559,280 @@ export class DataMaintenanceComponent implements OnInit {
     }));
     
     this.loadArticles();
+  }
+
+  // -------- Import CSV UI Methods --------
+  openImportDialog(){
+  this.importState.set({open:true, step:'select'});
+  this.importRows.set([]);
+  this.importRawRows.set([]);
+  this.importHeaders.set([]);
+  this.importMapping.set({});
+  this.importProgress.set({processed:0, success:0, failed:0, percent:0, done:false});
+  document.body.classList.add('has-import-open');
+  }
+  closeImportDialog(){
+    if(this.importState().step==='running' && !this.importProgress().done){ this.importCancelled = true; }
+    this.importState.set({open:false, step:'select'});
+    document.body.classList.remove('has-import-open');
+  }
+  async onImportFileSelected(event: Event){
+    const input = event.target as HTMLInputElement;
+    const file = input.files && input.files[0];
+    if(!file) return;
+    if(!PapaRef){
+      const mod = await import('papaparse');
+      PapaRef = mod.default || mod; // handle CJS / ESM
+    }
+    PapaRef.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      worker: true,
+      complete: (results:any)=>{
+        const raw = (results.data||[]).slice(0,5000);
+        const headers: string[] = (results.meta?.fields || []).map((h:string)=>h);
+        this.importRawRows.set(raw);
+        this.importHeaders.set(headers);
+        // attempt auto map
+        this.autoMapImportHeaders();
+        this.rebuildMappedRows();
+  // Always show mapping step so user can see what auto-mapped
+  this.importState.set({open:true, step:'mapping'});
+      },
+      error: ()=>{
+        this.error.set('Failed to parse CSV');
+      }
+    });
+  }
+  private normalizeHeaderName(h:string){ return h.toLowerCase().replace(/[^a-z0-9]/g,''); }
+  autoMapImportHeaders(){
+    const headers = this.importHeaders();
+    const mapping: {[csvHeader:string]: string} = { ...this.importMapping() };
+    const usedTargets = new Set(Object.values(mapping));
+    headers.forEach(h=>{
+      const norm = this.normalizeHeaderName(h);
+      if(mapping[h]) return; // already mapped
+      // direct synonym match
+      for(const def of this.importFieldDefinitions){
+        if(usedTargets.has(def.key)) continue;
+        if(def.synonyms.includes(norm)){ mapping[h] = def.key; usedTargets.add(def.key); return; }
+      }
+      // pattern simpleTextXX
+      const simpleTextMatch = norm.match(/^simpletext(\d{1,2})$/); if(simpleTextMatch){ const n=parseInt(simpleTextMatch[1],10); if(n>=1&&n<=30){ mapping[h] = `simpleText${n}`; return; }}
+      const generalNumberMatch = norm.match(/^generalnumber(\d{1,2})$/); if(generalNumberMatch){ const n=parseInt(generalNumberMatch[1],10); if(n>=1&&n<=20){ mapping[h] = `generalNumber${n}`; return; }}
+      const logoMatch = norm.match(/^logo(\d{1,2})$/); if(logoMatch){ const n=parseInt(logoMatch[1],10); if(n>=1&&n<=10){ mapping[h] = `logoField${n}`; return; }}
+      const codeNumMatch = norm.match(/^codenumber(\d)$/); if(codeNumMatch){ mapping[h] = `codeField${codeNumMatch[1]}`; return; }
+      const codeSubMatch = norm.match(/^codesubstring(\d)$/); if(codeSubMatch){ mapping[h] = `codeString${codeSubMatch[1]}`; return; }
+      const dateTextMatch = norm.match(/^datetextfieldno(\d)$/); if(dateTextMatch){ mapping[h] = `dateTextField${dateTextMatch[1]}`; return; }
+      const generalTextFieldMatch = norm.match(/^generaltextfieldno(\d)$/); if(generalTextFieldMatch){ mapping[h] = `textField${generalTextFieldMatch[1]}`; return; }
+    });
+    this.importMapping.set(mapping);
+  }
+  updateImportMapping(csvHeader:string, target:string){
+    const mapping = { ...this.importMapping() };
+    if(!target) delete mapping[csvHeader]; else mapping[csvHeader] = target;
+    // enforce uniqueness (latest wins)
+    const reversed: {[target:string]: string} = {};
+    for(const [h,t] of Object.entries(mapping)){
+      if(reversed[t] && reversed[t]!==h){ delete mapping[reversed[t]]; }
+      reversed[t] = h;
+    }
+    this.importMapping.set(mapping);
+    this.rebuildMappedRows();
+  }
+  private rebuildMappedRows(){
+    const raw = this.importRawRows();
+    const rows = raw.map((r:any,i:number)=> this.mapImportRow(r,i+2));
+    this.importRows.set(rows);
+  }
+  requiredImportFieldsMapped(){
+    const mappedTargets = new Set(Object.values(this.importMapping()));
+    return this.importRequiredKeys.every(k=> mappedTargets.has(k));
+  }
+  goToPreviewFromMapping(){ if(this.requiredImportFieldsMapped()) this.importState.set({open:true, step:'preview'}); }
+  backToMapping(){ if(this.importState().step==='preview') this.importState.set({open:true, step:'mapping'}); }
+  mapImportRow(r:any,line:number){
+    const trim = (v:any)=> (v===undefined||v===null?'':String(v).trim());
+    const mapping = this.importMapping();
+    const getVal = (target:string)=>{
+      const header = Object.entries(mapping).find(([,t])=> t===target)?.[0];
+      if(!header) return '';
+      return r[header];
+    };
+    const parseNumber = (val:any)=>{ const t=trim(val); if(!t) return 0; const m=t.match(/-?\d+(?:[.,]\d+)?/); return m? parseFloat(m[0].replace(',','.')):0; };
+  const parseBool = (val:any)=> /^true|1|yes$/i.test(trim(val));
+  const mappingKeys = Object.values(mapping);
+    const row:any = {
+      original:r,
+      line,
+      number: trim(getVal('number')||r.number||r.articleNumber),
+      name: trim(getVal('name')||r.name||r.articleName),
+      description: trim(getVal('description')||r.description||''),
+      labelingMode: this.normalizeLabelingMode(trim(getVal('labelingMode')||r.labelingMode)),
+      unitPriceValue: parseNumber(getVal('unitPriceValue')||r.unitPriceValue||r.price),
+      specialUnitPriceValue: parseNumber(getVal('specialUnitPriceValue')||r.specialUnitPriceValue),
+      tareWeightValue: parseNumber(getVal('tareWeightValue')||r.tareWeightValue||r.tare),
+      labelParameter: parseInt(trim(getVal('labelParameter')||r.labelParameter||r.labelParam||'0'))||0,
+      shelfLifeDays1: parseInt(trim(getVal('shelfLifeDays1')||r.shelfLifeDays1||r.shelfLife1||'0'))||0,
+      active: parseBool(getVal('active')||r.active||'true'),
+      weightUnit: trim(getVal('weightUnit')||r.weightUnit||'lb').replace(/[^a-zA-Z]/g,'')||'lb',
+      simpleText1: trim(getVal('simpleText1')||r.simpleText1||''),
+      simpleText2: trim(getVal('simpleText2')||r.simpleText2||''),
+      simpleText3: trim(getVal('simpleText3')||r.simpleText3||''),
+      staticText: parseInt(trim(getVal('staticText')||r.staticText||'0'))||0,
+      codeField1: parseInt(trim(getVal('codeField1')||r.codeField1||'0'))||0,
+      codeField2: parseInt(trim(getVal('codeField2')||r.codeField2||'0'))||0,
+      codeField3: parseInt(trim(getVal('codeField3')||r.codeField3||'0'))||0,
+      codeString1: trim(getVal('codeString1')||r.codeString1||''),
+      codeString2: trim(getVal('codeString2')||r.codeString2||''),
+      codeString3: trim(getVal('codeString3')||r.codeString3||''),
+      dateTextField1: parseInt(trim(getVal('dateTextField1')||r.dateTextField1||'-1'))||-1,
+      dateTextField2: parseInt(trim(getVal('dateTextField2')||r.dateTextField2||'-1'))||-1,
+      fixedWeightValue: parseNumber(getVal('fixedWeightValue')||r.fixedWeightValue),
+      generalNumber1: parseInt(trim(getVal('generalNumber1')||r.generalNumber1||'0'))||0,
+      generalNumber2: parseInt(trim(getVal('generalNumber2')||r.generalNumber2||'0'))||0,
+      textField1: parseInt(trim(getVal('textField1')||r.textField1||'-1'))||-1,
+      textField2: parseInt(trim(getVal('textField2')||r.textField2||'-1'))||-1,
+      textField3: parseInt(trim(getVal('textField3')||r.textField3||'-1'))||-1,
+      logoField1: parseInt(trim(getVal('logoField1')||r.logoField1||'0'))||0,
+      maxWeightValue: parseNumber(getVal('maxWeightValue')||r.maxWeightValue),
+      minWeightValue: parseNumber(getVal('minWeightValue')||r.minWeightValue),
+      piecesPerPackage: parseInt(trim(getVal('piecesPerPackage')||r.piecesPerPackage||'0'))||0,
+      weightClass: parseInt(trim(getVal('weightClass')||r.weightClass||'0'))||0,
+      status:'',
+      error:''
+    };
+    // Dynamic series extraction
+    for(let i=1;i<=30;i++){ if(mappingKeys.includes(`simpleText${i}`)) row[`simpleText${i}`] = trim(getVal(`simpleText${i}`)); }
+    for(let i=1;i<=20;i++){ if(mappingKeys.includes(`generalNumber${i}`)) row[`generalNumber${i}`] = parseInt(trim(getVal(`generalNumber${i}`)||'0'))||0; }
+    for(let i=1;i<=10;i++){ if(mappingKeys.includes(`logoField${i}`)) row[`logoField${i}`] = parseInt(trim(getVal(`logoField${i}`)||'0'))||0; }
+    for(let i=1;i<=7;i++){ if(mappingKeys.includes(`codeField${i}`)) row[`codeField${i}`] = parseInt(trim(getVal(`codeField${i}`)||'0'))||0; }
+    for(let i=1;i<=7;i++){ if(mappingKeys.includes(`codeString${i}`)) row[`codeString${i}`] = trim(getVal(`codeString${i}`)); }
+    for(let i=1;i<=20;i++){
+      if(mappingKeys.includes(`textField${i}Number`)) row[`textField${i}Number`] = parseInt(trim(getVal(`textField${i}Number`)||'-1'))||-1;
+      if(mappingKeys.includes(`textField${i}Text`)) row[`textField${i}Text`] = trim(getVal(`textField${i}Text`));
+    }
+    for(let i=1;i<=3;i++){
+      if(mappingKeys.includes(`dateTextField${i}Number`)) row[`dateTextField${i}Number`] = parseInt(trim(getVal(`dateTextField${i}Number`)||'-1'))||-1;
+      if(mappingKeys.includes(`dateTextField${i}Text`)) row[`dateTextField${i}Text`] = trim(getVal(`dateTextField${i}Text`));
+    }
+    if(!row.number || row.number.length>20) row.error += 'invalid number; ';
+    if(!row.name || row.name.length>64) row.error += 'invalid name; ';
+    if(row.description && row.description.length>64) row.error += 'desc>64; ';
+    if(row.labelingMode && !this.allowedLabelingModes.includes(row.labelingMode)) row.error += 'mode; ';
+    return row;
+  }
+  invalidImportRowCount(){ return this.importRows().filter(r=>r.error).length; }
+  startImport(){
+    this.importCancelled = false;
+    this.importProgress.set({processed:0, success:0, failed:0, percent:0, done:false});
+    // filter valid rows only for now
+    const rows = this.importRows().filter(r=>!r.error);
+    this.importRows.set(rows);
+    this.importState.set({open:true, step:'running'});
+    this.importQueueIndex = 0; this.activeImports = 0;
+    for(let i=0;i<this.importConcurrency;i++) this.pumpImportQueue();
+  }
+  cancelImport(){ this.importCancelled = true; }
+  private pumpImportQueue(){
+    if(this.importCancelled){ this.finishImport(); return; }
+    if(this.importQueueIndex >= this.importRows().length){
+      if(this.activeImports===0) this.finishImport();
+      return;
+    }
+    if(this.activeImports>=this.importConcurrency) return;
+    const row = this.importRows()[this.importQueueIndex++];
+    this.activeImports++;
+    this.processImportRow(row).finally(()=>{ this.activeImports--; this.updateImportProgress(); this.pumpImportQueue(); });
+    this.pumpImportQueue();
+  }
+  private async processImportRow(row:any){
+    try{
+      const emptyPLU = this.createEmptyArticlePLU();
+      const article: any = {
+        number: row.number,
+        name: row.name,
+        description: row.description,
+        isEnabledForLabelers: true,
+        weightUnit: row.weightUnit || 'lb',
+        weightDecimalPlaces: 2,
+        active: row.active,
+        approved: false,
+        gxPriceCurrencyCode: 'USD',
+        gxPriceDecimalPlaces: 2,
+        articlePLU: {
+          ...emptyPLU,
+          labelingMode: row.labelingMode,
+          unitPriceValue: row.unitPriceValue,
+          specialUnitPriceValue: row.specialUnitPriceValue || 0,
+          tareWeightValue: row.tareWeightValue,
+          labelParameter: row.labelParameter,
+          shelfLifeDays1: row.shelfLifeDays1,
+          simpleText1: row.simpleText1 || '',
+          simpleText2: row.simpleText2 || '',
+          simpleText3: row.simpleText3 || '',
+          staticText: row.staticText || 0,
+          codeField1: row.codeField1 || 0,
+          codeField2: row.codeField2 || 0,
+          codeField3: row.codeField3 || 0,
+          codeString1: row.codeString1 || '',
+          codeString2: row.codeString2 || '',
+          codeString3: row.codeString3 || '',
+          dateTextField1: { number: row.dateTextField1 ?? row.dateTextField1Number ?? -1, text: row.dateTextField1Text || null },
+          dateTextField2: { number: row.dateTextField2 ?? row.dateTextField2Number ?? -1, text: row.dateTextField2Text || null },
+          dateTextField3: { number: row.dateTextField3 ?? row.dateTextField3Number ?? -1, text: row.dateTextField3Text || null },
+          fixedWeightValue: row.fixedWeightValue || 0,
+          generalNumber1: row.generalNumber1 || 0,
+          generalNumber2: row.generalNumber2 || 0,
+          textField1: { ...emptyPLU.textField1, number: row.textField1 ?? row.textField1Number ?? -1, text: row.textField1Text || null },
+          textField2: { ...emptyPLU.textField2, number: row.textField2 ?? row.textField2Number ?? -1, text: row.textField2Text || null },
+          textField3: { ...emptyPLU.textField3, number: row.textField3 ?? row.textField3Number ?? -1, text: row.textField3Text || null },
+          logoField1: row.logoField1 || 0,
+          maxWeightValue: row.maxWeightValue || 0,
+          minWeightValue: row.minWeightValue || 0,
+          piecesPerPackage: row.piecesPerPackage || 0,
+          weightClass: row.weightClass || 0
+        }
+      };
+      // dynamic series
+      for(let i=4;i<=30;i++){ if(row[`simpleText${i}`]!==undefined) article.articlePLU[`simpleText${i}`] = row[`simpleText${i}`]; }
+      for(let i=3;i<=20;i++){ if(row[`generalNumber${i}`]!==undefined) article.articlePLU[`generalNumber${i}`] = row[`generalNumber${i}`]; }
+      for(let i=2;i<=10;i++){ if(row[`logoField${i}`]!==undefined) article.articlePLU[`logoField${i}`] = row[`logoField${i}`]; }
+      for(let i=4;i<=7;i++){ if(row[`codeField${i}`]!==undefined) article.articlePLU[`codeField${i}`] = row[`codeField${i}`]; }
+      for(let i=4;i<=7;i++){ if(row[`codeString${i}`]!==undefined) article.articlePLU[`codeString${i}`] = row[`codeString${i}`]; }
+      for(let i=4;i<=20;i++){ const n=row[`textField${i}Number`]; const t=row[`textField${i}Text`]; if(n!==undefined||t!==undefined){ article.articlePLU[`textField${i}`]={ number: n??-1, text: t||null }; } }
+      if(row['dateTextField3Number']!==undefined || row['dateTextField3Text']!==undefined){ article.articlePLU['dateTextField3'] = { number: row['dateTextField3Number'] ?? -1, text: row['dateTextField3Text'] || null }; }
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json'});
+      await this.http.post(`${this.baseUrl}/api/v1/articles/labeler`, article, {headers}).toPromise();
+      row.status = 'created';
+    }catch(e:any){
+      row.status = 'failed';
+      row.error = e?.error?.title || e?.message || 'error';
+    }
+  }
+  private updateImportProgress(){
+    const rows = this.importRows();
+    const processed = rows.filter(r=>r.status).length;
+    const success = rows.filter(r=>r.status==='created').length;
+    const failed = rows.filter(r=>r.status==='failed').length;
+    const percent = rows.length? Math.round(processed*100/rows.length):0;
+    const done = processed===rows.length || this.importCancelled;
+    this.importProgress.set({processed, success, failed, percent, done});
+    if(done) this.finishImport();
+  }
+  private finishImport(){
+    this.importState.set({open:true, step:'done'});
+  }
+  downloadImportErrors(){
+    const errs = this.importRows().filter(r=>r.status==='failed');
+    if(!errs.length) return;
+    const header = 'line,number,name,error\n';
+    const body = errs.map(r=>`${r.line},"${r.number}","${r.name}","${(r.error||'').replace(/"/g,'""')}"`).join('\n');
+    const blob = new Blob([header+body], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'import-errors.csv'; a.click();
+    URL.revokeObjectURL(url);
   }
 
   async loadArticles() {
