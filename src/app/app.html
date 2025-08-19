@@ -12,6 +12,9 @@
           <span class="status-value active">Active</span>
         </span>
       </div>
+      <button mat-button type="button" (click)="toggleDarkMode()" class="mode-toggle-btn">
+        {{ darkMode() ? 'Light Mode' : 'Dark Mode' }}
+      </button>
       <span>Welcome, {{ (currentUser$ | async)?.name }}</span>
       <button (click)="logout()" class="logout-btn">Logout</button>
     </div>
