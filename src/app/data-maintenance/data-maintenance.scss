@@ -1,8 +1,7 @@
 .data-maintenance {
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding:20px;
+  margin:0 auto;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 // Import mapping styles
@@ -206,6 +205,14 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     border: 1px solid #e0e0e0;
+    /* Now fill the page container without causing viewport overflow */
+    width:100%;
+    max-width:100%;
+    margin:0 auto;
+  }
+
+  @media (max-width: 1000px){
+    .table-container { width:100%; max-width:100%; }
   }
 
   .articles-table {
@@ -1441,6 +1448,21 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .simple-style-codes .simple-text-item input { width:18ch; max-width:18ch; }
 .simple-style-codes .codes-list .simple-text-item input { width:14ch; }
 .simple-style-codes .logos-list .simple-text-item input { width:10ch; }
+.stacked-label-input .simple-text-item { display:flex; flex-direction:column; align-items:stretch; }
+.stacked-label-input .simple-text-item label.stacked { text-align:left; min-width:0; font-weight:500; margin-bottom:2px; }
+.stacked-label-input .simple-text-item input { width:100%; max-width:22ch; }
+.numeric-stacked .simple-text-item input { height:32px; padding:.4rem .55rem; border:1px solid #ced4da; border-radius:4px; font-size:.8rem; }
+.numeric-stacked .simple-text-item input:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.15); }
+.tare-mode-row .mini-group input, .tare-mode-row .mini-group select { height:32px; padding:.35rem .5rem; }
+.description-after-approval .form-group.full-width input { width:100%; }
+.weight-desc-row { align-items:flex-end; }
+.weight-desc-row .form-group.flex-grow { flex:1 1 auto; }
+.labeling-mode-group select { min-width:140px; height:34px; padding:.35rem .6rem; font-size:.8rem; }
+.labeling-mode-group select option { font-size:.8rem; }
+.numeric-stacked .simple-text-item label.stacked { font-size:.8rem; }
+.wide-name input#editName { width:64ch; max-width:100%; }
+.hide-labeler-checkboxes .checkbox-label { display:none !important; }
+.moved-desc-row { display:none; }
 
 /* Scoped larger font size just for dense text-related areas */
 .compact-text-fields input,
@@ -1501,14 +1523,15 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 
 // Order-style adaptation
 .order-like-container {
-  /* Expanded width to use 90% of viewport (was fixed 1200px) */
-  width: 90%;
-  max-width: 90%;
-  margin: 0 auto;
-  padding: 1.5rem 2rem 2.5rem;
+  /* Unified: use 90vw so internal full-width elements align left/right evenly */
+  width:90vw;
+  max-width:90vw;
+  margin:0 auto;
+  padding:1.5rem 2rem 2.5rem;
+  box-sizing:border-box;
   background: linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
-  min-height: 100vh;
-  border-radius: 0 0 18px 18px;
+  min-height:100vh;
+  border-radius:0 0 18px 18px;
 }
 
 /* On narrow viewports keep full width for better space usage */
