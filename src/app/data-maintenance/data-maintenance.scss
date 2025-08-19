@@ -22,8 +22,19 @@
 // Inline import panel
 .import-inline { position:relative; margin:16px -40px 24px -40px; padding:14px 18px 18px 18px; background:#fff; border:1px solid #d9dee4; box-shadow:0 4px 18px rgba(0,0,0,.12); border-radius:10px; font-size:13px; display:flex; flex-direction:column; gap:14px; width:auto; }
 .import-inline.full-bleed { width:calc(100% + 80px); }
-.import-inline.global-fixed { position:fixed; top:60px; left:0; right:0; margin:0; width:100%; border-radius:0 0 12px 12px; padding:18px 40px 24px 40px; box-shadow:0 8px 28px rgba(0,0,0,.25); z-index:120; }
-body.has-import-open { padding-top:140px; }
+.import-inline.global-fixed { position:fixed; top:60px; left:50%; transform:translateX(-50%); margin:0; width:90%; max-width:1800px; border-radius:12px; padding:18px 32px 24px 32px; box-shadow:0 8px 28px rgba(0,0,0,.25); z-index:120; max-height:calc(100vh - 70px); display:flex; flex-direction:column; }
+.import-inline.global-fixed .import-inline-header { position:sticky; top:0; background:#fff; z-index:3; padding-bottom:8px; margin:-4px -8px 4px -8px; padding:4px 8px 8px 8px; border-bottom:1px solid #e2e5e9; }
+.import-inline.global-fixed .import-scroll { overflow:auto; flex:1; min-height:100px; }
+.import-inline.global-fixed .import-inline-body { padding-bottom:12px; }
+.import-inline.global-fixed table.mapping-table, .import-inline.global-fixed table.preview-table { width:100%; border-collapse:collapse; font-size:13px; }
+.import-inline.global-fixed table.mapping-table th, .import-inline.global-fixed table.mapping-table td, .import-inline.global-fixed table.preview-table th, .import-inline.global-fixed table.preview-table td { padding:6px 10px; border-bottom:1px solid #f0f0f0; }
+.import-inline.global-fixed table.preview-table td.wide-text-field, .import-inline.global-fixed table.preview-table th.wide-text-field { min-width:280px; width:280px; }
+.import-inline.global-fixed table.mapping-table thead th, .import-inline.global-fixed table.preview-table thead th { position:sticky; top:0; background:#f5f5f5; z-index:2; }
+body.has-import-open { padding-top:140px; overflow:hidden; }
+
+// Sticky headers inside import tables
+.import-inline.global-fixed table.mapping-table thead th,
+.import-inline.global-fixed table.preview-table thead th { position:sticky; top:0; background:#f5f5f5; z-index:2; }
 .header-right { position:relative; width:100%; display:flex; gap:12px; justify-content:flex-end; }
 .import-inline-header { display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #eceff3; padding-bottom:4px; }
 .import-inline-body { overflow:auto; }
@@ -79,11 +90,12 @@ body.has-import-open { padding-top:140px; }
 
   .search-form {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     align-items: flex-end;
-    flex-wrap: wrap;
+    flex-wrap: wrap; // allow wrapping so fields don't overlap buttons
+    overflow: visible;
 
-    .form-group {
+  .form-group {
       min-width: 200px;
       flex: 1;
 
@@ -102,6 +114,7 @@ body.has-import-open { padding-top:140px; }
         border-radius: 4px;
         font-size: 14px;
         transition: border-color 0.2s;
+        height: 42px; // standardize field height
 
         &:focus {
           outline: none;
@@ -111,10 +124,11 @@ body.has-import-open { padding-top:140px; }
       }
     }
 
-    .search-actions {
-      display: flex;
-      gap: 8px;
-    }
+  .search-actions { display:flex; gap:8px; align-items:flex-end; padding-bottom:2px; margin-left:auto; }
+  .narrow-number { flex:0 0 160px; min-width:160px; margin-right:12px; }
+  .article-name-group { flex: 0 0 auto; }
+  .article-name-input { width:64ch; max-width:100%; }
+  .search-actions .btn { height:42px; display:inline-flex; align-items:center; }
   }
 }
 
@@ -1336,6 +1350,16 @@ body.has-import-open { padding-top:140px; }
 .inline-text-field-row .text-col { flex:1; }
 .inline-text-field-row input { width:100%; padding:.45rem .55rem; border:1px solid #ced4da; border-radius:6px; font-size:.75rem; }
 .inline-text-field-row input:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.15); }
+
+/* Dense edit view overrides to make dynamic field groups compact like Simple Texts */
+.dynamic-fields-container.dense-mode .text-field-row,
+.dynamic-fields-container.dense-mode .code-field-row { background: transparent; border:none; padding:4px 0; margin-bottom:6px; display:flex; gap:8px; align-items:flex-start; }
+.dynamic-fields-container.dense-mode .text-field-row .field-number,
+.dynamic-fields-container.dense-mode .code-field-row .field-number { flex:0 0 120px; }
+.dynamic-fields-container.dense-mode .text-field-row .field-text,
+.dynamic-fields-container.dense-mode .code-field-row .field-text { flex:1; }
+.dynamic-fields-container.dense-mode input { padding:.45rem .55rem; font-size:.75rem; border-radius:4px; }
+.dynamic-fields-container.dense-mode label { font-size:.65rem; font-weight:500; text-transform:uppercase; letter-spacing:.5px; color:#555; margin-bottom:2px; display:block; }
 
 // unify number-field width for compact layout
 .compact-form .number-field { max-width:140px !important; }

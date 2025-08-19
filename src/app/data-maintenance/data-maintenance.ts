@@ -533,15 +533,18 @@ export class DataMaintenanceComponent implements OnInit {
     push('weightClass','Weight Class',['weightclass','weightclassno']);
     push('productGroupNumber','Product Group Number',['productgroupnumber']);
     push('tendencyControl','Tendency Control',['tendencycontrol']);
-    push('staticText','Static Text Param #',['statictext','statictextparameter']);
+    push('staticText','Static Text Param #',[
+      'statictext','statictextparameter','statictextparam','statictextparamno','statictextparameterno',
+      'statictextparameternumber','statictextparamnumber','statictextparameterno','statictextparameter#','statictextparam#'
+    ]);
     // Numeric series helpers
     for(let i=1;i<=10;i++) push(`logoField${i}`,`Logo ${i}`,[`logo${i}`,`logofield${i}`]);
     for(let i=1;i<=7;i++) push(`codeField${i}`,`Code Field ${i}`,[`codenumber${i}`,`codefield${i}`]);
     for(let i=1;i<=7;i++) push(`codeString${i}`,`Code String ${i}`,[`codestring${i}`,`codesubstring${i}`,`codesubstr${i}`]);
     for(let i=1;i<=20;i++) push(`generalNumber${i}`,`General Number ${i}`,[`generalnumber${i.toString().padStart(2,'0')}`,`generalnumber${i}`]);
     for(let i=1;i<=30;i++) push(`simpleText${i}`,`Simple Text ${i}`,[`simpletext${i.toString().padStart(2,'0')}`,`simpletext${i}`,`st${i}`]);
-    for(let i=1;i<=20;i++) push(`textField${i}Number`,`Text Field ${i} (number)`,[`textfield${i}`,`textfeld${i}`]);
-    for(let i=1;i<=20;i++) push(`textField${i}Text`,`Text Field ${i} (text)`,[`textfield${i}text`]);
+  for(let i=1;i<=20;i++) push(`textField${i}Text`,`Text Field ${i} (text)`,[`textfield${i}`,`textfeld${i}`,`textfield${i}text`]);
+  for(let i=1;i<=20;i++) push(`textField${i}Number`,`Text Field ${i} (number)`,[`textfield${i}number`,`textfield${i}num`,`textfeld${i}number`]);
     for(let i=1;i<=3;i++) push(`dateTextField${i}Number`,`Date Text Field ${i} (number)`,[`datetextfieldno${i}`,`datetextfield${i}`]);
     for(let i=1;i<=3;i++) push(`dateTextField${i}Text`,`Date Text Field ${i} (text)`,[`datetextfield${i}text`]);
     return defs;
@@ -802,9 +805,27 @@ export class DataMaintenanceComponent implements OnInit {
       for(let i=4;i<=7;i++){ if(row[`codeString${i}`]!==undefined) article.articlePLU[`codeString${i}`] = row[`codeString${i}`]; }
       for(let i=4;i<=20;i++){ const n=row[`textField${i}Number`]; const t=row[`textField${i}Text`]; if(n!==undefined||t!==undefined){ article.articlePLU[`textField${i}`]={ number: n??-1, text: t||null }; } }
       if(row['dateTextField3Number']!==undefined || row['dateTextField3Text']!==undefined){ article.articlePLU['dateTextField3'] = { number: row['dateTextField3Number'] ?? -1, text: row['dateTextField3Text'] || null }; }
-      const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json'});
-      await this.http.post(`${this.baseUrl}/api/v1/articles/labeler`, article, {headers}).toPromise();
-      row.status = 'created';
+      // Decide create vs update
+      const authToken = this.auth.getToken();
+      const jsonHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json'});
+      let exists = false;
+      try {
+        await this.http.get(`${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, { headers: jsonHeaders }).toPromise();
+        exists = true;
+      } catch(getErr:any) {
+        exists = false; // 404 -> create
+      }
+      if(!exists){
+        await this.http.post(`${this.baseUrl}/api/v1/articles/labeler`, article, {headers: jsonHeaders}).toPromise();
+        row.status = 'created';
+      } else {
+        // Prepare patch operations (ensure basePriceDivision set like updateArticle)
+        if(article.articlePLU){ article.articlePLU.basePriceDivision = 'perUnit'; }
+        const patchOps = this.createPatchOperations(article as LabelerArticle);
+        const patchHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json-patch+json'});
+        await this.http.patch(`${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, patchOps, {headers: patchHeaders}).toPromise();
+        row.status = 'updated';
+      }
     }catch(e:any){
       row.status = 'failed';
       row.error = e?.error?.title || e?.message || 'error';
@@ -813,15 +834,31 @@ export class DataMaintenanceComponent implements OnInit {
   private updateImportProgress(){
     const rows = this.importRows();
     const processed = rows.filter(r=>r.status).length;
-    const success = rows.filter(r=>r.status==='created').length;
+  const success = rows.filter(r=>r.status==='created' || r.status==='updated').length;
     const failed = rows.filter(r=>r.status==='failed').length;
     const percent = rows.length? Math.round(processed*100/rows.length):0;
     const done = processed===rows.length || this.importCancelled;
     this.importProgress.set({processed, success, failed, percent, done});
     if(done) this.finishImport();
   }
+  
+  // Manual refresh of current list (keeps pagination & filters)
+  refreshList(){
+    this.loadArticles();
+  }
   private finishImport(){
     this.importState.set({open:true, step:'done'});
+  }
+
+  // Helper to style preview columns (Text Field 1-10 wider)
+  isWideTextFieldHeader(h:string){
+    if(!h) return false;
+    const norm = h.toLowerCase().replace(/[^a-z0-9]/g,''); // remove spaces/punct
+    // Match textfield1..textfield10 or "text field 01" forms
+    const m = norm.match(/^textfield(\d{1,2})$/);
+    if(!m) return false;
+    const n = parseInt(m[1],10);
+    return n>=1 && n<=10;
   }
   downloadImportErrors(){
     const errs = this.importRows().filter(r=>r.status==='failed');
@@ -1630,7 +1667,8 @@ export class DataMaintenanceComponent implements OnInit {
     for (let i = 1; i <= 20; i++) {
       const fieldKey = `textField${i}` as keyof ArticlePLU;
       const field = article.articlePLU[fieldKey] as TextField;
-      if (field && field.number !== -1) {
+      // Show field if it has an assigned number OR non-empty text value
+      if (field && (field.number !== -1 || (field.text && field.text.trim() !== ''))) {
         textFields.push({
           key: fieldKey,
           field: field,

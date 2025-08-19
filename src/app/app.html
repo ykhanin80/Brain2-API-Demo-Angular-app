@@ -13,7 +13,6 @@
         </span>
       </div>
       <span>Welcome, {{ (currentUser$ | async)?.name }}</span>
-      <button (click)="navigateToSettings()" class="settings-btn">⚙️ Connection Settings</button>
       <button (click)="logout()" class="logout-btn">Logout</button>
     </div>
   </nav>

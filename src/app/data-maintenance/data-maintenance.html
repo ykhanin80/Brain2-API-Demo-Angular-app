@@ -22,16 +22,18 @@
         </button>
       </div>
     <!-- Full-width Import Panel (document flow, full-bleed) -->
-  <div class="import-inline full-bleed global-fixed" *ngIf="importState().open">
+    <div class="import-inline full-bleed global-fixed" *ngIf="importState().open">
       <div class="import-inline-header">
         <strong>Import Articles</strong>
         <div class="import-inline-tabs">
           <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto Map</button>
           <button class="btn btn-small" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()" *ngIf="importState().step==='mapping'">Preview</button>
           <button class="btn btn-small" (click)="backToMapping()" *ngIf="importState().step==='preview'">Back</button>
+          <button class="btn btn-small btn-primary" (click)="startImport()" *ngIf="importState().step==='preview' && importRows().length>0 && invalidImportRowCount()!==importRows().length">Start Import</button>
         </div>
         <button class="btn btn-small" (click)="closeImportDialog()">×</button>
       </div>
+      <div class="import-scroll">
       <div class="import-inline-body" *ngIf="importState().step === 'select'">
         <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)" />
         <div class="hint">Choose CSV (max 5000 rows preview).</div>
@@ -56,16 +58,13 @@
       <div class="import-inline-body" *ngIf="importState().step === 'preview'">
         <div class="preview-head">
           <span>{{ importRows().length }} rows (invalid {{ invalidImportRowCount() }})</span>
-          <div class="preview-actions">
-            <button class="btn btn-small" (click)="startImport()" [disabled]="importRows().length===0 || invalidImportRowCount()===importRows().length">Start Import</button>
-          </div>
         </div>
         <table class="preview-table wide">
-          <thead><tr><th>#</th><th *ngFor="let h of importHeaders()">{{ h }}</th><th>error</th></tr></thead>
+          <thead><tr><th>#</th><th *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ h }}</th><th>error</th></tr></thead>
           <tbody>
             <tr *ngFor="let r of importRows().slice(0,100)">
               <td>{{ r.line }}</td>
-              <td *ngFor="let h of importHeaders()">{{ r.original[h] }}</td>
+              <td *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ r.original[h] }}</td>
               <td class="err">{{ r.error }}</td>
             </tr>
           </tbody>
@@ -83,13 +82,14 @@
           <button class="btn btn-small btn-primary" (click)="closeImportDialog()">Close</button>
         </div>
       </div>
+  </div>
     </div>
     </div>
 
   <!-- Search Section -->
   <div class="search-section">
     <div class="search-form">
-      <div class="form-group">
+  <div class="form-group narrow-number">
         <label for="searchNumber">Article Number</label>
         <input
           type="text"
@@ -100,11 +100,12 @@
         />
       </div>
       
-      <div class="form-group">
+      <div class="form-group article-name-group">
         <label for="searchName">Article Name</label>
         <input
           type="text"
           id="searchName"
+          class="article-name-input"
           [value]="searchParams().articleName || ''"
           (input)="updateSearchArticleName($event)"
           placeholder="Search by article name..."
@@ -119,6 +120,10 @@
         <button class="btn btn-secondary" (click)="clearSearch()">
           <i class="icon-refresh"></i>
           Clear
+        </button>
+        <button class="btn btn-secondary" (click)="refreshList()" title="Reload current page">
+          <i class="icon-refresh"></i>
+          Refresh
         </button>
       </div>
     </div>
@@ -1021,7 +1026,7 @@
               </div>
 
               <!-- Dynamic Text Fields with non -1 values -->
-              <div class="dynamic-fields-container">
+              <div class="dynamic-fields-container dense-mode">
                 <h5 class="field-group-title">Text Fields (showing fields with number ≠ -1)</h5>
                 <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle())" class="text-field-row">
                   <div class="form-row">
@@ -1053,7 +1058,7 @@
               </div>
 
               <!-- Dynamic Simple Texts with non-empty values -->
-              <div class="dynamic-fields-container">
+              <div class="dynamic-fields-container dense-mode">
                 <h5 class="field-group-title">Simple Texts (showing non-empty fields)</h5>
                 <div *ngFor="let simpleText of getSimpleTextsWithValues(selectedArticle())" class="simple-text-row">
                   <div class="form-group">
@@ -1075,7 +1080,7 @@
               <h4 class="subsection-title">🔢 Codes (Code Structures & Substrings)</h4>
               
               <!-- Dynamic Code Fields with non-zero values -->
-              <div class="dynamic-fields-container">
+              <div class="dynamic-fields-container dense-mode">
                 <h5 class="field-group-title">Code Fields (showing non-zero values)</h5>
                 <div *ngFor="let codeField of getCodeFieldsWithValues(selectedArticle())" class="code-field-row">
                   <div class="form-row">
