@@ -1361,6 +1361,26 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .dynamic-fields-container.dense-mode input { padding:.45rem .55rem; font-size:.75rem; border-radius:4px; }
 .dynamic-fields-container.dense-mode label { font-size:.65rem; font-weight:500; text-transform:uppercase; letter-spacing:.5px; color:#555; margin-bottom:2px; display:block; }
 
+/* Ultra compact text field inline rows for edit page */
+.compact-text-fields { padding:4px 6px !important; }
+.compact-text-fields .field-group-title { margin-bottom:4px !important; font-size:.7rem !important; padding-bottom:2px !important; }
+.tf-inline-row { display:grid; grid-template-columns: 48px 72px 1fr; align-items:center; gap:4px; margin-bottom:3px; }
+.tf-inline-row:last-child { margin-bottom:0; }
+.tf-label { font-size:.55rem; font-weight:600; text-align:right; white-space:nowrap; }
+.tf-num { width:70px; padding:.25rem .35rem !important; font-size:.9rem !important; border:1px solid #cdd4db; border-radius:4px; }
+.tf-text { width:100%; padding:.25rem .4rem !important; font-size:.9rem !important; border:1px solid #cdd4db; border-radius:4px; }
+.tf-num:focus, .tf-text:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.12); }
+.compact-text-fields input { line-height:1.1; }
+
+/* Compact simple texts multi-column */
+.compact-simple-texts { padding:4px 6px !important; }
+.compact-simple-texts .field-group-title { margin-bottom:4px !important; font-size:.7rem !important; padding-bottom:2px !important; }
+.simple-texts-grid { display:flex; flex-wrap:wrap; gap:4px 8px; }
+.simple-text-item { display:flex; align-items:center; gap:4px; background:transparent; padding:2px 0; }
+.simple-text-item label { font-size:.55rem; font-weight:600; white-space:nowrap; }
+.simple-text-item .st-input { width:30ch; max-width:30ch; padding:.25rem .4rem; font-size:.9rem; border:1px solid #cdd4db; border-radius:4px; }
+.simple-text-item .st-input:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.12); }
+
 // unify number-field width for compact layout
 .compact-form .number-field { max-width:140px !important; }
 
@@ -1377,6 +1397,88 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   .debug-header h4 { font-size:.8rem; }
   .debug-header small { font-size:.6rem; }
 }
+
+/* Compact labeler configuration inline row */
+.compact-labeler-config .labeler-inline-row { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:flex-end; margin-bottom:12px; }
+.compact-labeler-config .labeler-inline-row .checkbox-label { display:flex; align-items:center; gap:4px; font-size:.65rem; }
+.compact-labeler-config .labeler-inline-row .mini-group { display:flex; flex-direction:column; gap:2px; width:90px; }
+.compact-labeler-config .labeler-inline-row .mini-group label { font-size:.8rem; font-weight:600; text-transform:none; letter-spacing:0; }
+.compact-labeler-config .labeler-inline-row .mini-group input, 
+.compact-labeler-config .labeler-inline-row .mini-group select { padding:.25rem .35rem; font-size:.7rem; border:1px solid #cdd4db; border-radius:4px; }
+.compact-labeler-config .labeler-inline-row .mini-group input:focus, 
+.compact-labeler-config .labeler-inline-row .mini-group select:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.12); }
+
+/* Two-column layout for edit page (adjusted proportions) */
+.edit-columns { display:flex; gap:24px; align-items:flex-start; }
+.edit-columns .col-left { flex:0 0 50%; max-width:50%; }
+.edit-columns .col-right { flex:0 0 50%; max-width:50%; }
+@media (max-width: 1400px) { .edit-columns { gap:18px; } .edit-columns .col-left, .edit-columns .col-right { flex:0 0 50%; max-width:50%; } }
+@media (max-width: 1100px) { .edit-columns { flex-direction:column; } .edit-columns .col-left, .edit-columns .col-right { flex:1 1 auto; max-width:100%; } }
+
+/* Simple table-based split (requested) */
+.edit-split-table { width:100%; border-collapse:collapse; table-layout:fixed; margin:0 0 1rem; }
+.edit-split-table td { vertical-align:top; border:2px solid #000; padding:8px 12px; }
+.edit-split-table .left-cell { width:50%; }
+.edit-split-table .right-cell { width:50%; }
+
+/* Compact Codes / Numbers / Logos */
+.compact-codes .codes-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap:6px 10px; margin-bottom:12px; }
+.compact-codes .codes-grid .code-item { display:grid; grid-template-columns:42px 1fr 1fr; align-items:center; gap:4px; background:transparent; padding:2px 4px; border:1px solid #e3e8ef; border-radius:6px; }
+.compact-codes .codes-grid .code-item label { font-size:.55rem; font-weight:600; text-align:center; }
+.compact-codes .codes-grid .code-item input { height:26px; font-size:.7rem; padding:2px 4px; }
+.numbers-logos-wrap { display:flex; gap:16px; align-items:flex-start; }
+.numbers-grid.compact, .logos-grid.compact { display:grid; gap:4px 8px; }
+.numbers-grid.compact { grid-template-columns: repeat(auto-fill,minmax(84px,1fr)); }
+.logos-grid.compact { grid-template-columns: repeat(auto-fill,minmax(70px,1fr)); }
+.numbers-grid.compact .number-item, .logos-grid.compact .logo-item { display:flex; flex-direction:column; background:transparent; padding:2px 4px; border:1px solid #e3e8ef; border-radius:6px; }
+.numbers-grid.compact label, .logos-grid.compact label { font-size:.55rem; font-weight:600; text-align:center; margin-bottom:2px; }
+.numbers-grid.compact input, .logos-grid.compact input { height:26px; padding:2px 4px; font-size:.7rem; }
+@media (max-width:1400px){ .numbers-logos-wrap { flex-direction:column; gap:12px; } }
+
+/* Simple style codes/numbers/logos matching Simple Texts */
+.simple-style-codes .simple-texts-grid { gap:4px 12px; }
+.simple-style-codes .simple-text-item label { width:auto; min-width:46px; text-align:right; }
+.simple-style-codes .simple-text-item input { width:18ch; max-width:18ch; }
+.simple-style-codes .codes-list .simple-text-item input { width:14ch; }
+.simple-style-codes .logos-list .simple-text-item input { width:10ch; }
+
+/* Scoped larger font size just for dense text-related areas */
+.compact-text-fields input,
+.compact-simple-texts input,
+.tf-inline-row input { font-size:.9rem !important; }
+
+/* Keep mini-group controls compact (smaller than text areas) */
+.labeler-inline-row .mini-group input,
+.labeler-inline-row .mini-group select { font-size:.7rem; height:30px; }
+/* Make checkbox labels same font size as other labels */
+.labeler-inline-row .checkbox-label span { font-size:.8rem; }
+
+/* Uniform control sizing (match Article Name field) */
+.article-form.compact-form input[type=text],
+.article-form.compact-form input[type=number],
+.article-form.compact-form select {
+  font-size:.8rem !important;
+  height:32px !important;
+  line-height:1.2 !important;
+  padding:.4rem .55rem !important;
+}
+/* Override specialized compact fields to inherit uniform size */
+.tf-inline-row .tf-num,
+.tf-inline-row .tf-text,
+.simple-text-item .st-input,
+.numbers-grid.compact input,
+.logos-grid.compact input,
+.codes-grid .code-item input,
+.labeler-inline-row .mini-group input,
+.labeler-inline-row .mini-group select {
+  font-size:inherit !important;
+  height:32px !important;
+  padding:.4rem .55rem !important;
+}
+/* Restore original (more compact) sizing for Text Fields & Simple Texts specifically */
+.tf-inline-row .tf-num,
+.tf-inline-row .tf-text,
+.simple-text-item .st-input { font-size:.9rem !important; height:auto !important; padding:.25rem .4rem !important; }
 
 @media (max-width: 680px) {
   .compact-form {
@@ -1399,12 +1501,19 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 
 // Order-style adaptation
 .order-like-container {
-  max-width: 1200px;
+  /* Expanded width to use 90% of viewport (was fixed 1200px) */
+  width: 90%;
+  max-width: 90%;
   margin: 0 auto;
   padding: 1.5rem 2rem 2.5rem;
   background: linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);
   min-height: 100vh;
   border-radius: 0 0 18px 18px;
+}
+
+/* On narrow viewports keep full width for better space usage */
+@media (max-width: 1100px) {
+  .order-like-container { width:100%; max-width:100%; }
 }
 
 .dm-card {

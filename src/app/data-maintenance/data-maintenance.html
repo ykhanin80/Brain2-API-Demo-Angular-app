@@ -723,434 +723,113 @@
 
     <div class="edit-form-container comprehensive-form">
       <form class="article-form compact-form">
-          
-          <!-- General Article Information Section -->
-          <div class="form-section">
-            <h3 class="section-title">📋 General Information</h3>
-            <div class="form-row three-cols">
-              <div class="form-group">
-                <label for="editNumber">Article Number</label>
-                <input
-                  type="text"
-                  id="editNumber"
-                  [value]="selectedArticle()?.number"
-                  readonly
-                  class="readonly article-number-field"
-                  maxlength="20"
-                />
+        <table class="edit-split-table"><tbody><tr>
+          <td class="left-cell">
+            <!-- Left content: General, Labeler Config, Pricing, Codes/Numbers/Logos -->
+            <!-- General Article Information Section -->
+            <div class="form-section">
+              <h3 class="section-title">📋 General Information</h3>
+              <div class="form-row three-cols">
+                <div class="form-group">
+                  <label for="editNumber">Article Number</label>
+                  <input type="text" id="editNumber" [value]="selectedArticle()?.number" readonly class="readonly article-number-field" maxlength="20" />
+                </div>
+                <div class="form-group">
+                  <label for="editName">Name *</label>
+                  <input type="text" id="editName" maxlength="64" [value]="selectedArticle()?.name" (input)="updateSelectedArticleField('name', $event)" placeholder="Enter article name" required />
+                </div>
+                <div class="form-group">
+                  <label for="editDescription">Description</label>
+                  <input type="text" id="editDescription" maxlength="64" [value]="selectedArticle()?.description" (input)="updateSelectedArticleField('description', $event)" placeholder="Enter description" />
+                </div>
               </div>
-              <div class="form-group">
-                <label for="editName">Name *</label>
-                <input
-                  type="text"
-                  id="editName"
-                  maxlength="64"
-                  [value]="selectedArticle()?.name"
-                  (input)="updateSelectedArticleField('name', $event)"
-                  placeholder="Enter article name"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label for="editDescription">Description</label>
-                <input
-                  type="text"
-                  id="editDescription"
-                  maxlength="64"
-                  [value]="selectedArticle()?.description"
-                  (input)="updateSelectedArticleField('description', $event)"
-                  placeholder="Enter description"
-                />
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="editWeightUnit">Weight Unit</label>
-                <select
-                  id="editWeightUnit"
-                  [value]="selectedArticle()?.weightUnit"
-                  (change)="updateSelectedArticleField('weightUnit', $event)"
-                  required
-                >
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="editWeightUnit">Weight Unit</label>
+                  <select id="editWeightUnit" [value]="selectedArticle()?.weightUnit" (change)="updateSelectedArticleField('weightUnit', $event)" required>
                     <option value="lb">Pounds (lb)</option>
-                  <option value="kg">Kilograms (kg)</option>
-                   </select>
-              </div>
-              
-              <div class="form-group">
-                <label for="editWeightDecimals">Weight Decimal Places</label>
-                <input
-                  type="number"
-                  id="editWeightDecimals"
-                  [value]="selectedArticle()?.weightDecimalPlaces"
-                  (input)="updateSelectedArticleField('weightDecimalPlaces', $event)"
-                  min="0"
-                  max="6"
-                />
-              </div>
-            </div>
-            
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input
-                  type="checkbox"
-                  [checked]="selectedArticle()?.active"
-                  (change)="updateSelectedArticleField('active', $event)"
-                />
-                <span>Active</span>
-              </label>
-              
-              <label class="checkbox-label">
-                <input
-                  type="checkbox"
-                  [checked]="selectedArticle()?.approved"
-                  (change)="updateSelectedArticleField('approved', $event)"
-                />
-                <span>Approved</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Labeler Configuration Section -->
-          <div class="form-section">
-            <h3 class="section-title">🏷️ Labeler Configuration</h3>
-            
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input
-                  type="checkbox"
-                  [checked]="selectedArticle()?.isEnabledForLabelers"
-                  (change)="updateSelectedArticleField('isEnabledForLabelers', $event)"
-                />
-                <span>Enabled for Labelers</span>
-              </label>
-              
-              <label class="checkbox-label">
-                <input
-                  type="checkbox"
-                  [checked]="selectedArticle()?.isEnabledForGxCheckWeighers"
-                  (change)="updateSelectedArticleField('isEnabledForGxCheckWeighers', $event)"
-                />
-                <span>Enabled for GX Checkweighers</span>
-              </label>
-            </div>
-
-            <!-- Labeler General Sub-section -->
-            <div class="form-subsection">
-              <h4 class="subsection-title">💰 General (Pricing & Shelf Life)</h4>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="editUnitPrice">Unit Price Value</label>
-                  <input
-                    type="number"
-                    id="editUnitPrice"
-                      [value]="selectedUnitPriceInput() || (selectedArticle()?.articlePLU?.unitPriceValue ?? 0)"
-                      (input)="onSelectedUnitPriceInput($event)"
-                      (blur)="commitSelectedUnitPrice()"
-                    step="any"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="editCurrency">Currency Code</label>
-                  <select
-                    id="editCurrency"
-                    [value]="selectedArticle()?.gxPriceCurrencyCode || 'USD'"
-                    (change)="updateSelectedArticleField('gxPriceCurrencyCode', $event)"
-                  >
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="CAD">CAD - Canadian Dollar</option>
-                    <option value="MXN">MXN - Mexican Peso</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
+                    <option value="kg">Kilograms (kg)</option>
                   </select>
                 </div>
-              </div>
-              
-              <div class="form-row">
                 <div class="form-group">
-                  <label for="editShelfLife1">Shelf Life Days 1</label>
-                  <input
-                    type="number"
-                    id="editShelfLife1"
-                    [value]="selectedArticle()?.articlePLU?.shelfLifeDays1 || 0"
-                    (input)="updateSelectedArticlePLUField('shelfLifeDays1', $event)"
-                    min="0"
-                    class="number-field"
-                  />
+                  <label for="editWeightDecimals">Weight Decimal Places</label>
+                  <input type="number" id="editWeightDecimals" [value]="selectedArticle()?.weightDecimalPlaces" (input)="updateSelectedArticleField('weightDecimalPlaces', $event)" min="0" max="6" />
                 </div>
-                
-                <div class="form-group">
-                  <label for="editShelfLife2">Shelf Life Days 2</label>
-                  <input
-                    type="number"
-                    id="editShelfLife2"
-                    [value]="selectedArticle()?.articlePLU?.shelfLifeDays2 || 0"
-                    (input)="updateSelectedArticlePLUField('shelfLifeDays2', $event)"
-                    min="0"
-                    class="number-field"
-                  />
+              </div>
+              <div class="checkbox-group">
+                <label class="checkbox-label"><input type="checkbox" [checked]="selectedArticle()?.active" (change)="updateSelectedArticleField('active', $event)" /> <span>Active</span></label>
+                <label class="checkbox-label"><input type="checkbox" [checked]="selectedArticle()?.approved" (change)="updateSelectedArticleField('approved', $event)" /> <span>Approved</span></label>
+              </div>
+            </div>
+            <div class="form-section compact-labeler-config">
+              <h3 class="section-title">🏷️ Labeler Configuration & Labeling</h3>
+              <div class="labeler-inline-row">
+                <label class="checkbox-label"><input type="checkbox" [checked]="selectedArticle()?.isEnabledForLabelers" (change)="updateSelectedArticleField('isEnabledForLabelers', $event)" /> <span>Labelers</span></label>
+                <label class="checkbox-label"><input type="checkbox" [checked]="selectedArticle()?.isEnabledForGxCheckWeighers" (change)="updateSelectedArticleField('isEnabledForGxCheckWeighers', $event)" /> <span>GX Checkweighers</span></label>
+                <div class="mini-group"><label for="editMinWeight">Min Wt</label><input type="number" id="editMinWeight" [value]="selectedArticle()?.articlePLU?.minWeightValue || 0" (input)="updateSelectedArticlePLUField('minWeightValue', $event)" step="any" min="0" /></div>
+                <div class="mini-group"><label for="editMaxWeight">Max Wt</label><input type="number" id="editMaxWeight" [value]="selectedArticle()?.articlePLU?.maxWeightValue || 0" (input)="updateSelectedArticlePLUField('maxWeightValue', $event)" step="any" min="0" /></div>
+                <div class="mini-group"><label for="editTareWeight">Tare</label><input type="number" id="editTareWeight" [value]="selectedArticle()?.articlePLU?.tareWeightValue || 0" (input)="updateSelectedArticlePLUField('tareWeightValue', $event)" step="any" min="0" /></div>
+                <div class="mini-group"><label for="editLabelingMode">Mode</label><select id="editLabelingMode" [value]="selectedArticle()?.articlePLU?.labelingMode || 'fixedWeight'" (change)="updateSelectedArticlePLUField('labelingMode', $event)"><option value="weight">Weight</option><option value="fixedPrice">Fixed Price</option><option value="fixedWeight">Fixed Weight</option><option value="fixedValue">Fixed Value</option></select></div>
+              </div>
+              <div class="form-subsection">
+                <h4 class="subsection-title">💰 General (Pricing & Shelf Life)</h4>
+                <div class="form-row">
+                  <div class="form-group"><label for="editUnitPrice">Unit Price Value</label><input type="number" id="editUnitPrice" [value]="selectedUnitPriceInput() || (selectedArticle()?.articlePLU?.unitPriceValue ?? 0)" (input)="onSelectedUnitPriceInput($event)" (blur)="commitSelectedUnitPrice()" step="any" min="0" class="number-field" /></div>
+                  <div class="form-group"><label for="editCurrency">Currency Code</label><select id="editCurrency" [value]="selectedArticle()?.gxPriceCurrencyCode || 'USD'" (change)="updateSelectedArticleField('gxPriceCurrencyCode', $event)"><option value="USD">USD - US Dollar</option><option value="CAD">CAD - Canadian Dollar</option><option value="MXN">MXN - Mexican Peso</option><option value="EUR">EUR - Euro</option><option value="GBP">GBP - British Pound</option></select></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group"><label for="editShelfLife1">Shelf Life Days 1</label><input type="number" id="editShelfLife1" [value]="selectedArticle()?.articlePLU?.shelfLifeDays1 || 0" (input)="updateSelectedArticlePLUField('shelfLifeDays1', $event)" min="0" class="number-field" /></div>
+                  <div class="form-group"><label for="editShelfLife2">Shelf Life Days 2</label><input type="number" id="editShelfLife2" [value]="selectedArticle()?.articlePLU?.shelfLifeDays2 || 0" (input)="updateSelectedArticlePLUField('shelfLifeDays2', $event)" min="0" class="number-field" /></div>
+                </div>
+              </div>
+              <div class="form-subsection compact-codes simple-style-codes">
+                <h4 class="subsection-title">🔢 Codes / Numbers / Logos</h4>
+                <h5 class="field-group-title">Code Structures</h5>
+                <div class="simple-texts-grid codes-list">
+                  <div *ngFor="let codeField of getCodeFieldsWithValues(selectedArticle())" class="simple-text-item">
+                    <label [for]="'edit' + codeField.fieldKey">CS {{ codeField.index }}</label>
+                    <input type="number" [id]="'edit' + codeField.fieldKey" [value]="codeField.fieldValue" (input)="updateSelectedArticlePLUFieldDynamic(codeField.fieldKey, $event)" min="0" />
+                  </div>
+                </div>
+                <h5 class="field-group-title">General Numbers</h5>
+                <div class="simple-texts-grid numbers-list">
+                  <div *ngFor="let generalNumber of getGeneralNumbersWithValues(selectedArticle())" class="simple-text-item">
+                    <label [for]="'edit' + generalNumber.key">GN {{ generalNumber.index }}</label>
+                    <input type="number" [id]="'edit' + generalNumber.key" [value]="generalNumber.value" (input)="updateSelectedArticlePLUFieldDynamic(generalNumber.key, $event)" />
+                  </div>
+                </div>
+                <h5 class="field-group-title">Logos</h5>
+                <div class="simple-texts-grid logos-list">
+                  <div *ngFor="let logo of getLogosWithValues(selectedArticle())" class="simple-text-item">
+                    <label [for]="'edit' + logo.key">L {{ logo.index }}</label>
+                    <input type="number" [id]="'edit' + logo.key" [value]="logo.value" (input)="updateSelectedArticlePLUFieldDynamic(logo.key, $event)" min="0" />
+                  </div>
                 </div>
               </div>
             </div>
-
-            <!-- Labeling Sub-section -->
-            <div class="form-subsection">
-              <h4 class="subsection-title">⚖️ Labeling (Weights & Mode)</h4>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="editFixedWeight">Fixed Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
-                  <input
-                    type="number"
-                    id="editFixedWeight"
-                    [value]="selectedArticle()?.articlePLU?.fixedWeightValue || 0"
-                    (input)="updateSelectedArticlePLUField('fixedWeightValue', $event)"
-                    step="any"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="editMinWeight">Min Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
-                  <input
-                    type="number"
-                    id="editMinWeight"
-                    [value]="selectedArticle()?.articlePLU?.minWeightValue || 0"
-                    (input)="updateSelectedArticlePLUField('minWeightValue', $event)"
-                    step="any"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="editMaxWeight">Max Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
-                  <input
-                    type="number"
-                    id="editMaxWeight"
-                    [value]="selectedArticle()?.articlePLU?.maxWeightValue || 0"
-                    (input)="updateSelectedArticlePLUField('maxWeightValue', $event)"
-                    step="any"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-              </div>
-              
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="editTareWeight">Tare Weight {{ getWeightUnitLabel(selectedArticle()) }}</label>
-                  <input
-                    type="number"
-                    id="editTareWeight"
-                    [value]="selectedArticle()?.articlePLU?.tareWeightValue || 0"
-                    (input)="updateSelectedArticlePLUField('tareWeightValue', $event)"
-                    step="any"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="editLabelingMode">Labeling Mode</label>
-                  <select
-                    id="editLabelingMode"
-                    [value]="selectedArticle()?.articlePLU?.labelingMode || 'fixedWeight'"
-                    (change)="updateSelectedArticlePLUField('labelingMode', $event)"
-                  >
-                    <option value="weight">Weight</option>
-                    <option value="fixedPrice">Fixed Price</option>
-                    <option value="fixedWeight">Fixed Weight</option>
-                    <option value="fixedValue">Fixed Value</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Device Parameters -->
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="editLabelParameter">Label Parameter #</label>
-                  <input
-                    type="number"
-                    id="editLabelParameter"
-                    [value]="selectedArticle()?.articlePLU?.labelParameter || 0"
-                    (input)="updateSelectedArticlePLUField('labelParameter', $event)"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="editAutoLabelParam">Auto Label Parameter</label>
-                  <input
-                    type="number"
-                    id="editAutoLabelParam"
-                    [value]="selectedArticle()?.articlePLU?.automaticLabelParameter || 0"
-                    (input)="updateSelectedArticlePLUField('automaticLabelParameter', $event)"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-                
-                <div class="form-group">
-                  <label for="editWeightClass">Weight Class #</label>
-                  <input
-                    type="number"
-                    id="editWeightClass"
-                    [value]="selectedArticle()?.articlePLU?.weightClass || 0"
-                    (input)="updateSelectedArticlePLUField('weightClass', $event)"
-                    min="0"
-                    class="number-field"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <!-- Text Fields Sub-section -->
+          </td>
+          <td class="right-cell">
+            <!-- Texts only -->
             <div class="form-subsection">
               <h4 class="subsection-title">📝 Texts (Static & General Texts)</h4>
-              <div class="form-group">
-                <label for="editStaticText">Static Text #</label>
-                <input
-                  type="number"
-                  id="editStaticText"
-                  [value]="selectedArticle()?.articlePLU?.staticText || 0"
-                  (input)="updateSelectedArticlePLUField('staticText', $event)"
-                  min="0"
-                  class="number-field"
-                />
-              </div>
-
-              <!-- Dynamic Text Fields with non -1 values -->
-              <div class="dynamic-fields-container dense-mode">
-                <h5 class="field-group-title">Text Fields (showing fields with number ≠ -1)</h5>
-                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle())" class="text-field-row">
-                  <div class="form-row">
-                    <div class="form-group field-number">
-                      <label [for]="'edit' + textField.key + 'Num'">Text Field {{ textField.index }} Number</label>
-                      <input
-                        type="text"
-                        inputmode="numeric"
-                        pattern="\\d{0,10}"
-                        maxlength="10"
-                        [id]="'edit' + textField.key + 'Num'"
-                        [value]="textField.field.number === -1 ? '' : textField.field.number"
-                        (input)="onEditTextFieldNumberInput(textField.key, $event)"
-                        class="number-field no-spinner"
-                      />
-                    </div>
-                    <div class="form-group field-text">
-                      <label [for]="'edit' + textField.key + 'Text'">Text Field {{ textField.index }} Text</label>
-                      <textarea
-                        [id]="'edit' + textField.key + 'Text'"
-                        [value]="textField.field.text || ''"
-                        (input)="updateSelectedArticleTextFieldDynamic(textField.key, 'text', $event)"
-                        rows="2"
-                        class="text-area-field"
-                      ></textarea>
-                    </div>
-                  </div>
+              <div class="form-group"><label for="editStaticText">Static Text #</label><input type="number" id="editStaticText" [value]="selectedArticle()?.articlePLU?.staticText || 0" (input)="updateSelectedArticlePLUField('staticText', $event)" min="0" class="number-field" /></div>
+              <div class="dynamic-fields-container dense-mode compact-text-fields">
+                <h5 class="field-group-title">Text Fields</h5>
+                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle())" class="tf-inline-row">
+                  <label class="tf-label" [for]="'edit' + textField.key + 'Num'">TF {{ textField.index }}</label>
+                  <input type="text" inputmode="numeric" pattern="\\d{0,10}" maxlength="10" [id]="'edit' + textField.key + 'Num'" [value]="textField.field.number === -1 ? '' : (rawTextFieldNumbersEdit[textField.key] || textField.field.number)" (input)="onEditTextFieldNumberInput(textField.key, $event)" (blur)="commitEditTextFieldNumber(textField.key)" class="tf-num" />
+                  <input type="text" [id]="'edit' + textField.key + 'Text'" [value]="textField.field.text || ''" (input)="updateSelectedArticleTextFieldDynamic(textField.key, 'text', $event)" class="tf-text" placeholder="Text Field {{ textField.index }} Text" />
                 </div>
               </div>
-
-              <!-- Dynamic Simple Texts with non-empty values -->
-              <div class="dynamic-fields-container dense-mode">
-                <h5 class="field-group-title">Simple Texts (showing non-empty fields)</h5>
-                <div *ngFor="let simpleText of getSimpleTextsWithValues(selectedArticle())" class="simple-text-row">
-                  <div class="form-group">
-                    <label [for]="'edit' + simpleText.key">Simple Text {{ simpleText.index }}</label>
-                    <input
-                      type="text"
-                      [id]="'edit' + simpleText.key"
-                      [value]="simpleText.value"
-                      (input)="updateSelectedArticlePLUFieldDynamic(simpleText.key, $event)"
-                      class="text-field"
-                    />
-                  </div>
+              <div class="dynamic-fields-container dense-mode compact-simple-texts">
+                <h5 class="field-group-title">Simple Texts</h5>
+                <div class="simple-texts-grid">
+                  <div *ngFor="let simpleText of getSimpleTextsWithValues(selectedArticle())" class="simple-text-item"><label [for]="'edit' + simpleText.key">ST {{ simpleText.index }}</label><input type="text" maxlength="30" [id]="'edit' + simpleText.key" [value]="simpleText.value" (input)="updateSelectedArticlePLUFieldDynamic(simpleText.key, $event)" class="st-input" /></div>
                 </div>
               </div>
             </div>
-
-            <!-- Codes Sub-section -->
-            <div class="form-subsection">
-              <h4 class="subsection-title">🔢 Codes (Code Structures & Substrings)</h4>
-              
-              <!-- Dynamic Code Fields with non-zero values -->
-              <div class="dynamic-fields-container dense-mode">
-                <h5 class="field-group-title">Code Fields (showing non-zero values)</h5>
-                <div *ngFor="let codeField of getCodeFieldsWithValues(selectedArticle())" class="code-field-row">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label [for]="'edit' + codeField.fieldKey">Code Structure # {{ codeField.index }}</label>
-                      <input
-                        type="number"
-                        [id]="'edit' + codeField.fieldKey"
-                        [value]="codeField.fieldValue"
-                        (input)="updateSelectedArticlePLUFieldDynamic(codeField.fieldKey, $event)"
-                        min="0"
-                        class="number-field"
-                      />
-                    </div>
-                    
-                    <div class="form-group">
-                      <label [for]="'edit' + codeField.stringKey">Code Substring {{ codeField.index }}</label>
-                      <input
-                        type="text"
-                        [id]="'edit' + codeField.stringKey"
-                        [value]="codeField.stringValue"
-                        (input)="updateSelectedArticlePLUFieldDynamic(codeField.stringKey, $event)"
-                        class="text-field"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Numbers and Logos Sub-section -->
-            <div class="form-subsection">
-              <h4 class="subsection-title">🔢 Numbers and Logos</h4>
-              
-              <!-- Dynamic General Numbers with non-zero values -->
-              <div class="dynamic-fields-container">
-                <h5 class="field-group-title">General Numbers (showing non-zero values)</h5>
-                <div class="numbers-grid">
-                  <div *ngFor="let generalNumber of getGeneralNumbersWithValues(selectedArticle())" class="form-group">
-                    <label [for]="'edit' + generalNumber.key">General Number {{ generalNumber.index }}</label>
-                    <input
-                      type="number"
-                      [id]="'edit' + generalNumber.key"
-                      [value]="generalNumber.value"
-                      (input)="updateSelectedArticlePLUFieldDynamic(generalNumber.key, $event)"
-                      class="number-field"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Dynamic Logo Fields with non-zero values -->
-              <div class="dynamic-fields-container">
-                <h5 class="field-group-title">Logo Fields (showing non-zero values)</h5>
-                <div class="logos-grid">
-                  <div *ngFor="let logo of getLogosWithValues(selectedArticle())" class="form-group">
-                    <label [for]="'edit' + logo.key">Logo # {{ logo.index }}</label>
-                    <input
-                      type="number"
-                      [id]="'edit' + logo.key"
-                      [value]="logo.value"
-                      (input)="updateSelectedArticlePLUFieldDynamic(logo.key, $event)"
-                      min="0"
-                      class="number-field"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </td>
+        </tr></tbody></table>
       </form>
       <div class="form-actions">
         <button class="btn btn-secondary" (click)="goToListPage()">Cancel</button>
