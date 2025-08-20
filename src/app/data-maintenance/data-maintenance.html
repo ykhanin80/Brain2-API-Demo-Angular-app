@@ -76,7 +76,7 @@
         <button class="btn btn-small" (click)="cancelImport()" [disabled]="importProgress().done">Cancel</button>
       </div>
       <div class="import-inline-body" *ngIf="importState().step === 'done'">
-        <div>Done: {{ importProgress().success }} created, {{ importProgress().failed }} failed.</div>
+    <div>Done: {{ importProgress().created }} created, {{ importProgress().updated }} updated, {{ importProgress().failed }} failed.</div>
         <div class="import-done-actions">
           <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="importProgress().failed===0">Errors CSV</button>
           <button class="btn btn-small btn-primary" (click)="closeImportDialog()">Close</button>

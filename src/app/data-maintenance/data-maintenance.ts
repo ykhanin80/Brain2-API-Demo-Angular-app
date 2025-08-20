@@ -500,7 +500,7 @@ export class DataMaintenanceComponent implements OnInit {
   importRawRows = signal<any[]>([]); // raw rows from CSV prior to mapping
   importHeaders = signal<string[]>([]); // original CSV headers
   importMapping = signal<{[csvHeader:string]: string}>({}); // header -> internal field key
-  importProgress = signal<{processed:number; success:number; failed:number; percent:number; done:boolean}>({processed:0, success:0, failed:0, percent:0, done:false});
+  importProgress = signal<{processed:number; success:number; created:number; updated:number; failed:number; percent:number; done:boolean}>({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
   private importFieldDefinitions: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = this.buildImportFieldDefinitions();
   private importRequiredKeys = ['number','name'];
   // Expose field definitions to template
@@ -545,8 +545,27 @@ export class DataMaintenanceComponent implements OnInit {
     for(let i=1;i<=30;i++) push(`simpleText${i}`,`Simple Text ${i}`,[`simpletext${i.toString().padStart(2,'0')}`,`simpletext${i}`,`st${i}`]);
   for(let i=1;i<=20;i++) push(`textField${i}Text`,`Text Field ${i} (text)`,[`textfield${i}`,`textfeld${i}`,`textfield${i}text`]);
   for(let i=1;i<=20;i++) push(`textField${i}Number`,`Text Field ${i} (number)`,[`textfield${i}number`,`textfield${i}num`,`textfeld${i}number`]);
-    for(let i=1;i<=3;i++) push(`dateTextField${i}Number`,`Date Text Field ${i} (number)`,[`datetextfieldno${i}`,`datetextfield${i}`]);
-    for(let i=1;i<=3;i++) push(`dateTextField${i}Text`,`Date Text Field ${i} (text)`,[`datetextfield${i}text`]);
+    // Date Text Fields: ensure Text variant is defined BEFORE Number variant so auto-map & dropdown favor text.
+    for(let i=1;i<=3;i++) push(
+      `dateTextField${i}Text`,
+      `Date Text Field ${i} (text)`,
+      [
+        `datetextfield${i}`,
+        `date text field ${i}`,
+        `datetextfield${i}text`,
+        `datetextfield${i}txt`
+      ]
+    );
+    for(let i=1;i<=3;i++) push(
+      `dateTextField${i}Number`,
+      `Date Text Field ${i} (number)`,
+      [
+        `datetextfieldno${i}`,
+        `datetextfield${i}number`,
+        `datetextfield${i}num`,
+        `datetextfield${i}nbr`
+      ]
+    );
     return defs;
   }
   private importCancelled = false;
@@ -571,7 +590,7 @@ export class DataMaintenanceComponent implements OnInit {
   this.importRawRows.set([]);
   this.importHeaders.set([]);
   this.importMapping.set({});
-  this.importProgress.set({processed:0, success:0, failed:0, percent:0, done:false});
+  this.importProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
   document.body.classList.add('has-import-open');
   }
   closeImportDialog(){
@@ -613,20 +632,50 @@ export class DataMaintenanceComponent implements OnInit {
     const mapping: {[csvHeader:string]: string} = { ...this.importMapping() };
     const usedTargets = new Set(Object.values(mapping));
     headers.forEach(h=>{
-      const norm = this.normalizeHeaderName(h);
+        // Normalize header: join lines, remove spaces, lowercase
+        let norm = h.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
+        norm = norm.replace(/[^a-z0-9 ]/g, '');
+        const normCompact = norm.replace(/ /g,''); // no-space version for relaxed matching
+        // Special handling: plain 'date text field X' -> Text variant, explicit number tokens -> Number variant
+        const dtPlainMatch = norm.match(/^date text field (\d)$/);
+        if(dtPlainMatch){
+          const idx = dtPlainMatch[1];
+          const target = `dateTextField${idx}Text`;
+          if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
+          return;
+        }
+        const dtSpecificNumber = norm.match(/^date text field (\d) number$/) || norm.match(/^date text field (\d) num$/) || norm.match(/^date text field (\d) nbr$/);
+        if(dtSpecificNumber){
+          const idx = dtSpecificNumber[1];
+          const target = `dateTextField${idx}Number`;
+          if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
+          return;
+        }
+        // New: handle exported form 'Date text field no. X' (becomes 'date text field no x') -> Number variant
+        const dtNoVariant = norm.match(/^date text field no (\d)$/);
+        if(dtNoVariant){
+          const idx = dtNoVariant[1];
+          const target = `dateTextField${idx}Number`;
+          if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
+          return;
+        }
       if(mapping[h]) return; // already mapped
       // direct synonym match
       for(const def of this.importFieldDefinitions){
         if(usedTargets.has(def.key)) continue;
-        if(def.synonyms.includes(norm)){ mapping[h] = def.key; usedTargets.add(def.key); return; }
+          if(def.synonyms.includes(norm) || def.synonyms.includes(normCompact)){ mapping[h] = def.key; usedTargets.add(def.key); return; }
       }
+        // Special case: 'Date Text Field 1', 'Date Text Field 2', 'Date Text Field 3' should map to 'dateTextField1Text', etc.
+        for(let i=1;i<=3;i++){
+          // Already handled above
+        }
       // pattern simpleTextXX
       const simpleTextMatch = norm.match(/^simpletext(\d{1,2})$/); if(simpleTextMatch){ const n=parseInt(simpleTextMatch[1],10); if(n>=1&&n<=30){ mapping[h] = `simpleText${n}`; return; }}
       const generalNumberMatch = norm.match(/^generalnumber(\d{1,2})$/); if(generalNumberMatch){ const n=parseInt(generalNumberMatch[1],10); if(n>=1&&n<=20){ mapping[h] = `generalNumber${n}`; return; }}
       const logoMatch = norm.match(/^logo(\d{1,2})$/); if(logoMatch){ const n=parseInt(logoMatch[1],10); if(n>=1&&n<=10){ mapping[h] = `logoField${n}`; return; }}
       const codeNumMatch = norm.match(/^codenumber(\d)$/); if(codeNumMatch){ mapping[h] = `codeField${codeNumMatch[1]}`; return; }
       const codeSubMatch = norm.match(/^codesubstring(\d)$/); if(codeSubMatch){ mapping[h] = `codeString${codeSubMatch[1]}`; return; }
-      const dateTextMatch = norm.match(/^datetextfieldno(\d)$/); if(dateTextMatch){ mapping[h] = `dateTextField${dateTextMatch[1]}`; return; }
+      const dateTextMatch = normCompact.match(/^datetextfieldno(\d)$/); if(dateTextMatch){ const idx=dateTextMatch[1]; const target=`dateTextField${idx}Number`; if(!usedTargets.has(target)){ mapping[h]=target; usedTargets.add(target);} return; }
       const generalTextFieldMatch = norm.match(/^generaltextfieldno(\d)$/); if(generalTextFieldMatch){ mapping[h] = `textField${generalTextFieldMatch[1]}`; return; }
     });
     this.importMapping.set(mapping);
@@ -728,7 +777,7 @@ export class DataMaintenanceComponent implements OnInit {
   invalidImportRowCount(){ return this.importRows().filter(r=>r.error).length; }
   startImport(){
     this.importCancelled = false;
-    this.importProgress.set({processed:0, success:0, failed:0, percent:0, done:false});
+  this.importProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
     // filter valid rows only for now
     const rows = this.importRows().filter(r=>!r.error);
     this.importRows.set(rows);
@@ -834,11 +883,13 @@ export class DataMaintenanceComponent implements OnInit {
   private updateImportProgress(){
     const rows = this.importRows();
     const processed = rows.filter(r=>r.status).length;
-  const success = rows.filter(r=>r.status==='created' || r.status==='updated').length;
+    const created = rows.filter(r=>r.status==='created').length;
+    const updated = rows.filter(r=>r.status==='updated').length;
+    const success = created + updated;
     const failed = rows.filter(r=>r.status==='failed').length;
     const percent = rows.length? Math.round(processed*100/rows.length):0;
     const done = processed===rows.length || this.importCancelled;
-    this.importProgress.set({processed, success, failed, percent, done});
+    this.importProgress.set({processed, success, created, updated, failed, percent, done});
     if(done) this.finishImport();
   }
   

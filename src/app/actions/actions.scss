@@ -13,6 +13,17 @@
   }
 }
 
+:host-context(body.dark-theme) .actions-wrapper {
+  background: linear-gradient(135deg,#1e1e21 0%,#2a2d33 60%,#22252a 100%);
+}
+:host-context(body.dark-theme) .actions-wrapper h2 { color:#e4e8ec; }
+:host-context(body.dark-theme) .job-form,
+:host-context(body.dark-theme) .job-list,
+:host-context(body.dark-theme) .response-section { background:#212225; box-shadow:0 6px 18px rgba(0,0,0,.6); border-color:#2f3338; }
+:host-context(body.dark-theme) .job-form h3,
+:host-context(body.dark-theme) .job-list h3,
+:host-context(body.dark-theme) .response-section h3 { color:#e0e4e8; }
+
 .job-form, .job-list, .response-section {
   background: white;
   border: 1px solid #e0e6ed;

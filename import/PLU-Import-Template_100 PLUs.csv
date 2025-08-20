@@ -1,0 +1,304 @@
+Number,Name,Labeling mode,Active,Description,Unit,Shelf life 1,Simple text 01,Simple text 02,Simple text 03,Static Text Param #,Tare Weight,Unit Price,Special price,Automatic Label Parameter,Code number 1,Code number 2,Code number 3,Code substring 1,Code substring 2,Code substring 3,Date Text Field 1,Date Text Field 2,Fixed weight,General number 01,General number 02,Text Field 1,Text Field 2,Text Field 3,Text Field 4,Text Field 5,Text Field 6,Text Field 7,Text Field 8,Text Field 9,Text Field 10,Label parameter set no.,Logo 1,Logo 2,Minimum weight,Maximum weight,Pieces per package,Weight class no.
+20,Yevhen Recipe 20,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+21,Yevhen Recipe 21,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+22,Yevhen Recipe 22,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+23,Yevhen Recipe 23,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+24,Yevhen Recipe 24,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+25,Yevhen Recipe 25,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+26,Yevhen Recipe 26,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+27,Yevhen Recipe 27,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+28,Yevhen Recipe 28,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+29,Yevhen Recipe 29,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+30,Yevhen Recipe 30,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+31,Yevhen Recipe 31,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+32,Yevhen Recipe 32,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+33,Yevhen Recipe 33,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+34,Yevhen Recipe 34,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+35,Yevhen Recipe 35,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+36,Yevhen Recipe 36,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+37,Yevhen Recipe 37,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+38,Yevhen Recipe 38,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+39,Yevhen Recipe 39,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+40,Yevhen Recipe 40,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+41,Yevhen Recipe 41,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+42,Yevhen Recipe 42,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+43,Yevhen Recipe 43,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+44,Yevhen Recipe 44,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+45,Yevhen Recipe 45,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+46,Yevhen Recipe 46,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+47,Yevhen Recipe 47,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+48,Yevhen Recipe 48,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+49,Yevhen Recipe 49,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+50,Yevhen Recipe 50,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+51,Yevhen Recipe 51,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+52,Yevhen Recipe 52,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+53,Yevhen Recipe 53,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+54,Yevhen Recipe 54,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+55,Yevhen Recipe 55,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+56,Yevhen Recipe 56,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+57,Yevhen Recipe 57,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+58,Yevhen Recipe 58,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+59,Yevhen Recipe 59,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+60,Yevhen Recipe 60,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+61,Yevhen Recipe 61,FixedWeight,TRUE,changed by Billy 5/5/2025,lb,18,simple text 1,simple text2,st3,1122,0.08 lb,19.99 USD,17.99 USD,1,1,2,3,12345678901,codesubstr2,,Packed On:,Sell By:,1.7500 lb,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",BNLS CNTR CUT LOIN CHOPS ,Pork Loin Boneless Center Cut  Butterfly Chops,"^09;With Up To 9% Solution Of Water, Contains 2% Or 
+Less Of Sodium Phosphates, Potassium Acetate, 
+Potassium Lactate And Salt To Improve Tenderness
+And Juiciness.",text5,text6,text7,text8,text9,text10,1,1,2,1.7500 lb,2.5000 lb,8,1
+121,Yevhen Recipe 121,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+122,Yevhen Recipe 122,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+123,Yevhen Recipe 123,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+124,Yevhen Recipe 124,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+125,Yevhen Recipe 125,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+126,Yevhen Recipe 126,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+127,Yevhen Recipe 127,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+128,Yevhen Recipe 128,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+129,Yevhen Recipe 129,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+130,Yevhen Recipe 130,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+131,Yevhen Recipe 131,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+132,Yevhen Recipe 132,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+133,Yevhen Recipe 133,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+134,Yevhen Recipe 134,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+135,Yevhen Recipe 135,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+136,Yevhen Recipe 136,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+137,Yevhen Recipe 137,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+138,Yevhen Recipe 138,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+139,Yevhen Recipe 139,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+140,Yevhen Recipe 140,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+141,Yevhen Recipe 141,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+142,Yevhen Recipe 142,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+143,Yevhen Recipe 143,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+144,Yevhen Recipe 144,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+145,Yevhen Recipe 145,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+146,Yevhen Recipe 146,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+147,Yevhen Recipe 147,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+148,Yevhen Recipe 148,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+149,Yevhen Recipe 149,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+150,Yevhen Recipe 150,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+151,Yevhen Recipe 151,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+152,Yevhen Recipe 152,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+153,Yevhen Recipe 153,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+154,Yevhen Recipe 154,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+155,Yevhen Recipe 155,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+156,Yevhen Recipe 156,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+157,Yevhen Recipe 157,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+158,Yevhen Recipe 158,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+159,Yevhen Recipe 159,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+160,Yevhen Recipe 160,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+161,Yevhen Recipe 161,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+162,Yevhen Recipe 162,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+163,Yevhen Recipe 163,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+164,Yevhen Recipe 164,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+165,Yevhen Recipe 165,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+166,Yevhen Recipe 166,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+167,Yevhen Recipe 167,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1
+168,Yevhen Recipe 168,Weight,TRUE,changed by Tommy 5/5/2025,lb,19,simple text 1,simple text2,st3,1545,0.08 lb,7.89 USD,5.99 USD,1,3,2,1,12345678901,codesubstr2,,Packed On:,Sell By:,,1,2,"Con Hasta 8% De Solucion De Agua, Contiene 2% O Menos De Fosfatos De Sodio, Acetato
+De Potasio, Lactato De Potasio, Y Sal, Para Mejorar Terneza Y Jugosidad.",Butter Chicken,Pork Loin Boneless Center Cut Butterfly Chops,text4,^Ac;^2;^b+Cook to a minimum internal temperature of 160 and let rest for 3 minutes.,text6,text7,text8,text9,text10,1,1,2,1.5500 lb,2.5000 lb,8,-1

@@ -7,6 +7,15 @@
   min-height: 100vh;
 }
 
+:host-context(body.dark-theme) .order-container {
+  background: linear-gradient(135deg,#1e1e21 0%,#2a2d33 60%,#22252a 100%);
+}
+:host-context(body.dark-theme) .order-header h2 { color:#e4e8ec; }
+:host-context(body.dark-theme) .success-message,
+:host-context(body.dark-theme) .error-message { background:#212225; box-shadow:0 6px 18px rgba(0,0,0,.6); border-color:#2f3338; }
+:host-context(body.dark-theme) .success-message h3,
+:host-context(body.dark-theme) .error-message h3 { color:#e0e4e8; }
+
 .order-header {
   display: flex;
   justify-content: space-between;
