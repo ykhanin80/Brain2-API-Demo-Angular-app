@@ -85,6 +85,24 @@
   background-color: #f8f9fa;
 }
 
+/* Dark mode overrides */
+body.dark-theme {
+  .app-header {
+    background-color:#1b1b1b;
+    border-color:#2a2a2a;
+    nav h1 { color:#e6e6e6; }
+    .nav-actions {
+      .system-status-header { background:#242424; border-color:#333; 
+        .status-label { color:#9aa0a6; }
+      }
+      span { color:#c2c2c2; }
+      .logout-btn { background:#b3261e; &:hover { background:#d13a31; } }
+      .mode-toggle-btn { color:#ddd; }
+    }
+  }
+  .app-content { background:#000; }
+}
+
 // Responsive design for header
 @media (max-width: 768px) {
   .app-header nav {
