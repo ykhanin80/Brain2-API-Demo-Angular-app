@@ -48,12 +48,13 @@ $app-dark-theme: mat.m2-define-dark-theme((
 
 body.dark-theme {
 	@include mat.all-component-colors($app-dark-theme);
-	background:#000; /* pure black for out-of-container area */
+	background:#121212 !important; /* dark grey for overall background */
 	color:#e0e0e0;
 }
-/* Ensure root viewport behind body (rare scroll reveal) is also black */
-html { background:#000; }
-body.dark-theme::before, body.dark-theme::after { background:#000; }
+/* Ensure root viewport behind body (rare scroll reveal) is also dark */
+html { background:#121212; }
+html.dark-theme { background:#121212 !important; }
+body.dark-theme::before, body.dark-theme::after { background:#121212; }
 
 body.dark-theme .app-header { background:#1e1e1e; border-color:#333; }
 body.dark-theme .dm-card { background:#1f1f1f; border-color:#2c2c2c; }
@@ -62,8 +63,8 @@ body.dark-theme .articles-table thead { background:#2a2a2a; }
 body.dark-theme .search-section { background:#1e1e1e; border-color:#333; }
 body.dark-theme input, body.dark-theme select, body.dark-theme textarea { background:#2a2a2a; color:#e0e0e0; border-color:#444; }
 body.dark-theme input:focus, body.dark-theme select:focus, body.dark-theme textarea:focus { border-color:$primary-default; }
-/* Ensure main content wrapper is black edge-to-edge in dark mode */
-body.dark-theme .app-content { background:#000 !important; }
+/* Ensure main content wrapper is dark grey edge-to-edge in dark mode */
+body.dark-theme .app-content { background:#121212 !important; }
 html, body { height:100%; }
 body { margin:0; font-family: Roboto, "Segoe UI", Arial, sans-serif; background:#f3f6f9; /* softer neutral light background */ }
 html { background:#f3f6f9; }

@@ -270,6 +270,9 @@ export class DataMaintenanceComponent implements OnInit {
   private readonly auth = inject(Auth);
   private readonly baseUrl = 'http://localhost:9997';
 
+  // Dark mode detection
+  readonly isDarkMode = signal(false);
+
   // State signals
   articles = signal<LabelerArticle[]>([]);
   selectedArticle = signal<LabelerArticle | null>(null);
@@ -279,7 +282,7 @@ export class DataMaintenanceComponent implements OnInit {
   // Form controls
   searchParams = signal<ArticleSearchParams>({
     skip: 0,
-    take: 100,
+    take: 10,
     sort: 'Number+',
     articleName: '',
     articleNumber: ''
@@ -289,7 +292,7 @@ export class DataMaintenanceComponent implements OnInit {
   showDeleteConfirm = signal(false);
 
   // View states for full page navigation
-  currentView = signal<'list' | 'create' | 'edit'>('list');
+  currentView = signal<'list' | 'create' | 'edit' | 'copy'>('list');
   
   // API response feedback
   apiResponse = signal<{
@@ -580,7 +583,24 @@ export class DataMaintenanceComponent implements OnInit {
       articlePLU: this.createEmptyArticlePLU()
     }));
     
+    // Initialize dark mode detection
+    this.updateDarkModeState();
+    
+    // Set up observer for dark mode changes
+    const observer = new MutationObserver(() => {
+      this.updateDarkModeState();
+    });
+    
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
     this.loadArticles();
+  }
+  
+  private updateDarkModeState() {
+    this.isDarkMode.set(document.body.classList.contains('dark-theme'));
   }
 
   // -------- Import CSV UI Methods --------
@@ -1173,6 +1193,75 @@ export class DataMaintenanceComponent implements OnInit {
     }
   }
 
+  async saveCopiedArticle(article: LabelerArticle) {
+    // Validate that PLU number is provided
+    if (!article.number || article.number.trim() === '') {
+      this.error.set('PLU Number is required');
+      this.apiResponse.set({
+        type: 'error',
+        message: 'PLU Number is required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Ensure basePriceDivision is always set to "perUnit"
+    if (article.articlePLU) {
+      article.articlePLU.basePriceDivision = 'perUnit';
+    }
+
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${this.auth.getToken()}`,
+        'Content-Type': 'application/json'
+      });
+
+      // Use POST to create new article (same as createArticle)
+      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
+      await this.http.post(requestUrl, article, { headers }).toPromise();
+
+      // Store debug information
+      this.debugApiResponses.createArticle = {
+        timestamp: new Date().toISOString(),
+        requestUrl: requestUrl,
+        requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+        requestBody: article
+      };
+
+      this.apiResponse.set({
+        type: 'success',
+        message: `Article ${article.number} copied successfully!`,
+        timestamp: new Date().toISOString()
+      });
+
+      await this.loadArticles(); // Refresh the list
+      this.closeCopyModal();
+    } catch (error: any) {
+      console.error('Error saving copied article:', error);
+      const errorMessage = error?.error?.message || error?.error?.title || 'Failed to save copied article';
+      this.error.set(errorMessage);
+      this.apiResponse.set({
+        type: 'error',
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Store error debug information
+      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
+      this.debugApiResponses.createArticle = {
+        timestamp: new Date().toISOString(),
+        requestUrl: requestUrl,
+        requestBody: article,
+        error: error
+      };
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
   async deleteArticle(articleNumber: string) {
     this.isLoading.set(true);
     this.error.set(null);
@@ -1234,16 +1323,56 @@ export class DataMaintenanceComponent implements OnInit {
   // Pagination methods
   previousPage() {
     const params = this.searchParams();
-    const newSkip = Math.max(0, (params.skip || 0) - (params.take || 50));
+    const pageSize = params.take || 10;
+    const newSkip = Math.max(0, (params.skip || 0) - pageSize);
     this.searchParams.update(p => ({ ...p, skip: newSkip }));
     this.loadArticles();
   }
 
   nextPage() {
     const params = this.searchParams();
-    const newSkip = (params.skip || 0) + (params.take || 50);
+    const pageSize = params.take || 10;
+    const newSkip = (params.skip || 0) + pageSize;
     this.searchParams.update(p => ({ ...p, skip: newSkip }));
     this.loadArticles();
+  }
+
+  updatePageSize(newPageSize: number) {
+    // Reset to first page when changing page size
+    console.log('updatePageSize called with:', newPageSize, 'type:', typeof newPageSize);
+    console.log('Current searchParams before update:', this.searchParams());
+    
+    this.searchParams.update(p => {
+      const newParams = { 
+        ...p, 
+        take: newPageSize,
+        skip: 0 
+      };
+      console.log('New params after update:', newParams);
+      return newParams;
+    });
+    
+    console.log('searchParams after signal update:', this.searchParams());
+    this.loadArticles();
+  }
+
+  // Helper to get available page size options
+  getPageSizeOptions(): number[] {
+    return [10, 25, 50, 100, 200, 500];
+  }
+
+  // Helper to get current page number (1-based)
+  getCurrentPage(): number {
+    const params = this.searchParams();
+    const pageSize = params.take || 10;
+    return Math.floor((params.skip || 0) / pageSize) + 1;
+  }
+
+  // Helper to calculate total pages (estimated based on current results)
+  canShowNextPage(): boolean {
+    const params = this.searchParams();
+    const pageSize = params.take || 10;
+    return this.articles().length >= pageSize;
   }
 
   // Navigation methods
@@ -1267,11 +1396,51 @@ export class DataMaintenanceComponent implements OnInit {
     this.currentView.set('edit');
   }
 
+  async goToCopyPage(article: LabelerArticle) {
+    // First fetch the complete article data using the GET endpoint
+    this.isLoading.set(true);
+    this.error.set(null);
+    
+    try {
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${this.auth.getToken()}`
+      });
+
+      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
+      const fullArticle = await this.http.get<LabelerArticle>(requestUrl, { headers }).toPromise();
+      
+      if (fullArticle) {
+        // Create a copy with empty number (to force user to enter new PLU number)
+        const copyArticle = { 
+          ...fullArticle,
+          number: '', // Force user to enter new PLU number
+          name: fullArticle.name + ' (Copy)', // Suggest it's a copy
+        };
+        
+        this.selectedArticle.set(copyArticle);
+        this.apiResponse.set({ type: null, message: '' });
+        this.currentView.set('copy');
+      }
+    } catch (error: any) {
+      console.error('Error fetching article for copy:', error);
+      this.error.set(error?.error?.title || 'Failed to fetch article data for copying');
+      this.apiResponse.set({
+        type: 'error',
+        message: error?.error?.title || 'Failed to fetch article data for copying',
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
   // Backwards compatibility methods (previous modal triggers)
   openCreateModal() { this.goToCreatePage(); }
   closeCreateModal() { this.goToListPage(); }
   openEditModal(article: LabelerArticle) { this.goToEditPage(article); }
   closeEditModal() { this.goToListPage(); }
+  openCopyModal(article: LabelerArticle) { this.goToCopyPage(article); }
+  closeCopyModal() { this.goToListPage(); }
 
   openDeleteConfirm(article: LabelerArticle) {
     this.selectedArticle.set(article);

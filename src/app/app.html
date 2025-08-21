@@ -2,14 +2,17 @@
   <nav>
     <h1>Brain2 API Demo App</h1>
     <div class="nav-actions">
-      <div class="system-status-header">
+      <div class="system-status-header" 
+           [style.background-color]="darkMode() ? '#2a2a2a' : '#f8f9fa'" 
+           [style.border]="darkMode() ? '1px solid #404040' : '1px solid #e9ecef'"
+           [attr.data-dark-mode]="darkMode()">
         <span class="status-item">
-          <span class="status-label">BRAIN2 API:</span>
-          <span class="status-value connected">Connected</span>
+          <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">BRAIN2 API:</span>
+          <span class="status-value connected" [style.color]="darkMode() ? '#4ade80' : '#28a745'">Connected</span>
         </span>
         <span class="status-item">
-          <span class="status-label">Auth:</span>
-          <span class="status-value active">Active</span>
+          <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">Auth:</span>
+          <span class="status-value active" [style.color]="darkMode() ? '#38bdf8' : '#17a2b8'">Active</span>
         </span>
       </div>
       <button mat-button type="button" (click)="toggleDarkMode()" class="mode-toggle-btn">
