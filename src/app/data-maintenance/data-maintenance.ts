@@ -434,60 +434,60 @@ export class DataMaintenanceComponent implements OnInit {
   // Units are in pixels relative to a 521x947 (standard) base; will be scaled.
   private nutritionOverlayMaps: Record<string, { baseWidth:number; baseHeight:number; image:string; positions: Record<number,{x:number;y:number;width?:number;align?:'left'|'right'|'center';}> }> = {
     standard: {
-      baseWidth: 600,
+      baseWidth: 680,
       baseHeight: 947,
       image: 'labels/nutrition-dual.png', // place image under public/labels/
       positions: {
-        1:{x:25,y:70,width:140}, 
-        2:{x:25,y:100,width:200},
-        3:{x:25,y:130,width:200},
-        4:{x:155,y:200,width:70}, // Total Fat amount (e.g., 8g)
-        5:{x:430,y:200,width:60}, //
-        6:{x:180,y:230,width:70,align:'right'}, //  Total Fat %DV (e.g., 10%)
-        7:{x:430,y:230,width:60}, // Saturated Fat %DV
-        8:{x:180,y:255,width:90,align:'right'}, // Trans Fat
-        9:{x:155,y:285,width:70}, // Cholesterol amount
-        10:{x:430,y:285,width:60,align:'right'}, // Cholesterol %
-        11:{x:155,y:315,width:70}, // Sodium amount
-        12:{x:430,y:315,width:60,align:'right'},
-        13:{x:215,y:345,width:100}, // Total Carbohydrate grams
-        14:{x:430,y:345,width:60,align:'right'}, // Carbs %
-        15:{x:200,y:375,width:100}, // Dietary Fiber
-        16:{x:430,y:375,width:60,align:'right'},
-        17:{x:200,y:400,width:120}, // Total Sugars
-        18:{x:315,y:425,width:120,align:'right'}, // Includes Added Sugars
-        19:{x:430,y:425,width:60},
-        20:{x:155,y:455,width:70}, // Protein
-        21:{x:25,y:500,width:200}, // Vitamin D
-        22:{x:25,y:530,width:200}, // Calcium
-        23:{x:25,y:560,width:200}, // Iron
-        24:{x:25,y:590,width:200}, // Potassium
-        25:{x:25,y:620,width:200}, // Magnesium
-        26:{x:25,y:650,width:200}, // Zinc
-        27:{x:25,y:680,width:200}, // Selenium
-        28:{x:25,y:710,width:200}, // Copper
-        29:{x:25,y:740,width:200}, // Manganese
-        30:{x:25,y:770,width:200}, // Chromium
-        31:{x:25,y:800,width:200}, // Molybdenum
-        32:{x:25,y:830,width:200}, // Chloride
-        33:{x:25,y:860,width:200}, // Iodine
-        34:{x:25,y:890,width:200}, // Cobalt
-        35:{x:25,y:920,width:200}, // Vanadium
-        36:{x:25,y:950,width:200}, // Nickel
-        37:{x:25,y:980,width:200}, // Silicon
-        38:{x:25,y:1010,width:200}, // Boron
-        39:{x:25,y:1040,width:200}, // Lithium
-        40:{x:25,y:1070,width:200}, // Arsenic
-        41:{x:25,y:1100,width:200}, // Cadmium
-        42:{x:25,y:1130,width:200}, // Antimony
-        43:{x:25,y:1160,width:200}, // Thallium
-        44:{x:25,y:1190,width:200}, // Lead
-        45:{x:25,y:1220,width:200}, // Bismuth
-        46:{x:25,y:1250,width:200}, // Polonium
-        47:{x:25,y:1280,width:200}, // Astatine
-        48:{x:25,y:1310,width:200}, // Radon
-        49:{x:25,y:1340,width:200}, // Francium
-        50:{x:25,y:1370,width:200} // Radium
+        1:{x:600,y:82,width:40}, 
+        2:{x:206,y:60,width:40},
+        3:{x:478,y:160,width:40},
+        4:{x:620,y:160,width:40}, 
+        5:{x:424,y:224,width:40}, //
+        6:{x:498,y:224,width:40,align:'right'}, //  Total Fat %DV (e.g., 10%)
+        7:{x:424,y:248,width:40}, // Saturated Fat %DV
+        8:{x:498,y:248,width:40,align:'right'}, // Trans Fat
+        9:{x:424,y:274,width:70}, // Cholesterol amount
+        10:{x:10,y:44,width:40,align:'right'}, // Cholesterol %
+        11:{x:424,y:300,width:40}, // Sodium amount
+        12:{x:498,y:300,width:40,align:'right'},
+        13:{x:424,y:325,width:40}, // Total Carbohydrate grams
+        14:{x:498,y:325,width:40,align:'right'}, // Carbs %
+        15:{x:424,y:350,width:40}, // Dietary Fiber
+        16:{x:498,y:350,width:40,align:'right'},
+        17:{x:424,y:375,width:40}, // Total Sugars
+        18:{x:498,y:375,width:40,align:'right'}, // Includes Added Sugars
+        19:{x:424,y:401,width:40},
+        20:{x:424,y:427,width:40}, // Protein
+        21:{x:498,y:427,width:40}, // Vitamin D
+        22:{x:424,y:451,width:40}, // Calcium
+        23:{x:424,y:492,width:40}, // Iron
+        24:{x:424,y:517,width:40}, // Potassium
+        25:{x:424,y:543,width:40}, // Magnesium
+        26:{x:424,y:567,width:40}, // Zinc
+        27:{x:10,y:68,width:40}, // Selenium
+        28:{x:10,y:92,width:40}, // Copper
+        29:{x:10,y:116,width:40}, // Manganese
+        30:{x:10,y:140,width:40}, // Chromium
+        31:{x:10,y:184,width:40}, // Molybdenum
+        32:{x:10,y:208,width:40}, // Chloride
+        33:{x:10,y:230,width:40}, // Iodine
+        34:{x:10,y:250,width:40}, // Cobalt
+        35:{x:10,y:270,width:40}, // Vanadium
+        36:{x:10,y:290,width:40}, // Nickel
+        37:{x:10,y:310,width:40}, // Silicon
+        38:{x:10,y:330,width:40}, // Boron
+        39:{x:10,y:350,width:40}, // Lithium
+        40:{x:10,y:370,width:40}, // Arsenic
+        41:{x:10,y:390,width:40}, // Cadmium
+        42:{x:10,y:410,width:40}, // Antimony
+        43:{x:10,y:440,width:40}, // Thallium
+        44:{x:10,y:460,width:40}, // Lead
+        45:{x:10,y:480,width:40}, // Bismuth
+        46:{x:10,y:500,width:40}, // Polonium
+        47:{x:10,y:530,width:40}, // Astatine
+        48:{x:10,y:550,width:40}, // Radon
+        49:{x:10,y:570,width:40}, // Francium
+        50:{x:10,y:590,width:40} // Radium
       }
     },
     dual: {

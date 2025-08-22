@@ -160,15 +160,18 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .nutrition-overlay-canvas.layout-dual { aspect-ratio: 949/658; max-width:949px; }
 /* .nutrition-overlay-canvas.layout-horizontal { aspect-ratio: 900/185; max-width:900px; } */
 .nutrition-overlay-canvas .nutrition-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; filter:contrast(1.05); }
-.nutrition-overlay-canvas .overlay-item { position:absolute; box-sizing:border-box; }
+.nutrition-overlay-canvas .overlay-item { position:absolute; box-sizing:border-box; min-width: 60px;   // reduce from 160px or higher
+  min-height: 18px;  // reduce from 32px or higher
+  padding: 2px 2px;  // add or reduce padding
+  gap: 2px;  }
 .nutrition-overlay-canvas .overlay-item input {
-  width: 100px !important;
-  min-width: 100px !important;
-  max-width: 100px !important;
+  width: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
   font-size: 16px !important;
   font-weight: bold !important;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-  padding:.18rem .3rem;
+  padding:2px 2px;
   line-height:1.1;
   border:1px solid #999;
   border-radius:3px;
