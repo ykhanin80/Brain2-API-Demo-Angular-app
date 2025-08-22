@@ -280,6 +280,13 @@ export interface ArticleSearchParams {
   styleUrls: ['./data-maintenance.scss']
 })
 export class DataMaintenanceComponent implements OnInit {
+  // Save overlay field positions to persist user changes
+  saveOverlayPositions() {
+    const map = this.getCurrentNutritionMap();
+    // Overwrite the nutritionOverlayMaps entry with current positions
+    this.nutritionOverlayMaps[this.labelLayout()].positions = { ...map.positions };
+    this.apiResponse.set({ type: 'success', message: 'Overlay positions saved to code map', timestamp: new Date().toISOString() });
+  }
   // Drag/resize state
   private dragItem: number|null = null;
   private dragStart = { x: 0, y: 0 };
@@ -427,18 +434,18 @@ export class DataMaintenanceComponent implements OnInit {
   // Units are in pixels relative to a 521x947 (standard) base; will be scaled.
   private nutritionOverlayMaps: Record<string, { baseWidth:number; baseHeight:number; image:string; positions: Record<number,{x:number;y:number;width?:number;align?:'left'|'right'|'center';}> }> = {
     standard: {
-      baseWidth: 521,
+      baseWidth: 600,
       baseHeight: 947,
-      image: 'labels/nutrition-standard.png', // place image under public/labels/
+      image: 'labels/nutrition-dual.png', // place image under public/labels/
       positions: {
-        1:{x:25,y:70,width:140}, // Example mapping; refine as needed
+        1:{x:25,y:70,width:140}, 
         2:{x:25,y:100,width:200},
         3:{x:25,y:130,width:200},
         4:{x:155,y:200,width:70}, // Total Fat amount (e.g., 8g)
-        5:{x:430,y:200,width:60,align:'right'}, // Total Fat %DV (e.g., 10%)
-        6:{x:180,y:230,width:70}, // Saturated Fat amount
-        7:{x:430,y:230,width:60,align:'right'}, // Saturated Fat %DV
-        8:{x:180,y:255,width:90}, // Trans Fat
+        5:{x:430,y:200,width:60}, //
+        6:{x:180,y:230,width:70,align:'right'}, //  Total Fat %DV (e.g., 10%)
+        7:{x:430,y:230,width:60}, // Saturated Fat %DV
+        8:{x:180,y:255,width:90,align:'right'}, // Trans Fat
         9:{x:155,y:285,width:70}, // Cholesterol amount
         10:{x:430,y:285,width:60,align:'right'}, // Cholesterol %
         11:{x:155,y:315,width:70}, // Sodium amount
@@ -448,10 +455,39 @@ export class DataMaintenanceComponent implements OnInit {
         15:{x:200,y:375,width:100}, // Dietary Fiber
         16:{x:430,y:375,width:60,align:'right'},
         17:{x:200,y:400,width:120}, // Total Sugars
-        18:{x:315,y:425,width:120}, // Includes Added Sugars
-        19:{x:430,y:425,width:60,align:'right'},
+        18:{x:315,y:425,width:120,align:'right'}, // Includes Added Sugars
+        19:{x:430,y:425,width:60},
         20:{x:155,y:455,width:70}, // Protein
-        // Add remaining mappings as needed up to 50
+        21:{x:25,y:500,width:200}, // Vitamin D
+        22:{x:25,y:530,width:200}, // Calcium
+        23:{x:25,y:560,width:200}, // Iron
+        24:{x:25,y:590,width:200}, // Potassium
+        25:{x:25,y:620,width:200}, // Magnesium
+        26:{x:25,y:650,width:200}, // Zinc
+        27:{x:25,y:680,width:200}, // Selenium
+        28:{x:25,y:710,width:200}, // Copper
+        29:{x:25,y:740,width:200}, // Manganese
+        30:{x:25,y:770,width:200}, // Chromium
+        31:{x:25,y:800,width:200}, // Molybdenum
+        32:{x:25,y:830,width:200}, // Chloride
+        33:{x:25,y:860,width:200}, // Iodine
+        34:{x:25,y:890,width:200}, // Cobalt
+        35:{x:25,y:920,width:200}, // Vanadium
+        36:{x:25,y:950,width:200}, // Nickel
+        37:{x:25,y:980,width:200}, // Silicon
+        38:{x:25,y:1010,width:200}, // Boron
+        39:{x:25,y:1040,width:200}, // Lithium
+        40:{x:25,y:1070,width:200}, // Arsenic
+        41:{x:25,y:1100,width:200}, // Cadmium
+        42:{x:25,y:1130,width:200}, // Antimony
+        43:{x:25,y:1160,width:200}, // Thallium
+        44:{x:25,y:1190,width:200}, // Lead
+        45:{x:25,y:1220,width:200}, // Bismuth
+        46:{x:25,y:1250,width:200}, // Polonium
+        47:{x:25,y:1280,width:200}, // Astatine
+        48:{x:25,y:1310,width:200}, // Radon
+        49:{x:25,y:1340,width:200}, // Francium
+        50:{x:25,y:1370,width:200} // Radium
       }
     },
     dual: {
@@ -464,8 +500,10 @@ export class DataMaintenanceComponent implements OnInit {
       //  - Items 21-40 reserve spots for RIGHT ("Per container") column values (amounts & %DV)
       //  - Adjust or extend as needed; refine x/y after exact pixel review
       positions: {
-        // Left column (per serving) nutrient amounts & %DV pairs
-        4:{x:170,y:205,width:55},     // Total Fat amount (per serving)
+        1:{x:170,y:205,width:40},
+        2:{x:170,y:205,width:40},
+        3:{x:170,y:205,width:40},
+        4:{x:170,y:205,width:40},     // Total Fat amount (per serving)
         5:{x:255,y:205,width:50,align:'right'}, // Total Fat %DV (per serving)
         6:{x:170,y:235,width:55},     // Saturated Fat amount
         7:{x:255,y:235,width:50,align:'right'}, // Saturated Fat %DV
@@ -482,7 +520,7 @@ export class DataMaintenanceComponent implements OnInit {
         18:{x:315,y:435,width:110},   // Incl. Added Sugars grams
         19:{x:255,y:435,width:50,align:'right'},
         20:{x:170,y:465,width:55},    // Protein grams
-        // Right column (per container) duplicated nutrients start at item 21
+        
         24:{x:555,y:205,width:55},    // Total Fat amount (per container) (using item 24 to separate; adjust mapping numbers to your schema)
         25:{x:640,y:205,width:55,align:'right'},
         26:{x:555,y:235,width:55},    // Saturated Fat amount
@@ -502,32 +540,7 @@ export class DataMaintenanceComponent implements OnInit {
         40:{x:555,y:465,width:55}     // Protein grams
       }
     },
-    horizontal: {
-      // Horizontal label supplied (approx 785x162). Coordinates approximate; refine after pixel check.
-      baseWidth: 785,
-      baseHeight: 162,
-      image: 'labels/nutrition-horizontal.png',
-      positions: {
-        // Left group (amount/serving) (reuse item numbers similar to standard)
-        4:{x:295,y:44,width:50},      // Total Fat amount
-        5:{x:360,y:44,width:40,align:'right'}, // Total Fat %
-        6:{x:295,y:60,width:50},      // Saturated Fat amount
-        7:{x:360,y:60,width:40,align:'right'}, // Saturated Fat %
-        8:{x:295,y:74,width:60},      // Trans Fat
-        9:{x:295,y:90,width:50},      // Cholesterol amount
-        10:{x:360,y:90,width:40,align:'right'},
-        11:{x:295,y:105,width:55},    // Sodium amount
-        12:{x:360,y:105,width:40,align:'right'},
-        13:{x:550,y:44,width:60},     // Total Carbohydrate amount
-        14:{x:720,y:44,width:40,align:'right'}, // Total Carbohydrate %
-        15:{x:550,y:60,width:55},     // Dietary Fiber amount
-        16:{x:720,y:60,width:40,align:'right'},
-        17:{x:550,y:74,width:60},     // Total Sugars amount
-        18:{x:620,y:90,width:120},    // Includes Added Sugars amount
-        19:{x:720,y:90,width:40,align:'right'},
-        20:{x:550,y:105,width:55}     // Protein amount
-      }
-    }
+    
   };
   getCurrentNutritionMap(){ return this.nutritionOverlayMaps[this.labelLayout()]; }
   getOverlayPosition(itemNumber: number){
