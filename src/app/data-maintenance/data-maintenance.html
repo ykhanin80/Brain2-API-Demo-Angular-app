@@ -152,6 +152,9 @@
   <!-- Static Texts Section -->
   <div *ngIf="currentSubPage()==='static-texts'" class="static-texts dm-card">
     <h2>Static Text Definition</h2>
+   <!-- <div class="layout-select-row">
+  <!-- Label layout selection hidden, dual layout always used -->
+    
     <form class="static-text-form" (submit)="$event.preventDefault(); createStaticText();">
       <div class="st-row">
         <label>Number
@@ -162,16 +165,34 @@
         </label>
         <button class="btn btn-primary" type="submit" [disabled]="!staticTextData().description">Save</button>
       </div>
-      <div class="static-text-items">
-        <div class="st-item" *ngFor="let it of staticTextData().items; trackBy: trackStaticTextItem">
-          <label class="st-item-label">{{it.number}}
-            <input type="text" maxlength="70" [value]="it.textValue" (input)="updateStaticTextItemValue(it,$event)" />
-          </label>
-          <label class="st-send">
-            <input type="checkbox" [checked]="it.sendFormat" (change)="toggleStaticTextItemSend(it)"> send
-          </label>
+      <!-- Nutrition label overlay preview with distributed text fields -->
+      <div class="nutrition-overlay-wrapper">
+        <div class="nutrition-overlay-canvas layout-dual">
+          <img class="nutrition-bg" src="/labels/nutrition-dual.png" alt="Nutrition Label" />
+          <!-- Render all 50 overlay fields in a single vertical stack, editable, draggable, font styling -->
+          <div class="overlay-items-stack">
+            <ng-container *ngFor="let i of [].constructor(50); let idx = index">
+              <div class="overlay-item"
+                [style.left]="'calc(100% + 32px)'"
+                [style.top]="(idx * 40) + 'px'"
+                (mousedown)="startDrag($event, idx)"
+                (touchstart)="startDrag($event, idx)"
+                [attr.data-item]="idx">
+                <input maxlength="8"
+                  [(ngModel)]="staticTextData().items[idx].textValue"
+                  [ngModelOptions]="{standalone: true}"
+                  [placeholder]="'Text ' + (idx+1)"
+                  [ngClass]="staticTextData().items[idx].fontClass + ' overlay-text-input'"
+                  style="color: #000 !important; background: #fff !important; opacity: 1 !important; width: 6ch !important; min-width: 6ch !important; max-width: 8ch !important; display: inline-block; margin-bottom: 8px;" />
+                <span class="resize-handle" (mousedown)="startResize($event, idx)" (touchstart)="startResize($event, idx)"></span>
+              </div>
+            </ng-container>
+          </div>
         </div>
+        <div class="overlay-hint">Overlay edit (values sync with list). Resize window to test scaling.</div>
       </div>
+      <!-- Overlay Editor -->
+      
       <div *ngIf="apiResponse().type" class="api-response" [ngClass]="'api-response-' + apiResponse().type">{{apiResponse().message}}</div>
     </form>
   </div>

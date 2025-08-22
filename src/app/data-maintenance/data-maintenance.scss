@@ -1,3 +1,12 @@
+// Overlay text field styles for nutrition label editor
+.overlay-text-bold {
+  font-weight: bold;
+  font-size: 18pt; 
+}
+.overlay-text-regular {
+  font-weight: normal;
+  font-size: 18pt; 
+}
 .data-maintenance {
   padding:20px;
   margin:0 auto;
@@ -104,27 +113,37 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
       margin: 0 0 5px 0;
       color: #1976d2;
       font-size: 2rem;
-      font-weight: 600;
     }
-
-    .subtitle {
-      margin: 0;
-      color: #666;
-      font-size: 1rem;
-    }
-  }
-
-  .header-right {
-    display: flex;
     gap: 12px;
   }
+
+// Overlay text field styles for nutrition label editor
+.overlay-text-input {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  box-sizing: border-box;
+}
+.overlay-text-bold {
+  font-weight: bold !important;
+  font-size: 18px !important;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+.overlay-text-regular {
+  font-weight: bold !important;
+  font-size: 18px !important;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
   .sub-tabs { margin-top:12px; display:flex; gap:8px; }
   .sub-tab { padding:6px 14px; border:1px solid #b5c3d1; background:#fff; border-radius:18px; font-size:13px; cursor:pointer; }
   .sub-tab.active { background:#1976d2; color:#fff; border-color:#1976d2; }
 }
 
 // Static Texts
-.static-texts { margin-top:24px; }
+.static-texts { margin-top:18px; }
 .static-text-form { display:flex; flex-direction:column; gap:16px; }
 .static-text-form .st-row { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; }
 .static-text-form label { font-size:12px; font-weight:600; display:flex; flex-direction:column; gap:4px; }
@@ -132,6 +151,60 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .static-text-items .st-item { display:flex; flex-direction:column; gap:4px; padding:6px 8px; background:#fff; border:1px solid #e5e5e5; border-radius:4px; }
 .static-text-items .st-item input[type=text]{ width:100%; padding:4px 6px; font-size:12px; border:1px solid #c9d1d9; border-radius:3px; }
 .static-text-items .st-send { font-size:11px; display:flex; align-items:center; gap:4px; }
+/* Nutrition label overlay editor */
+.layout-select-row { display:flex; gap:1rem; align-items:center; font-size:.75rem; }
+.layout-select-row select { padding:.3rem .5rem; font-size:.75rem; }
+.nutrition-overlay-wrapper { margin-top:1rem; border:1px solid #d9dee4; border-radius:8px; padding:.85rem 1rem 1rem; background:#ffffff; }
+.nutrition-overlay-canvas { position:relative; max-width:498px; width:100%; aspect-ratio: 498/905; margin:0 auto; background:#fff; }
+/* .nutrition-overlay-canvas.layout-standard { aspect-ratio: 521/947; max-width:321px; } */
+.nutrition-overlay-canvas.layout-dual { aspect-ratio: 949/658; max-width:949px; }
+/* .nutrition-overlay-canvas.layout-horizontal { aspect-ratio: 900/185; max-width:900px; } */
+.nutrition-overlay-canvas .nutrition-bg { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; filter:contrast(1.05); }
+.nutrition-overlay-canvas .overlay-item { position:absolute; box-sizing:border-box; }
+.nutrition-overlay-canvas .overlay-item input {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  padding:.18rem .3rem;
+  line-height:1.1;
+  border:1px solid #999;
+  border-radius:3px;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(1.5px);
+  box-shadow:0 1px 2px rgba(0,0,0,.25);
+}
+.nutrition-overlay-canvas .overlay-item .overlay-badge {
+  position: absolute;
+  left: -1.2em;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1976d2;
+  color: #fff;
+  font-size: .6em;
+  font-weight: bold;
+  border-radius: 50%;
+  width: 1.6em;
+  height: 1.6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(25,118,210,.18);
+  z-index: 2;
+  pointer-events: none;
+}
+.nutrition-overlay-canvas .overlay-item input:focus { outline:2px solid #1976d2; background:#fff; }
+.nutrition-overlay-canvas .overlay-item.align-right input { text-align:right; }
+.nutrition-overlay-canvas .overlay-item.align-center input { text-align:center; }
+.nutrition-overlay-wrapper .overlay-hint { margin-top:.6rem; font-size:.6rem; text-align:center; opacity:.65; letter-spacing:.5px; }
+
+:host-context(body.dark-theme) .layout-select-row select { background:#262c33; border:1px solid #3a434d; color:#e2e8f0; }
+:host-context(body.dark-theme) .nutrition-overlay-wrapper { background:#1f252c; border-color:#2c343d; }
+:host-context(body.dark-theme) .nutrition-overlay-canvas { background:#14191f; }
+:host-context(body.dark-theme) .nutrition-overlay-canvas .overlay-item input { background:rgba(25,30,38,.85); border-color:#4a5566; color:#e2e8f0; }
+:host-context(body.dark-theme) .nutrition-overlay-canvas .overlay-item input:focus { outline-color:#5da0ff; }
 
 :host-context(body.dark-theme) .sub-tab { background:#2a3036; border-color:#3a434d; color:#9aa4b1; }
 :host-context(body.dark-theme) .sub-tab.active { background:#1976d2; color:#fff; border-color:#1976d2; }
@@ -207,6 +280,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
     border-top: 3px solid #1976d2;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+
     margin-right: 12px;
   }
 }
@@ -1202,19 +1276,14 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
     }
   }
 
-  .simple-text-row {
-    margin-bottom: 10px;
-  }
-
-  .code-field-row {
-    margin-bottom: 15px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
-  }
-
-  .numbers-grid {
+  .overlay-items-stack {
+    position: absolute;
+    left: calc(100% + 32px);
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+  
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 15px;
@@ -1827,4 +1896,5 @@ body.dark-theme .data-maintenance .api-response-error { background:#3a1f1f !impo
 :host-context(body.dark-theme) .articles-table { background:#1f252c !important; }
 :host-context(body.dark-theme) .articles-table thead { background:#1f2a33 !important; }
 :host-context(body.dark-theme) .articles-table tbody tr { background:transparent; }
+
 :host-context(body.dark-theme) .articles-table tbody tr:hover { background:#262e36 !important; }

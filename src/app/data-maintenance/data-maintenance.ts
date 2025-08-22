@@ -1,3 +1,4 @@
+
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -12,6 +13,7 @@ interface StaticTextItem {
   number: number;
   textValue: string;
   sendFormat: boolean;
+  fontClass?: string; // 'overlay-text-bold' | 'overlay-text-regular'
 }
 
 interface StaticTextData {
@@ -278,6 +280,104 @@ export interface ArticleSearchParams {
   styleUrls: ['./data-maintenance.scss']
 })
 export class DataMaintenanceComponent implements OnInit {
+  // Drag/resize state
+  private dragItem: number|null = null;
+  private dragStart = { x: 0, y: 0 };
+  private dragOrig = { x: 0, y: 0 };
+  private resizeItem: number|null = null;
+  private resizeStartX = 0;
+  private resizeOrigWidth = 0;
+
+  startDrag(ev: MouseEvent|TouchEvent, itemNumber: number) {
+    ev.preventDefault();
+    this.dragItem = itemNumber;
+    const pos = this.getOverlayPosition(itemNumber);
+    if (!pos) return;
+    if (ev instanceof MouseEvent) {
+      this.dragStart = { x: ev.clientX, y: ev.clientY };
+    } else {
+      this.dragStart = { x: ev.touches[0].clientX, y: ev.touches[0].clientY };
+    }
+    this.dragOrig = { x: pos.x, y: pos.y };
+    window.addEventListener('mousemove', this.onDragMove);
+    window.addEventListener('mouseup', this.endDrag);
+    window.addEventListener('touchmove', this.onDragMove);
+    window.addEventListener('touchend', this.endDrag);
+  }
+
+  onDragMove = (ev: MouseEvent|TouchEvent) => {
+    if (this.dragItem == null) return;
+    let dx, dy;
+    if (ev instanceof MouseEvent) {
+      dx = ev.clientX - this.dragStart.x;
+      dy = ev.clientY - this.dragStart.y;
+    } else {
+      dx = ev.touches[0].clientX - this.dragStart.x;
+      dy = ev.touches[0].clientY - this.dragStart.y;
+    }
+    const map = this.getCurrentNutritionMap();
+    const scaleX = map.baseWidth / (document.querySelector('.nutrition-overlay-canvas')?.clientWidth || map.baseWidth);
+    const scaleY = map.baseHeight / (document.querySelector('.nutrition-overlay-canvas')?.clientHeight || map.baseHeight);
+    const pos = this.getOverlayPosition(this.dragItem);
+    if (!pos) return;
+    pos.x = Math.max(0, Math.min(map.baseWidth, this.dragOrig.x + dx * scaleX));
+    pos.y = Math.max(0, Math.min(map.baseHeight, this.dragOrig.y + dy * scaleY));
+    this.forceUpdateOverlay();
+  };
+
+  endDrag = () => {
+    this.dragItem = null;
+    window.removeEventListener('mousemove', this.onDragMove);
+    window.removeEventListener('mouseup', this.endDrag);
+    window.removeEventListener('touchmove', this.onDragMove);
+    window.removeEventListener('touchend', this.endDrag);
+  };
+
+  startResize(ev: MouseEvent|TouchEvent, itemNumber: number) {
+    ev.preventDefault();
+    this.resizeItem = itemNumber;
+    const pos = this.getOverlayPosition(itemNumber);
+    if (!pos) return;
+    if (ev instanceof MouseEvent) {
+      this.resizeStartX = ev.clientX;
+    } else {
+      this.resizeStartX = ev.touches[0].clientX;
+    }
+    this.resizeOrigWidth = pos.width || 80;
+    window.addEventListener('mousemove', this.onResizeMove);
+    window.addEventListener('mouseup', this.endResize);
+    window.addEventListener('touchmove', this.onResizeMove);
+    window.addEventListener('touchend', this.endResize);
+  }
+
+  onResizeMove = (ev: MouseEvent|TouchEvent) => {
+    if (this.resizeItem == null) return;
+    let dx;
+    if (ev instanceof MouseEvent) {
+      dx = ev.clientX - this.resizeStartX;
+    } else {
+      dx = ev.touches[0].clientX - this.resizeStartX;
+    }
+    const map = this.getCurrentNutritionMap();
+    const scaleX = map.baseWidth / (document.querySelector('.nutrition-overlay-canvas')?.clientWidth || map.baseWidth);
+    const pos = this.getOverlayPosition(this.resizeItem);
+    if (!pos) return;
+    pos.width = Math.max(20, Math.min(map.baseWidth, this.resizeOrigWidth + dx * scaleX));
+    this.forceUpdateOverlay();
+  };
+
+  endResize = () => {
+    this.resizeItem = null;
+    window.removeEventListener('mousemove', this.onResizeMove);
+    window.removeEventListener('mouseup', this.endResize);
+    window.removeEventListener('touchmove', this.onResizeMove);
+    window.removeEventListener('touchend', this.endResize);
+  };
+
+  forceUpdateOverlay() {
+    // Triggers Angular change detection for overlay
+    this.labelLayout.set(this.labelLayout());
+  }
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
@@ -311,12 +411,129 @@ export class DataMaintenanceComponent implements OnInit {
 
   // Static Text form state
   staticTextData = signal<StaticTextData>({
-    number: 1001,
-    description: '',
-    items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false}))
+  number: 1001,
+  description: '',
+  items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false,fontClass: (i%2===0 ? 'overlay-text-bold' : 'overlay-text-regular')}))
   });
   staticTextDirty = signal(false);
   isStaticTextDirty(){ return this.staticTextDirty(); }
+  // Nutrition label layout selection
+  labelLayout = signal<'standard'|'dual'|'horizontal'>('standard');
+  setLabelLayout(ev: Event){
+    const v = (ev.target as HTMLSelectElement).value as any;
+    if(v==='standard'||v==='dual'||v==='horizontal') this.labelLayout.set(v);
+  }
+  // Coordinate map for overlay inputs (initial sample positions; adjust to match real artwork)
+  // Units are in pixels relative to a 521x947 (standard) base; will be scaled.
+  private nutritionOverlayMaps: Record<string, { baseWidth:number; baseHeight:number; image:string; positions: Record<number,{x:number;y:number;width?:number;align?:'left'|'right'|'center';}> }> = {
+    standard: {
+      baseWidth: 521,
+      baseHeight: 947,
+      image: 'labels/nutrition-standard.png', // place image under public/labels/
+      positions: {
+        1:{x:25,y:70,width:140}, // Example mapping; refine as needed
+        2:{x:25,y:100,width:200},
+        3:{x:25,y:130,width:200},
+        4:{x:155,y:200,width:70}, // Total Fat amount (e.g., 8g)
+        5:{x:430,y:200,width:60,align:'right'}, // Total Fat %DV (e.g., 10%)
+        6:{x:180,y:230,width:70}, // Saturated Fat amount
+        7:{x:430,y:230,width:60,align:'right'}, // Saturated Fat %DV
+        8:{x:180,y:255,width:90}, // Trans Fat
+        9:{x:155,y:285,width:70}, // Cholesterol amount
+        10:{x:430,y:285,width:60,align:'right'}, // Cholesterol %
+        11:{x:155,y:315,width:70}, // Sodium amount
+        12:{x:430,y:315,width:60,align:'right'},
+        13:{x:215,y:345,width:100}, // Total Carbohydrate grams
+        14:{x:430,y:345,width:60,align:'right'}, // Carbs %
+        15:{x:200,y:375,width:100}, // Dietary Fiber
+        16:{x:430,y:375,width:60,align:'right'},
+        17:{x:200,y:400,width:120}, // Total Sugars
+        18:{x:315,y:425,width:120}, // Includes Added Sugars
+        19:{x:430,y:425,width:60,align:'right'},
+        20:{x:155,y:455,width:70}, // Protein
+        // Add remaining mappings as needed up to 50
+      }
+    },
+    dual: {
+      // Approximated from provided dual panel image (update after real asset dropped in /public/labels/)
+      baseWidth: 949,
+      baseHeight: 658,
+      image: 'labels/nutrition-dual.png',
+      // Mapping strategy:
+      //  - Items 1-20 mirror the LEFT ("Per serving") column nutrients similar to standard layout
+      //  - Items 21-40 reserve spots for RIGHT ("Per container") column values (amounts & %DV)
+      //  - Adjust or extend as needed; refine x/y after exact pixel review
+      positions: {
+        // Left column (per serving) nutrient amounts & %DV pairs
+        4:{x:170,y:205,width:55},     // Total Fat amount (per serving)
+        5:{x:255,y:205,width:50,align:'right'}, // Total Fat %DV (per serving)
+        6:{x:170,y:235,width:55},     // Saturated Fat amount
+        7:{x:255,y:235,width:50,align:'right'}, // Saturated Fat %DV
+        8:{x:170,y:260,width:70},     // Trans Fat (no %DV typically)
+        9:{x:170,y:295,width:55},     // Cholesterol amount
+        10:{x:255,y:295,width:50,align:'right'},
+        11:{x:170,y:325,width:55},    // Sodium amount
+        12:{x:255,y:325,width:50,align:'right'},
+        13:{x:190,y:355,width:70},    // Total Carbohydrate grams
+        14:{x:255,y:355,width:50,align:'right'},
+        15:{x:190,y:385,width:70},    // Dietary Fiber grams
+        16:{x:255,y:385,width:50,align:'right'},
+        17:{x:190,y:410,width:90},    // Total Sugars grams
+        18:{x:315,y:435,width:110},   // Incl. Added Sugars grams
+        19:{x:255,y:435,width:50,align:'right'},
+        20:{x:170,y:465,width:55},    // Protein grams
+        // Right column (per container) duplicated nutrients start at item 21
+        24:{x:555,y:205,width:55},    // Total Fat amount (per container) (using item 24 to separate; adjust mapping numbers to your schema)
+        25:{x:640,y:205,width:55,align:'right'},
+        26:{x:555,y:235,width:55},    // Saturated Fat amount
+        27:{x:640,y:235,width:55,align:'right'},
+        28:{x:555,y:260,width:70},    // Trans Fat
+        29:{x:555,y:295,width:55},    // Cholesterol amount
+        30:{x:640,y:295,width:55,align:'right'},
+        31:{x:555,y:325,width:55},    // Sodium amount
+        32:{x:640,y:325,width:55,align:'right'},
+        33:{x:575,y:355,width:70},    // Total Carbs grams
+        34:{x:640,y:355,width:55,align:'right'},
+        35:{x:575,y:385,width:70},    // Dietary Fiber grams
+        36:{x:640,y:385,width:55,align:'right'},
+        37:{x:575,y:410,width:90},    // Total Sugars grams
+        38:{x:700,y:435,width:110},   // Incl. Added Sugars grams
+        39:{x:640,y:435,width:55,align:'right'},
+        40:{x:555,y:465,width:55}     // Protein grams
+      }
+    },
+    horizontal: {
+      // Horizontal label supplied (approx 785x162). Coordinates approximate; refine after pixel check.
+      baseWidth: 785,
+      baseHeight: 162,
+      image: 'labels/nutrition-horizontal.png',
+      positions: {
+        // Left group (amount/serving) (reuse item numbers similar to standard)
+        4:{x:295,y:44,width:50},      // Total Fat amount
+        5:{x:360,y:44,width:40,align:'right'}, // Total Fat %
+        6:{x:295,y:60,width:50},      // Saturated Fat amount
+        7:{x:360,y:60,width:40,align:'right'}, // Saturated Fat %
+        8:{x:295,y:74,width:60},      // Trans Fat
+        9:{x:295,y:90,width:50},      // Cholesterol amount
+        10:{x:360,y:90,width:40,align:'right'},
+        11:{x:295,y:105,width:55},    // Sodium amount
+        12:{x:360,y:105,width:40,align:'right'},
+        13:{x:550,y:44,width:60},     // Total Carbohydrate amount
+        14:{x:720,y:44,width:40,align:'right'}, // Total Carbohydrate %
+        15:{x:550,y:60,width:55},     // Dietary Fiber amount
+        16:{x:720,y:60,width:40,align:'right'},
+        17:{x:550,y:74,width:60},     // Total Sugars amount
+        18:{x:620,y:90,width:120},    // Includes Added Sugars amount
+        19:{x:720,y:90,width:40,align:'right'},
+        20:{x:550,y:105,width:55}     // Protein amount
+      }
+    }
+  };
+  getCurrentNutritionMap(){ return this.nutritionOverlayMaps[this.labelLayout()]; }
+  getOverlayPosition(itemNumber: number){
+    const map = this.getCurrentNutritionMap();
+    return map.positions[itemNumber];
+  }
   
   // API response feedback
   apiResponse = signal<{
@@ -727,7 +944,6 @@ export class DataMaintenanceComponent implements OnInit {
           const idx = dtPlainMatch[1];
           const target = `dateTextField${idx}Text`;
           if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
-          return;
         }
         const dtSpecificNumber = norm.match(/^date text field (\d) number$/) || norm.match(/^date text field (\d) num$/) || norm.match(/^date text field (\d) nbr$/);
         if(dtSpecificNumber){
@@ -1532,7 +1748,7 @@ export class DataMaintenanceComponent implements OnInit {
     this.staticTextData.set({
       number: 1001,
       description: '',
-      items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false}))
+    items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false,fontClass:'overlay-text-regular'}))
     });
     this.staticTextDirty.set(false);
   }
