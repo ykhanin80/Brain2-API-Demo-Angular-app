@@ -1,98 +1,188 @@
 <div class="data-maintenance order-like-container">
-  <!-- List View -->
-  <div *ngIf="currentView() === 'list'" class="dm-card">
-    <!-- Header -->
+  <!-- Main Header with Sub-page Navigation -->
+  <div class="main-header dm-card">
     <div class="header">
       <div class="header-left">
         <h1>Data Maintenance</h1>
-        <p class="subtitle">Manage Articles & Static Texts</p>
-        <div class="sub-tabs">
-          <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
-          <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
-        </div>
+        <p class="subtitle">Manage articles and static texts for labeling system</p>
       </div>
-      <div class="header-right" *ngIf="currentSubPage()==='articles'">
+      <div class="header-right">
         <button class="btn btn-secondary" (click)="goToDashboard()">
           <i class="icon-arrow-left"></i>
           Back to Dashboard
         </button>
+      </div>
+    </div>
+    
+    <!-- Sub-page Navigation Tabs -->
+    <div class="sub-page-nav">
+      <button 
+        class="nav-tab" 
+        [class.active]="currentSubPage() === 'articles'"
+        [style.background]="currentSubPage() === 'articles' ? (isDarkMode() ? '#1976d2' : '#1976d2') : (isDarkMode() ? '#2a2a2a' : '#f8f9fa')"
+        [style.color]="currentSubPage() === 'articles' ? '#ffffff' : (isDarkMode() ? '#e0e0e0' : '#374151')"
+        [style.border-color]="isDarkMode() ? '#444' : '#e0e0e0'"
+        (click)="goToArticlesSubPage()">
+        <i class="icon-list"></i>
+        Articles
+      </button>
+      <button 
+        class="nav-tab" 
+        [class.active]="currentSubPage() === 'static-texts'"
+        [style.background]="currentSubPage() === 'static-texts' ? (isDarkMode() ? '#1976d2' : '#1976d2') : (isDarkMode() ? '#2a2a2a' : '#f8f9fa')"
+        [style.color]="currentSubPage() === 'static-texts' ? '#ffffff' : (isDarkMode() ? '#e0e0e0' : '#374151')"
+        [style.border-color]="isDarkMode() ? '#444' : '#e0e0e0'"
+        (click)="goToStaticTextsSubPage()">
+        <i class="icon-text"></i>
+        Static Texts
+      </button>
+    </div>
+  </div>
+
+  <!-- Articles Sub-page: List View -->
+  <div *ngIf="currentView() === 'articles-list'" class="dm-card">
+    <!-- Articles Header -->
+    <div class="header">
+      <div class="header-left">
+        <h2>Articles</h2>
+        <p class="subtitle">Manage labeler articles with CRUD operations</p>
+      </div>
+      <div class="header-right">
         <button class="btn btn-secondary" (click)="openImportDialog()">
           <i class="icon-upload"></i>
           Import CSV
         </button>
-        <button class="btn btn-secondary" (click)="downloadImportTemplate()">
+        <button class="btn btn-secondary" (click)="downloadImportTemplate()" title="Download CSV Import Template">
           <i class="icon-download"></i>
-          Download CSV Template
+          CSV Template
         </button>
         <button class="btn btn-primary" (click)="goToCreatePage()">
           <i class="icon-plus"></i>
           Create Article
         </button>
       </div>
-      <div class="header-right" *ngIf="currentSubPage()==='static-texts'">
-        <button class="btn btn-secondary" (click)="goToDashboard()">
-          <i class="icon-arrow-left"></i>
-          Back to Dashboard
-        </button>
-  <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
-        <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
-      </div>
-  <!-- Full-width Import Panel (document flow, full-bleed) -->
-    <div class="import-inline full-bleed global-fixed" *ngIf="importState().open">
-      <div class="import-inline-header">
-        <strong>Import Articles</strong>
+    </div>
+    <!-- Full-width Import Panel (document flow, full-bleed) -->
+    <div class="import-inline full-bleed global-fixed" *ngIf="importState().open"
+         [style.background]="isDarkMode() ? '#1f1f1f' : null"
+         [style.border-color]="isDarkMode() ? '#333' : null">
+      <div class="import-inline-header"
+           [style.background]="isDarkMode() ? '#1f1f1f' : null"
+           [style.border-color]="isDarkMode() ? '#333' : null">
+        <strong [style.color]="isDarkMode() ? '#ffffff' : null">Import Articles</strong>
         <div class="import-inline-tabs">
-          <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto Map</button>
-          <button class="btn btn-small btn-primary" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()" *ngIf="importState().step==='mapping'">Preview</button>
-          <button class="btn btn-small" (click)="backToMapping()" *ngIf="importState().step==='preview'">Back</button>
-          <button class="btn btn-small btn-primary" (click)="startImport()" *ngIf="importState().step==='preview' && importRows().length>0 && invalidImportRowCount()!==importRows().length">Start Import</button>
+          <button class="btn btn-small" (click)="autoMapImportHeaders()"
+                  [style.background]="isDarkMode() ? '#2a3036' : null"
+                  [style.border-color]="isDarkMode() ? '#3a434d' : null"
+                  [style.color]="isDarkMode() ? '#9aa4b1' : null">Auto Map</button>
+          <button class="btn btn-small btn-primary" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()" *ngIf="importState().step==='mapping'"
+                  [style.background]="isDarkMode() ? '#1976d2' : null"
+                  [style.border-color]="isDarkMode() ? '#1976d2' : null"
+                  [style.color]="isDarkMode() ? '#fff' : null">Preview</button>
+          <button class="btn btn-small" (click)="backToMapping()" *ngIf="importState().step==='preview'"
+                  [style.background]="isDarkMode() ? '#2a3036' : null"
+                  [style.border-color]="isDarkMode() ? '#3a434d' : null"
+                  [style.color]="isDarkMode() ? '#9aa4b1' : null">Back</button>
+          <button class="btn btn-small btn-primary" (click)="startImport()" *ngIf="importState().step==='preview' && importRows().length>0 && invalidImportRowCount()!==importRows().length"
+                  [style.background]="isDarkMode() ? '#1976d2' : null"
+                  [style.border-color]="isDarkMode() ? '#1976d2' : null"
+                  [style.color]="isDarkMode() ? '#fff' : null">Start Import</button>
         </div>
-        <button class="btn btn-small" (click)="closeImportDialog()">×</button>
+        <button class="btn btn-small" (click)="closeImportDialog()"
+                [style.background]="isDarkMode() ? '#2a3036' : null"
+                [style.border-color]="isDarkMode() ? '#3a434d' : null"
+                [style.color]="isDarkMode() ? '#9aa4b1' : null">×</button>
       </div>
       <div class="import-scroll">
       <div class="import-inline-body" *ngIf="importState().step === 'select'">
-        <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)" />
-        <div class="hint">Choose CSV (max 5000 rows preview).</div>
+        <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)"
+               [style.background]="isDarkMode() ? '#2a2a2a' : null"
+               [style.color]="isDarkMode() ? '#e0e0e0' : null"
+               [style.border-color]="isDarkMode() ? '#444' : null" />
+        <div class="hint" [style.color]="isDarkMode() ? '#9aa4b1' : null">Choose CSV (max 5000 rows preview). 
+          <button class="btn btn-small" (click)="downloadImportTemplate()" title="Download CSV Import Template"
+                  [style.background]="isDarkMode() ? '#2a3036' : null"
+                  [style.border-color]="isDarkMode() ? '#3a434d' : null"
+                  [style.color]="isDarkMode() ? '#9aa4b1' : null">
+            <i class="icon-download"></i> Download Template
+          </button>
+        </div>
       </div>
       <div class="import-inline-body" *ngIf="importState().step === 'mapping'">
-        <table class="mapping-table wide">
-          <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
+        <table class="mapping-table wide"
+               [style.background]="isDarkMode() ? '#1f1f1f' : null"
+               [style.border-color]="isDarkMode() ? '#333' : null">
+          <thead><tr>
+            <th style="width:260px" 
+                [style.background]="isDarkMode() ? '#232323' : null"
+                [style.color]="isDarkMode() ? '#ffffff' : null">CSV Header</th>
+            <th style="width:300px"
+                [style.background]="isDarkMode() ? '#232323' : null" 
+                [style.color]="isDarkMode() ? '#ffffff' : null">Maps To Field</th>
+            <th [style.background]="isDarkMode() ? '#232323' : null"
+                [style.color]="isDarkMode() ? '#ffffff' : null">Sample</th>
+          </tr></thead>
           <tbody>
             <tr *ngFor="let h of importHeaders()">
-              <td>{{ h }}</td>
-              <td>
-                <select (change)="updateImportMapping(h, $any($event.target).value)" [class.mapped]="importMapping()[h]">
+              <td [style.color]="isDarkMode() ? '#e0e0e0' : null"
+                  [style.border-color]="isDarkMode() ? '#333' : null">{{ h }}</td>
+              <td [style.border-color]="isDarkMode() ? '#333' : null">
+                <select (change)="updateImportMapping(h, $any($event.target).value)" [class.mapped]="importMapping()[h]"
+                        [style.background]="isDarkMode() ? '#2a2a2a' : null"
+                        [style.color]="isDarkMode() ? '#e0e0e0' : null"
+                        [style.border-color]="isDarkMode() ? '#444' : null">
                   <option value="" [selected]="!importMapping()[h]">-- ignore --</option>
                   <option *ngFor="let def of importFieldDefs" [value]="def.key" [selected]="importMapping()[h]===def.key">{{ def.label }}</option>
                 </select>
               </td>
-              <td>{{ importRawRows()[0] ? importRawRows()[0][h] : '' }}</td>
+              <td [style.color]="isDarkMode() ? '#e0e0e0' : null"
+                  [style.border-color]="isDarkMode() ? '#333' : null">{{ importRawRows()[0] ? importRawRows()[0][h] : '' }}</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="import-inline-body" *ngIf="importState().step === 'preview'">
         <div class="preview-head">
-          <span>{{ importRows().length }} rows (invalid {{ invalidImportRowCount() }})</span>
+          <span [style.color]="isDarkMode() ? '#ffffff' : null">{{ importRows().length }} rows (invalid {{ invalidImportRowCount() }})</span>
         </div>
-        <table class="preview-table wide">
-          <thead><tr><th>#</th><th *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ h }}</th><th>error</th></tr></thead>
+        <table class="preview-table wide"
+               [style.background]="isDarkMode() ? '#1f1f1f' : null"
+               [style.border-color]="isDarkMode() ? '#333' : null">
+          <thead><tr>
+            <th [style.background]="isDarkMode() ? '#232323' : null"
+                [style.color]="isDarkMode() ? '#ffffff' : null">#</th>
+            <th *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}"
+                [style.background]="isDarkMode() ? '#232323' : null"
+                [style.color]="isDarkMode() ? '#ffffff' : null">{{ h }}</th>
+            <th [style.background]="isDarkMode() ? '#232323' : null"
+                [style.color]="isDarkMode() ? '#ffffff' : null">error</th>
+          </tr></thead>
           <tbody>
             <tr *ngFor="let r of importRows().slice(0,100)">
-              <td>{{ r.line }}</td>
-              <td *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ r.original[h] }}</td>
-              <td class="err">{{ r.error }}</td>
+              <td [style.color]="isDarkMode() ? '#e0e0e0' : null"
+                  [style.border-color]="isDarkMode() ? '#333' : null">{{ r.line }}</td>
+              <td *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}"
+                  [style.color]="isDarkMode() ? '#e0e0e0' : null"
+                  [style.border-color]="isDarkMode() ? '#333' : null">{{ r.original[h] }}</td>
+              <td class="err" [style.color]="isDarkMode() ? '#f2a6a6' : null"
+                  [style.border-color]="isDarkMode() ? '#333' : null">{{ r.error }}</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="import-inline-body" *ngIf="importState().step === 'running'">
-        <div>{{ importProgress().processed }}/{{ importRows().length }} (ok {{ importProgress().success }}, failed {{ importProgress().failed }})</div>
-        <div class="progress-bar"><div class="bar" [style.width]="importProgress().percent + '%'" ></div></div>
-        <button class="btn btn-small" (click)="cancelImport()" [disabled]="importProgress().done">Cancel</button>
+        <div [style.color]="isDarkMode() ? '#ffffff' : null">{{ importProgress().processed }}/{{ importRows().length }} (ok {{ importProgress().success }}, failed {{ importProgress().failed }})</div>
+        <div class="progress-bar" [style.background]="isDarkMode() ? '#2a2a2a' : null">
+          <div class="bar" [style.width]="importProgress().percent + '%'"
+               [style.background]="isDarkMode() ? '#1976d2' : null"></div>
+        </div>
+        <button class="btn btn-small" (click)="cancelImport()" [disabled]="importProgress().done"
+                [style.background]="isDarkMode() ? '#2a3036' : null"
+                [style.border-color]="isDarkMode() ? '#3a434d' : null"
+                [style.color]="isDarkMode() ? '#9aa4b1' : null">Cancel</button>
       </div>
       <div class="import-inline-body" *ngIf="importState().step === 'done'">
-    <div>Done: {{ importProgress().created }} created, {{ importProgress().updated }} updated, {{ importProgress().failed }} failed.</div>
+        <div [style.color]="isDarkMode() ? '#ffffff' : null">Done: {{ importProgress().created }} created, {{ importProgress().updated }} updated, {{ importProgress().failed }} failed.</div>
         <div class="import-done-actions">
           <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="importProgress().failed===0">Errors CSV</button>
           <button class="btn btn-small btn-primary" (click)="closeImportDialog()">Close</button>
@@ -102,8 +192,6 @@
     </div>
     </div>
 
-  <!-- Articles Section -->
-  <ng-container *ngIf="currentSubPage()==='articles'">
   <!-- Search Section -->
   <div class="search-section">
     <div class="search-form">
@@ -146,34 +234,6 @@
         </button>
       </div>
     </div>
-  </div>
-  </ng-container>
-
-  <!-- Static Texts Section -->
-  <div *ngIf="currentSubPage()==='static-texts'" class="static-texts dm-card">
-    <h2>Static Text Definition</h2>
-    <form class="static-text-form" (submit)="$event.preventDefault(); createStaticText();">
-      <div class="st-row">
-        <label>Number
-          <input type="number" [value]="staticTextData().number" (input)="updateStaticTextNumber($event)" min="1" />
-        </label>
-        <label>Description
-          <input type="text" [value]="staticTextData().description" (input)="updateStaticTextDescription($event)" maxlength="64" />
-        </label>
-        <button class="btn btn-primary" type="submit" [disabled]="!staticTextData().description">Save</button>
-      </div>
-      <div class="static-text-items">
-        <div class="st-item" *ngFor="let it of staticTextData().items; trackBy: trackStaticTextItem">
-          <label class="st-item-label">{{it.number}}
-            <input type="text" maxlength="70" [value]="it.textValue" (input)="updateStaticTextItemValue(it,$event)" />
-          </label>
-          <label class="st-send">
-            <input type="checkbox" [checked]="it.sendFormat" (change)="toggleStaticTextItemSend(it)"> send
-          </label>
-        </div>
-      </div>
-      <div *ngIf="apiResponse().type" class="api-response" [ngClass]="'api-response-' + apiResponse().type">{{apiResponse().message}}</div>
-    </form>
   </div>
 
   <!-- Loading Indicator -->
@@ -326,7 +386,7 @@
   
 
   <!-- Create Article Page -->
-  <div *ngIf="currentView() === 'create'" class="article-page create-article-page dm-card">
+  <div *ngIf="currentView() === 'articles-create'" class="article-page create-article-page dm-card">
     <div class="page-header">
       <div class="header-left">
         <h1>Create New Article</h1>
@@ -777,8 +837,74 @@
     </div>
   </div> <!-- End Create Article Page -->
 
+  <!-- Static Text Page -->
+  <div *ngIf="currentView() === 'static-texts'" class="article-page static-text-page dm-card">
+    <div class="page-header">
+      <div class="header-left">
+        <h2>Static Texts</h2>
+        <p class="subtitle">Create and manage static text entries for labeling system</p>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="form-section">
+        <h3>Static Text Configuration</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="staticTextNumber" [style.color]="isDarkMode() ? '#ffffff' : null">Text Number <span class="required">*</span></label>
+            <input 
+              type="number" 
+              id="staticTextNumber" 
+              [value]="staticTextData().number" 
+              (input)="updateStaticTextNumber($event)"
+              [style.background]="isDarkMode() ? '#2a2a2a' : null"
+              [style.color]="isDarkMode() ? '#e0e0e0' : null"
+              [style.border-color]="isDarkMode() ? '#444' : null"
+              required>
+          </div>
+          <div class="form-group">
+            <label for="staticTextDescription" [style.color]="isDarkMode() ? '#ffffff' : null">Description <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="staticTextDescription" 
+              [value]="staticTextData().description" 
+              (input)="updateStaticTextDescription($event)"
+              [style.background]="isDarkMode() ? '#2a2a2a' : null"
+              [style.color]="isDarkMode() ? '#e0e0e0' : null"
+              [style.border-color]="isDarkMode() ? '#444' : null"
+              placeholder="Enter description"
+              required>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Static Text Fields</h3>
+        <div class="static-text-table-container">
+          <p>Static text configuration will be implemented here.</p>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="createStaticText()" [disabled]="isLoading()">
+          <span *ngIf="isLoading()">Creating...</span>
+          <span *ngIf="!isLoading()">Create Static Text</span>
+        </button>
+        <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset Form</button>
+      </div>
+
+      <!-- API Response Messages -->
+      <div *ngIf="apiResponse().type" class="api-response-container">
+        <div class="api-response" [class.success]="apiResponse().type === 'success'" [class.error]="apiResponse().type === 'error'">
+          <span>{{ apiResponse().message }}</span>
+        </div>
+      </div>
+    </div>
+  </div> <!-- End Static Text Page -->
+
   <!-- Edit Article Page -->
-  <div *ngIf="currentView() === 'edit' && selectedArticle()" class="article-page edit-article-page dm-card">
+  <div *ngIf="currentView() === 'articles-edit' && selectedArticle()" class="article-page edit-article-page dm-card">
     <div class="page-header">
       <div class="header-left">
         <h1>Edit Article: {{ selectedArticle()?.number }}</h1>
@@ -920,7 +1046,7 @@
   </div> <!-- End Edit Article Page -->
 
   <!-- Copy Article Page -->
-  <div *ngIf="currentView() === 'copy' && selectedArticle()" class="article-page copy-article-page dm-card">
+  <div *ngIf="currentView() === 'articles-copy' && selectedArticle()" class="article-page copy-article-page dm-card">
     <div class="page-header">
       <div class="header-left">
         <h1>Copy Article: {{ selectedArticle()?.name }}</h1>
@@ -1138,6 +1264,17 @@
         >
           Delete Article Response
         </button>
+        <button 
+          type="button" 
+          class="debug-tab" 
+          [class.active]="activeDebugTab === 'import'"
+          (click)="activeDebugTab = 'import'"
+          [style.background]="isDarkMode() ? (activeDebugTab === 'import' ? '#1976d2' : '#2a3036') : null"
+          [style.border-color]="isDarkMode() ? (activeDebugTab === 'import' ? '#1976d2' : '#3a434d') : null" 
+          [style.color]="isDarkMode() ? (activeDebugTab === 'import' ? '#fff' : '#9aa4b1') : null"
+        >
+          CSV Import Debug
+        </button>
       </div>
       
       <div class="debug-content" [class.collapsed]="jsonCollapsed()">
@@ -1204,6 +1341,123 @@
                [style.background]="isDarkMode() ? '#10161b' : null"
                [style.color]="isDarkMode() ? '#b9c3cc' : null"
                [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.deleteArticle | json}}</pre>
+        </div>
+
+        <div *ngIf="activeDebugTab === 'import'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null"
+             [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header">
+            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">CSV Import Debug Information</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">
+              <span *ngIf="debugApiResponses.csvImport?.phase">Phase: {{debugApiResponses.csvImport.phase}} | </span>
+              <span *ngIf="debugApiResponses.csvImport?.rawRowCount">{{debugApiResponses.csvImport.rawRowCount}} rows</span>
+              <span *ngIf="debugApiResponses.csvImport?.importProgress && debugApiResponses.csvImport.importProgress.processed > 0">
+                | {{debugApiResponses.csvImport.importProgress.processed}}/{{debugApiResponses.csvImport.rawRowCount}} processed
+              </span>
+            </small>
+          </div>
+          <div *ngIf="debugApiResponses.csvImport && !jsonCollapsed()" class="debug-sections">
+            <!-- File Info Section -->
+            <div class="debug-subsection" [style.border-color]="isDarkMode() ? '#373f48' : null">
+              <h5 [style.color]="isDarkMode() ? '#ffffff' : null">📁 File Information</h5>
+              <div class="debug-info-grid" [style.color]="isDarkMode() ? '#b9c3cc' : null">
+                <span>File Name:</span> <span>{{debugApiResponses.csvImport.fileName}}</span>
+                <span>File Size:</span> <span>{{debugApiResponses.csvImport.fileSize | number}} bytes</span>
+                <span>File Type:</span> <span>{{debugApiResponses.csvImport.fileType}}</span>
+                <span>Headers Found:</span> <span>{{debugApiResponses.csvImport.headers?.length || 0}}</span>
+              </div>
+            </div>
+
+            <!-- Auto-Mapping Section -->
+            <div *ngIf="debugApiResponses.csvImport.autoMapping" class="debug-subsection" [style.border-color]="isDarkMode() ? '#373f48' : null">
+              <h5 [style.color]="isDarkMode() ? '#ffffff' : null">🔗 Auto-Mapping Results</h5>
+              <div class="debug-mapping-grid" [style.color]="isDarkMode() ? '#b9c3cc' : null">
+                <div *ngFor="let mapping of debugApiResponses.csvImport.autoMapping | keyvalue" class="mapping-row">
+                  <span class="csv-header">"{{mapping.key}}"</span>
+                  <span class="mapping-arrow">→</span>
+                  <span class="target-field">{{mapping.value}}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Import Progress Section -->
+            <div *ngIf="debugApiResponses.csvImport.importProgress" class="debug-subsection" [style.border-color]="isDarkMode() ? '#373f48' : null">
+              <h5 [style.color]="isDarkMode() ? '#ffffff' : null">📊 Import Progress</h5>
+              <div class="debug-info-grid" [style.color]="isDarkMode() ? '#b9c3cc' : null">
+                <span>Processed:</span> <span>{{debugApiResponses.csvImport.importProgress.processed}}</span>
+                <span>Created:</span> <span>{{debugApiResponses.csvImport.importProgress.created}}</span>
+                <span>Updated:</span> <span>{{debugApiResponses.csvImport.importProgress.updated}}</span>
+                <span>Failed:</span> <span>{{debugApiResponses.csvImport.importProgress.failed}}</span>
+                <span>Success Rate:</span> <span>{{debugApiResponses.csvImport.importProgress.percent}}%</span>
+              </div>
+            </div>
+
+            <!-- Import Errors Section -->
+            <div *ngIf="debugApiResponses.csvImport.importErrors?.length > 0" class="debug-subsection" [style.border-color]="isDarkMode() ? '#373f48' : null">
+              <h5 [style.color]="isDarkMode() ? '#ffffff' : null">❌ Import Errors</h5>
+              <div class="debug-errors" [style.color]="isDarkMode() ? '#b9c3cc' : null">
+                <div *ngFor="let error of debugApiResponses.csvImport.importErrors" class="error-row">
+                  <strong>Line {{error.line}}:</strong> {{error.number}} - {{error.name}}
+                  <br><span class="error-message" [style.color]="isDarkMode() ? '#ff6b6b' : null">{{error.error}}</span>
+                  
+                  <!-- Detailed Request/Response Information -->
+                  <div *ngIf="error.debugInfo" class="error-debug-details" 
+                       [style.margin-top]="'8px'"
+                       [style.padding]="'8px'"
+                       [style.background]="isDarkMode() ? '#0f1419' : '#f8f9fa'"
+                       [style.border]="isDarkMode() ? '1px solid #22303b' : '1px solid #dee2e6'"
+                       [style.border-radius]="'4px'"
+                       [style.font-size]="'12px'">
+                    <div [style.color]="isDarkMode() ? '#9aa4b1' : '#6c757d'">
+                      <strong>Request Details:</strong>
+                    </div>
+                    <div [style.color]="isDarkMode() ? '#b9c3cc' : '#495057'">
+                      <strong>Method:</strong> {{error.debugInfo.requestMethod}}<br>
+                      <strong>URL:</strong> {{error.debugInfo.requestUrl}}
+                    </div>
+                    <div [style.margin-top]="'6px'">
+                      <strong [style.color]="isDarkMode() ? '#9aa4b1' : '#6c757d'">Request Body:</strong>
+                      <pre [style.background]="isDarkMode() ? '#10161b' : '#ffffff'"
+                           [style.color]="isDarkMode() ? '#b9c3cc' : '#495057'"
+                           [style.border]="isDarkMode() ? '1px solid #22303b' : '1px solid #dee2e6'"
+                           [style.padding]="'6px'"
+                           [style.margin-top]="'4px'"
+                           [style.font-size]="'11px'"
+                           [style.white-space]="'pre-wrap'"
+                           [style.word-break]="'break-word'"
+                           [style.max-height]="'200px'"
+                           [style.overflow-y]="'auto'">{{error.debugInfo.requestBody | json}}</pre>
+                    </div>
+                    <div *ngIf="error.debugInfo.responseError" [style.margin-top]="'6px'">
+                      <strong [style.color]="isDarkMode() ? '#9aa4b1' : '#6c757d'">Response Error:</strong>
+                      <pre [style.background]="isDarkMode() ? '#10161b' : '#ffffff'"
+                           [style.color]="isDarkMode() ? '#ff6b6b' : '#dc3545'"
+                           [style.border]="isDarkMode() ? '1px solid #22303b' : '1px solid #dee2e6'"
+                           [style.padding]="'6px'"
+                           [style.margin-top]="'4px'"
+                           [style.font-size]="'11px'"
+                           [style.white-space]="'pre-wrap'"
+                           [style.word-break]="'break-word'"
+                           [style.max-height]="'200px'"
+                           [style.overflow-y]="'auto'">{{error.debugInfo.responseError | json}}</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Full Debug Data -->
+            <div class="debug-subsection" [style.border-color]="isDarkMode() ? '#373f48' : null">
+              <h5 [style.color]="isDarkMode() ? '#ffffff' : null">🔧 Full Debug Data</h5>
+              <pre class="debug-json"
+                   [style.background]="isDarkMode() ? '#10161b' : null"
+                   [style.color]="isDarkMode() ? '#b9c3cc' : null"
+                   [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.csvImport | json}}</pre>
+            </div>
+          </div>
+          <div *ngIf="!debugApiResponses.csvImport" class="debug-empty" [style.color]="isDarkMode() ? '#9aa4b1' : null">
+            No CSV import data available. Import a CSV file to see debug information.
+          </div>
         </div>
       </div>
     </div>

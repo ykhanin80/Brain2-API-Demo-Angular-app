@@ -7,6 +7,19 @@ import { Auth } from '../auth';
 // PapaParse will be lazy-loaded only when an import file is selected to avoid SSR/runtime issues.
 let PapaRef: any = null;
 
+// Static Texts data structures
+interface StaticTextItem {
+  number: number;
+  textValue: string;
+  sendFormat: boolean;
+}
+
+interface StaticTextData {
+  number: number;
+  description: string;
+  items: StaticTextItem[];
+}
+
 export interface TextField {
   number: number;
   text: string | null;
@@ -293,6 +306,17 @@ export class DataMaintenanceComponent implements OnInit {
 
   // View states for full page navigation
   currentView = signal<'list' | 'create' | 'edit' | 'copy'>('list');
+  // Sub-page: articles vs static-texts (default articles)
+  currentSubPage = signal<'articles' | 'static-texts'>('articles');
+
+  // Static Text form state
+  staticTextData = signal<StaticTextData>({
+    number: 1001,
+    description: '',
+    items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false}))
+  });
+  staticTextDirty = signal(false);
+  isStaticTextDirty(){ return this.staticTextDirty(); }
   
   // API response feedback
   apiResponse = signal<{
@@ -517,6 +541,14 @@ export class DataMaintenanceComponent implements OnInit {
     push('name','Name',['name','articlename'],true);
     push('description','Description',['description','desc']);
     push('active','Active',['active','enabled','isactive']);
+    // Currency (GX price currency code)
+    push('gxPriceCurrencyCode','Currency',[
+      'currency','currencycode','currcode','curr','pricecurrency','gxpricecurrency'
+    ]);
+    // Labeler enable flag
+    push('isEnabledForLabelers','Labeler Enabled',[
+      'labeler enabled','labelerenabled','islabelerenabled','labelerenable','labeleractive','labeler'
+    ]);
     // PLU common
     push('labelingMode','Labeling Mode',['labelingmode','mode']);
     push('weightUnit','Weight Unit',['unit','weightunit','wtunit']);
@@ -617,6 +649,39 @@ export class DataMaintenanceComponent implements OnInit {
     if(this.importState().step==='running' && !this.importProgress().done){ this.importCancelled = true; }
     this.importState.set({open:false, step:'select'});
     document.body.classList.remove('has-import-open');
+  }
+  // Download CSV template (served from assets/import folder)
+  downloadImportTemplate(){
+    // Generate a simple CSV template on the fly (header + 2 sample rows)
+    const header = [
+      'Article Number','Name','Labeling mode','Active','Labeler Enabled','Description','Unit','Shelf life 1',
+      'Simple text 01','Simple text 02','Simple text 03','Static Text Param #','Tare Weight','Unit Price',
+      'Special price','Currency','Automatic Label Parameter','Code number 1','Code number 2','Code number 3',
+      'Code substring 1','Code substring 2','Code substring 3','Date Text Field 1','Date Text Field 2','Fixed weight',
+      'General number 01','General number 02','Text Field 1','Text Field 2','Text Field 3','Text Field 4','Text Field 5',
+      'Text Field 6','Text Field 7','Text Field 8','Text Field 9','Text Field 10','Label parameter set no.',
+      'Logo 1','Logo 2','Maximum weight','Minimum weight','Pieces per package','Weight class no.'
+    ];
+    const today = new Date().toISOString().substring(0,10);
+    const sample1 = [
+      '2001','Sample Article 1','Weight','TRUE','TRUE','Short description','lb','10',
+      'simple text 1','simple text2','st3','1122','0.08','19.99','17.99','USD','1','1','2','3',
+      '12345678901','codesubstr2','','Packed On:','Sell By:','1.7500','1','2',
+      'Example TF1','Example TF2','Example TF3','','','','','','','','','1','1','2','2.5000','1.7500','8','1'
+    ];
+    const sample2 = [
+      '2002','Sample Article 2','Weight','TRUE','TRUE','Another description','lb','7',
+      'fresh','quality','','1001','0.05','8.49','','USD','1','1','2','3',
+      '2343412001','','','Packed On:','Sell By:','1.0000','','','',
+      '','','','','','','','','','','','1','','','1.5000','0.7500','4','1'
+    ];
+    const csv = [header.join(','), sample1.join(','), sample2.join(',')].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `PLU-Import-Template-${today}.csv`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
   }
   async onImportFileSelected(event: Event){
     const input = event.target as HTMLInputElement;
@@ -752,6 +817,8 @@ export class DataMaintenanceComponent implements OnInit {
       simpleText2: trim(getVal('simpleText2')||r.simpleText2||''),
       simpleText3: trim(getVal('simpleText3')||r.simpleText3||''),
       staticText: parseInt(trim(getVal('staticText')||r.staticText||'0'))||0,
+  isEnabledForLabelers: parseBool(getVal('isEnabledForLabelers')||r.isEnabledForLabelers||r.labelerEnabled||'true'),
+  gxPriceCurrencyCode: trim(getVal('gxPriceCurrencyCode')||r.gxPriceCurrencyCode||r.currency||'USD').toUpperCase() || 'USD',
       codeField1: parseInt(trim(getVal('codeField1')||r.codeField1||'0'))||0,
       codeField2: parseInt(trim(getVal('codeField2')||r.codeField2||'0'))||0,
       codeField3: parseInt(trim(getVal('codeField3')||r.codeField3||'0'))||0,
@@ -830,7 +897,7 @@ export class DataMaintenanceComponent implements OnInit {
         weightDecimalPlaces: 2,
         active: row.active,
         approved: false,
-        gxPriceCurrencyCode: 'USD',
+  gxPriceCurrencyCode: row.gxPriceCurrencyCode || 'USD',
         gxPriceDecimalPlaces: 2,
         articlePLU: {
           ...emptyPLU,
@@ -1390,6 +1457,86 @@ export class DataMaintenanceComponent implements OnInit {
     this.apiResponse.set({ type: null, message: '' });
   }
 
+  // Sub-page navigation helpers
+  goToArticlesSubPage(){
+    this.currentSubPage.set('articles');
+    // Ensure an articles view is active
+    if(['create','edit','copy','list'].indexOf(this.currentView())===-1){
+      this.currentView.set('list');
+    }
+  }
+  goToStaticTextsSubPage(){
+    this.currentSubPage.set('static-texts');
+    // Collapse any article modals to base view when switching
+    this.currentView.set('list');
+  }
+
+  // Static Text handlers (placeholder logic)
+  updateStaticTextNumber(ev: Event){
+    const val = +(ev.target as HTMLInputElement).value;
+    this.staticTextData.update(s=>({...s, number: val}));
+  this.staticTextDirty.set(true);
+  }
+  updateStaticTextDescription(ev: Event){
+    const val = (ev.target as HTMLInputElement).value;
+    this.staticTextData.update(s=>({...s, description: val}));
+  this.staticTextDirty.set(true);
+  }
+  toggleStaticTextItemSend(item: StaticTextItem){
+    this.staticTextData.update(s=>({
+      ...s,
+      items: s.items.map(it=>it.number===item.number?{...it, sendFormat:!it.sendFormat}:it)
+    }));
+  this.staticTextDirty.set(true);
+  }
+  updateStaticTextItemValue(item: StaticTextItem, ev: Event){
+  const val = (ev.target as HTMLInputElement).value || '';
+    // Only update state if changed to reduce re-render cost
+    if(item.textValue === val) return;
+    this.staticTextData.update(s=>({
+      ...s,
+      items: s.items.map(it=> it.number===item.number ? {...it, textValue: val} : it)
+    }));
+  this.staticTextDirty.set(true);
+  }
+  trackStaticTextItem(index:number, item: StaticTextItem){ return item.number; }
+  createStaticText(){
+    const payload = {
+      number: this.staticTextData().number,
+      description: this.staticTextData().description,
+      items: this.staticTextData().items.map(it=>({
+        number: it.number,
+        textValue: it.textValue,
+        sendFormat: it.sendFormat
+      }))
+    };
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.auth.getToken()}`,
+      'Content-Type': 'application/json'
+    });
+    this.isLoading.set(true);
+    this.apiResponse.set({ type: null, message: '' });
+    this.http.post(`${this.baseUrl}/extensions/api/Example/CreateAndUpdateStaticText`, payload, { headers })
+      .subscribe({
+        next: (res:any)=>{
+          this.apiResponse.set({type:'success', message:`Static Text ${payload.number} saved`, timestamp:new Date().toISOString()});
+      this.staticTextDirty.set(false);
+        },
+        error: (err:any)=>{
+          const msg = err?.error?.title || err?.error?.message || 'Failed to save static text';
+          this.apiResponse.set({type:'error', message: msg, timestamp:new Date().toISOString()});
+        }
+      }).add(()=> this.isLoading.set(false));
+  }
+  resetStaticTextForm(){
+    this.staticTextData.set({
+      number: 1001,
+      description: '',
+      items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false}))
+    });
+    this.staticTextDirty.set(false);
+  }
+
   goToEditPage(article: LabelerArticle) {
     this.selectedArticle.set({ ...article });
     this.apiResponse.set({ type: null, message: '' });
@@ -1712,6 +1859,20 @@ export class DataMaintenanceComponent implements OnInit {
     let raw = target.value;
     let value: any = raw;
 
+    // Enforce max length for simpleText fields (30 chars)
+    if(/^simpleText\d+$/.test(field as string) && typeof value === 'string'){
+      if(value.length>30){
+        value = value.slice(0,30);
+        target.value = value;
+      }
+      // Do NOT apply any numeric coercion to simpleText fields
+      this.newArticle.update(article => ({
+        ...article,
+        articlePLU: article.articlePLU ? { ...article.articlePLU, [field]: value } : this.createEmptyArticlePLU()
+      }));
+      return;
+    }
+
     const numericExact = [
       'unitPriceValue','specialUnitPriceValue','fixedWeightValue','minWeightValue','maxWeightValue','tareWeightValue',
       'shelfLifeDays1','shelfLifeDays2','labelParameter','automaticLabelParameter','weightClass','staticText',
@@ -2032,6 +2193,20 @@ export class DataMaintenanceComponent implements OnInit {
   updateSelectedArticlePLUFieldDynamic(fieldKey: string, event: Event) {
     const target = event.target as HTMLInputElement;
     let value: any = target.value;
+
+    // Enforce max length for simpleText fields when editing
+    if(/^simpleText\d+$/.test(fieldKey) && typeof value === 'string'){
+      if(value.length>30){
+        value = value.slice(0,30);
+        target.value = value;
+      }
+      // Direct string update without numeric coercion
+      this.selectedArticle.update(article => article ? {
+        ...article,
+        articlePLU: article.articlePLU ? { ...article.articlePLU, [fieldKey]: value } : this.createEmptyArticlePLU()
+      } : null);
+      return;
+    }
     
     // Convert values based on field type
     if (fieldKey.includes('Number') || fieldKey.includes('Field') || fieldKey.includes('Value') || fieldKey.includes('Days') || 
