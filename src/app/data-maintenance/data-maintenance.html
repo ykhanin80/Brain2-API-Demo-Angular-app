@@ -184,7 +184,10 @@
                 [ngModelOptions]="{standalone: true}" 
                 [placeholder]="'Text ' + item.number"
                 [ngClass]="item.fontClass + ' overlay-text-input'"
-                style="color: #000 !important; background: #fff !important; opacity: 1 !important; width: 6ch !important; min-width: 6ch !important; max-width: 8ch !important; display: inline-block; margin-bottom: 8px;" />
+                [style.width.px]="getOverlayPosition(item.number)?.width || 60"
+                [style.minWidth.px]="getOverlayPosition(item.number)?.width || 60"
+                [style.maxWidth.px]="getOverlayPosition(item.number)?.width || 60"
+                style="color: #000 !important; background: #fff !important; opacity: 1 !important; display: inline-block; margin-bottom: 8px;" />
               <span class="resize-handle" (mousedown)="startResize($event, item.number)" (touchstart)="startResize($event, item.number)"></span>
               
             </div>

@@ -438,35 +438,35 @@ export class DataMaintenanceComponent implements OnInit {
       baseHeight: 947,
       image: 'labels/nutrition-dual.png', // place image under public/labels/
       positions: {
-        1:{x:600,y:82,width:40}, 
-        2:{x:206,y:60,width:40},
-        3:{x:478,y:160,width:40},
-        4:{x:620,y:160,width:40}, 
-        5:{x:424,y:224,width:40},               27:{x:568,y:224,width:40},
-        6:{x:498,y:224,width:40,align:'right'}, 28:{x:635,y:224,width:40,align:'right'}, 
-        7:{x:424,y:248,width:40},               29:{x:568,y:248,width:40},
-        8:{x:498,y:248,width:40,align:'right'}, 30:{x:635,y:248,width:40,align:'right'},
-        9:{x:424,y:274,width:70},              10:{x:568,y:274,width:40,align:'right'},
-        11:{x:424,y:300,width:40},              31:{x:568,y:300,width:40},
-        12:{x:498,y:300,width:40,align:'right'}, 32:{x:635,y:300,width:40,align:'right'},
-        13:{x:424,y:325,width:40},              33:{x:568,y:325,width:40},
-        14:{x:498,y:325,width:40,align:'right'}, 34:{x:635,y:325,width:40,align:'right'},
-        15:{x:424,y:350,width:40},              35:{x:568,y:350,width:40},
-        16:{x:498,y:350,width:40,align:'right'}, 36:{x:635,y:350,width:40,align:'right'},
-        17:{x:424,y:375,width:40},              37:{x:568,y:375,width:40},
-        18:{x:498,y:375,width:40,align:'right'}, 38:{x:635,y:375,width:40,align:'right'},
-        19:{x:424,y:401,width:40},              39:{x:568,y:401,width:40},
-        20:{x:424,y:427,width:40,align:'right'}, 40:{x:568,y:427,width:40,align:'right'},
-        21:{x:498,y:427,width:40},              41:{x:635,y:427,width:40},
-        22:{x:424,y:451,width:40,align:'right'}, 42:{x:568,y:451,width:40,align:'right'},
-  23:{x:424,y:492,width:80}, 43:{x:568,y:492,width:80},
-  24:{x:424,y:517,width:80}, 44:{x:568,y:517,width:80},
-  25:{x:424,y:543,width:80}, 45:{x:568,y:543,width:80},
-  26:{x:424,y:567,width:80}, 46:{x:568,y:567,width:80},
-        47:{x:150,y:475,width:40},
-        48:{x:150,y:500,width:40},
-        49:{x:150,y:525,width:40}, 
-        50:{x:150,y:550,width:40}
+        1:{x:600,y:82,width:54}, 
+        2:{x:206,y:60,width:54},
+        3:{x:478,y:160,width:54},
+        4:{x:620,y:160,width:54}, 
+        5:{x:424,y:224,width:54},               27:{x:568,y:224,width:54},
+        6:{x:498,y:224,width:54,align:'right'}, 28:{x:635,y:224,width:54,align:'right'}, 
+        7:{x:424,y:248,width:54},               29:{x:568,y:248,width:54},
+        8:{x:498,y:248,width:54,align:'right'}, 30:{x:635,y:248,width:54,align:'right'},
+        9:{x:424,y:274,width:70},              10:{x:568,y:274,width:54,align:'right'},
+        11:{x:424,y:300,width:54},              31:{x:568,y:300,width:54},
+        12:{x:498,y:300,width:54,align:'right'}, 32:{x:635,y:300,width:54,align:'right'},
+        13:{x:424,y:325,width:54},              33:{x:568,y:325,width:54},
+        14:{x:498,y:325,width:54,align:'right'}, 34:{x:635,y:325,width:54,align:'right'},
+        15:{x:424,y:350,width:54},              35:{x:568,y:350,width:54},
+        16:{x:498,y:350,width:54,align:'right'}, 36:{x:635,y:350,width:54,align:'right'},
+        17:{x:424,y:375,width:54},              37:{x:568,y:375,width:54},
+        18:{x:498,y:375,width:54,align:'right'}, 38:{x:635,y:375,width:54,align:'right'},
+        19:{x:424,y:401,width:54},              39:{x:568,y:401,width:54},
+        20:{x:424,y:427,width:54,align:'right'}, 40:{x:568,y:427,width:54,align:'right'},
+        21:{x:498,y:427,width:54},              41:{x:635,y:427,width:54},
+        22:{x:424,y:451,width:54,align:'right'}, 42:{x:568,y:451,width:54,align:'right'},
+  23:{x:424,y:492,width:130}, 43:{x:568,y:492,width:120},
+  24:{x:424,y:517,width:130}, 44:{x:568,y:517,width:120},
+  25:{x:424,y:543,width:130}, 45:{x:568,y:543,width:120},
+  26:{x:424,y:567,width:130}, 46:{x:568,y:567,width:120},
+        47:{x:150,y:475,width:54},
+        48:{x:150,y:500,width:54},
+        49:{x:150,y:525,width:54}, 
+        50:{x:150,y:550,width:54}
                }
     },
     dual: {
@@ -479,25 +479,25 @@ export class DataMaintenanceComponent implements OnInit {
       //  - Items 21-40 reserve spots for RIGHT ("Per container") column values (amounts & %DV)
       //  - Adjust or extend as needed; refine x/y after exact pixel review
       positions: {
-        1:{x:170,y:205,width:40},
-        2:{x:170,y:205,width:40},
-        3:{x:170,y:205,width:40},
-        4:{x:170,y:205,width:40},     // Total Fat amount (per serving)
-        5:{x:255,y:205,width:50,align:'right'}, // Total Fat %DV (per serving)
+        1:{x:170,y:205,width:54},
+        2:{x:170,y:205,width:54},
+        3:{x:170,y:205,width:54},
+        4:{x:170,y:205,width:54},     // Total Fat amount (per serving)
+        5:{x:255,y:205,width:54,align:'right'}, // Total Fat %DV (per serving)
         6:{x:170,y:235,width:55},     // Saturated Fat amount
-        7:{x:255,y:235,width:50,align:'right'}, // Saturated Fat %DV
+        7:{x:255,y:235,width:54,align:'right'}, // Saturated Fat %DV
         8:{x:170,y:260,width:70},     // Trans Fat (no %DV typically)
         9:{x:170,y:295,width:55},     // Cholesterol amount
-        10:{x:255,y:295,width:50,align:'right'},
+        10:{x:255,y:295,width:54,align:'right'},
         11:{x:170,y:325,width:55},    // Sodium amount
-        12:{x:255,y:325,width:50,align:'right'},
+        12:{x:255,y:325,width:54,align:'right'},
         13:{x:190,y:355,width:70},    // Total Carbohydrate grams
-        14:{x:255,y:355,width:50,align:'right'},
+        14:{x:255,y:355,width:54,align:'right'},
         15:{x:190,y:385,width:70},    // Dietary Fiber grams
-        16:{x:255,y:385,width:50,align:'right'},
+        16:{x:255,y:385,width:54,align:'right'},
         17:{x:190,y:410,width:90},    // Total Sugars grams
         18:{x:315,y:435,width:110},   // Incl. Added Sugars grams
-        19:{x:255,y:435,width:50,align:'right'},
+        19:{x:255,y:435,width:54,align:'right'},
         20:{x:170,y:465,width:55},    // Protein grams
         
         24:{x:555,y:205,width:55},    // Total Fat amount (per container) (using item 24 to separate; adjust mapping numbers to your schema)

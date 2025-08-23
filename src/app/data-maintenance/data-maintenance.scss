@@ -165,9 +165,6 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   padding: 2px 2px;  // add or reduce padding
   gap: 2px;  }
 .nutrition-overlay-canvas .overlay-item input {
-  width: 60px !important;
-  min-width: 60px !important;
-  max-width: 60px !important;
   font-size: 16px !important;
   font-weight: normal;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
@@ -212,8 +209,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 
 /* Additional %DV fields to be bold */
 .nutrition-overlay-canvas .overlay-item[data-item="21"] input,
-.nutrition-overlay-canvas .overlay-item[data-item="41"] input,
- {
+.nutrition-overlay-canvas .overlay-item[data-item="41"] input {
   font-weight: 700 !important;
 }
 
