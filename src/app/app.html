@@ -8,11 +8,17 @@
            [attr.data-dark-mode]="darkMode()">
         <span class="status-item">
           <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">BRAIN2 API:</span>
-          <span class="status-value connected" [style.color]="darkMode() ? '#4ade80' : '#28a745'">Connected</span>
+          <ng-container [ngSwitch]="apiConnected()">
+            <span *ngSwitchCase="true" class="status-value connected" [style.color]="darkMode() ? '#4ade80' : '#28a745'">Connected</span>
+            <span *ngSwitchCase="false" class="status-value disconnected" [style.color]="darkMode() ? '#f87171' : '#dc3545'">Offline</span>
+            <span *ngSwitchDefault class="status-value" [style.color]="darkMode() ? '#eab308' : '#ffc107'">Checking…</span>
+          </ng-container>
         </span>
         <span class="status-item">
           <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">Auth:</span>
-          <span class="status-value active" [style.color]="darkMode() ? '#38bdf8' : '#17a2b8'">Active</span>
+          <span class="status-value" [style.color]="(isAuthenticated$ | async) ? (darkMode() ? '#38bdf8' : '#17a2b8') : (darkMode() ? '#f87171' : '#dc3545')">
+            {{ (isAuthenticated$ | async) ? 'Active' : 'Logged out' }}
+          </span>
         </span>
       </div>
       <button mat-button type="button" (click)="toggleDarkMode()" class="mode-toggle-btn">

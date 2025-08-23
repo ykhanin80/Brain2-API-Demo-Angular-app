@@ -742,6 +742,80 @@ export class DataMaintenanceComponent implements OnInit {
   // Expose field definitions to template
   get importFieldDefs(){ return this.importFieldDefinitions; }
 
+  // Static Texts import state (separate from Articles)
+  stImportState = signal<{open: boolean; step: 'select'|'mapping'|'preview'|'running'|'done'}>({open:false, step:'select'});
+  stImportRows = signal<any[]>([]);
+  stImportRawRows = signal<any[]>([]);
+  stImportHeaders = signal<string[]>([]);
+  stImportMapping = signal<{[csvHeader:string]: string}>({});
+  stImportProgress = signal<{processed:number; success:number; created:number; updated:number; failed:number; percent:number; done:boolean}>({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
+  private stImportFieldDefinitions: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = [
+    { key:'number', label:'Static Text Number', required:true, synonyms:['number','no','statictextno','statictextnumber','stno'] },
+    { key:'description', label:'Description', synonyms:['description','desc'] },
+    // 50 text items
+    ...Array.from({length:50},(_,i)=>({ key:`item${i+1}`, label:`Text ${i+1}`, synonyms:[`item${i+1}`,`text${i+1}`,`textvalue${i+1}`] }))
+  ];
+  private stImportRequiredKeys = ['number'];
+  get stImportFieldDefs(){ return this.stImportFieldDefinitions; }
+
+  // Static Texts import UI handlers
+  stOpenImportDialog(){ this.stImportState.set({open:true, step:'select'}); this.stImportHeaders.set([]); this.stImportMapping.set({}); document.body.classList.add('has-import-open'); }
+  stCloseImportDialog(){ if(this.stImportState().step==='running' && !this.stImportProgress().done){ this.stImportCancelled = true; } this.stImportState.set({open:false, step:'select'}); document.body.classList.remove('has-import-open'); }
+  downloadStaticTextImportTemplate(){
+    // Header per request: number,description,Text1..Text50
+    const header = ['number','description', ...Array.from({length:50},(_,i)=>`Text${i+1}`)];
+    // Five sample rows 1001..1005 with description suffix 01..05 and values "Text 1".."Text 50"
+    const makeRow = (n:number) => [ String(1000+n), `Sample Static Text${String(n).padStart(2,'0')}`, ...Array.from({length:50},(_,i)=>`Text ${i+1}`) ];
+    const rows = [1,2,3,4,5].map(makeRow);
+    const csv = [header.join(','), ...rows.map(r=>r.join(','))].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='StaticTextImportTemplate.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  }
+  async onStaticTextImportFileSelected(event: Event){
+    const input = event.target as HTMLInputElement; const file = input.files && input.files[0]; if(!file) return;
+    if(!PapaRef){ const mod = await import('papaparse'); PapaRef = mod.default || mod; }
+    PapaRef.parse(file, { header:true, skipEmptyLines:true, worker:true, complete: (results:any)=>{
+      const raw = (results.data||[]).slice(0,5000); const headers: string[] = (results.meta?.fields||[]).map((h:string)=>h);
+      this.stImportRawRows.set(raw); this.stImportHeaders.set(headers);
+      this.stAutoMapImportHeaders(); this.stRebuildMappedRows(); this.stImportState.set({open:true, step:'mapping'});
+    }, error: ()=>{ this.error.set('Failed to parse CSV'); }});
+  }
+  stAutoMapImportHeaders(){
+    const headers = this.stImportHeaders(); const mapping: {[csvHeader:string]: string} = { ...this.stImportMapping() }; const used = new Set(Object.values(mapping));
+    headers.forEach(h=>{ const norm=h.toLowerCase().replace(/[^a-z0-9]/g,''); if(mapping[h]) return;
+      const direct = this.stImportFieldDefinitions.find(d=> d.synonyms.some(s=> s.replace(/[^a-z0-9]/g,'')===norm)); if(direct && !used.has(direct.key)){ mapping[h]=direct.key; used.add(direct.key); }
+    });
+    this.stImportMapping.set(mapping);
+  }
+  stUpdateImportMapping(csvHeader:string, target:string){ const mapping={...this.stImportMapping()}; if(!target) delete mapping[csvHeader]; else mapping[csvHeader]=target; const rev: {[t:string]:string}={}; for(const [h,t] of Object.entries(mapping)){ if(rev[t]&&rev[t]!==h){ delete mapping[rev[t]]; } rev[t]=h; } this.stImportMapping.set(mapping); this.stRebuildMappedRows(); }
+  private stRebuildMappedRows(){ const raw=this.stImportRawRows(); const rows = raw.map((r:any,i:number)=> this.stMapImportRow(r,i+2)); this.stImportRows.set(rows); }
+  stRequiredImportFieldsMapped(){ const mapped=new Set(Object.values(this.stImportMapping())); return this.stImportRequiredKeys.every(k=> mapped.has(k)); }
+  stGoToPreviewFromMapping(){ if(this.stRequiredImportFieldsMapped()) this.stImportState.set({open:true, step:'preview'}); }
+  stBackToMapping(){ if(this.stImportState().step==='preview') this.stImportState.set({open:true, step:'mapping'}); }
+  private stMapImportRow(r:any,line:number){
+    const trim=(v:any)=> (v===undefined||v===null?'':String(v).trim()); const mapping=this.stImportMapping(); const getVal=(target:string)=>{ const header=Object.entries(mapping).find(([,t])=> t===target)?.[0]; return header? r[header] : ''; };
+    const row:any = { original:r, line, number: trim(getVal('number')||r.number), description: trim(getVal('description')||r.description||''), items: {}, error:'' };
+    for(let i=1;i<=50;i++){ const key=`item${i}`; const v=trim(getVal(key)||r[key]); if(v) row.items[i]=v; }
+    if(!row.number) row.error+='missing number; ';
+    return row;
+  }
+  stInvalidImportRowCount(){ return this.stImportRows().filter(r=>r.error).length; }
+  stStartImport(){ this.stImportCancelled=false; this.stImportProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false}); const rows=this.stImportRows().filter(r=>!r.error); this.stImportRows.set(rows); this.stImportState.set({open:true, step:'running'}); this.stImportQueueIndex=0; this.stActiveImports=0; for(let i=0;i<this.stImportConcurrency;i++) this.stPumpImportQueue(); }
+  stCancelImport(){ this.stImportCancelled=true; }
+  private stPumpImportQueue(){ if(this.stImportCancelled){ this.stFinishImport(); return; } if(this.stImportQueueIndex>=this.stImportRows().length){ if(this.stActiveImports===0) this.stFinishImport(); return; } if(this.stActiveImports>=this.stImportConcurrency) return; const row=this.stImportRows()[this.stImportQueueIndex++]; this.stActiveImports++; this.stProcessImportRow(row).finally(()=>{ this.stActiveImports--; this.stUpdateImportProgress(); this.stPumpImportQueue(); }); this.stPumpImportQueue(); }
+  private async stProcessImportRow(row:any){
+    try{
+      const payload = { number: row.number, description: row.description, items: Array.from({length:50},(_,i)=> ({ number:i+1, textValue: row.items[i+1]||'', sendFormat:false })) };
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json' });
+      await this.http.post(`${this.baseUrl}/extensions/api/Example/CreateAndUpdateStaticText`, payload, { headers }).toPromise();
+      row.status='created';
+    }catch(e:any){ row.status='failed'; row.error = e?.error?.title || e?.message || 'error'; }
+  }
+  private stUpdateImportProgress(){ const rows=this.stImportRows(); const processed=rows.filter(r=>r.status).length; const created=rows.filter(r=>r.status==='created').length; const updated=rows.filter(r=>r.status==='updated').length; const success=created+updated; const failed=rows.filter(r=>r.status==='failed').length; const percent=rows.length? Math.round(processed*100/rows.length):0; const done=processed===rows.length || this.stImportCancelled; this.stImportProgress.set({processed, success, created, updated, failed, percent, done}); if(done) this.stFinishImport(); }
+  private stFinishImport(){ this.stImportState.set({open:true, step:'done'}); }
+  stDownloadImportErrors(){ const errs=this.stImportRows().filter(r=>r.status==='failed'); if(!errs.length) return; const header='line,number,error\n'; const body=errs.map(r=>`${r.line},"${r.number}","${(r.error||'').replace(/"/g,'""')}"`).join('\n'); const blob=new Blob([header+body],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='static-text-import-errors.csv'; a.click(); URL.revokeObjectURL(url); }
+  private stImportCancelled = false; private stImportConcurrency = 3; private stActiveImports = 0; private stImportQueueIndex = 0;
+
   private buildImportFieldDefinitions(){
     const defs: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = [];
     const push=(key:string,label:string,synonyms:string[]=[],required=false)=>{ defs.push({key,label,required,synonyms}); };

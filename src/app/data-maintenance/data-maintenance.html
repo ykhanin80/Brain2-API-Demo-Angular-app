@@ -34,6 +34,14 @@
           <i class="icon-arrow-left"></i>
           Back to Dashboard
         </button>
+        <button class="btn btn-secondary" (click)="stOpenImportDialog()">
+          <i class="icon-upload"></i>
+          Import Static Texts
+        </button>
+        <button class="btn btn-secondary" (click)="downloadStaticTextImportTemplate()">
+          <i class="icon-download"></i>
+          Download CSV Template
+        </button>
   <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
         <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
       </div>
@@ -151,11 +159,74 @@
 
   <!-- Static Texts Section -->
   <div *ngIf="currentSubPage()==='static-texts'" class="static-texts dm-card">
-    <h2>Static Text Definition</h2>
+    <h2>Add Static Text</h2>
    <!-- <div class="layout-select-row">
   <!-- Label layout selection hidden, dual layout always used -->
     
     <form class="static-text-form" (submit)="$event.preventDefault(); createStaticText();">
+      <!-- Static Texts Import Panel -->
+      <div class="import-inline full-bleed global-fixed" *ngIf="stImportState().open && currentSubPage()==='static-texts'">
+        <div class="import-inline-header">
+          <strong>Import Static Texts</strong>
+          <div class="import-inline-tabs">
+            <button class="btn btn-small" (click)="stAutoMapImportHeaders()">Auto Map</button>
+            <button class="btn btn-small btn-primary" [disabled]="!stRequiredImportFieldsMapped()" (click)="stGoToPreviewFromMapping()" *ngIf="stImportState().step==='mapping'">Preview</button>
+            <button class="btn btn-small" (click)="stBackToMapping()" *ngIf="stImportState().step==='preview'">Back</button>
+            <button class="btn btn-small btn-primary" (click)="stStartImport()" *ngIf="stImportState().step==='preview' && stImportRows().length>0 && stInvalidImportRowCount()!==stImportRows().length">Start Import</button>
+          </div>
+          <button class="btn btn-small" (click)="stCloseImportDialog()">×</button>
+        </div>
+        <div class="import-scroll">
+          <div class="import-inline-body" *ngIf="stImportState().step === 'select'">
+            <input type="file" accept=".csv,text/csv" (change)="onStaticTextImportFileSelected($event)" />
+            <div class="hint">Choose CSV (max 5000 rows preview).</div>
+          </div>
+          <div class="import-inline-body" *ngIf="stImportState().step === 'mapping'">
+            <table class="mapping-table wide">
+              <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let h of stImportHeaders()">
+                  <td>{{ h }}</td>
+                  <td>
+                    <select (change)="stUpdateImportMapping(h, $any($event.target).value)" [class.mapped]="stImportMapping()[h]">
+                      <option value="" [selected]="!stImportMapping()[h]">-- ignore --</option>
+                      <option *ngFor="let def of stImportFieldDefs" [value]="def.key" [selected]="stImportMapping()[h]===def.key">{{ def.label }}</option>
+                    </select>
+                  </td>
+                  <td>{{ stImportRawRows()[0] ? stImportRawRows()[0][h] : '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="import-inline-body" *ngIf="stImportState().step === 'preview'">
+            <div class="preview-head">
+              <span>{{ stImportRows().length }} rows (invalid {{ stInvalidImportRowCount() }})</span>
+            </div>
+            <table class="preview-table wide">
+              <thead><tr><th>#</th><th *ngFor="let h of stImportHeaders()">{{ h }}</th><th>error</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of stImportRows().slice(0,100)">
+                  <td>{{ r.line }}</td>
+                  <td *ngFor="let h of stImportHeaders()">{{ r.original[h] }}</td>
+                  <td class="err">{{ r.error }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="import-inline-body" *ngIf="stImportState().step === 'running'">
+            <div>{{ stImportProgress().processed }}/{{ stImportRows().length }} (ok {{ stImportProgress().success }}, failed {{ stImportProgress().failed }})</div>
+            <div class="progress-bar"><div class="bar" [style.width]="stImportProgress().percent + '%'" ></div></div>
+            <button class="btn btn-small" (click)="stCancelImport()" [disabled]="stImportProgress().done">Cancel</button>
+          </div>
+          <div class="import-inline-body" *ngIf="stImportState().step === 'done'">
+            <div>Done: {{ stImportProgress().created }} created, {{ stImportProgress().updated }} updated, {{ stImportProgress().failed }} failed.</div>
+            <div class="import-done-actions">
+              <button class="btn btn-small" (click)="stDownloadImportErrors()" [disabled]="stImportProgress().failed===0">Errors CSV</button>
+              <button class="btn btn-small btn-primary" (click)="stCloseImportDialog()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="st-row">
         <label>Number
           <input type="number" [value]="staticTextData().number" (input)="updateStaticTextNumber($event)" min="1" />

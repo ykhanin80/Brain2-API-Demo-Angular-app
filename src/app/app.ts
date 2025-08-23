@@ -1,4 +1,7 @@
-import { Component, signal, inject, effect } from '@angular/core';
+import { Component, signal, inject, effect, OnInit, OnDestroy } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Subscription, interval } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -10,10 +13,14 @@ import { Auth } from './auth';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('order-app');
   private readonly authService = inject(Auth);
+  private readonly http = inject(HttpClient);
   readonly darkMode = signal(false);
+  private readonly baseUrl = 'http://localhost:9997';
+  readonly apiConnected = signal<boolean | null>(null);
+  private connSub?: Subscription;
 
   constructor(){
     effect(() => {
@@ -28,6 +35,22 @@ export class App {
   // Expose auth observables to template
   readonly isAuthenticated$ = this.authService.isAuthenticated$;
   readonly currentUser$ = this.authService.currentUser$;
+  
+  ngOnInit(): void {
+    // Periodically check API connectivity (every 30s) and immediately on load
+    this.connSub = interval(30000).pipe(startWith(0)).subscribe(() => this.checkApiConnection());
+  }
+  ngOnDestroy(): void { this.connSub?.unsubscribe(); }
+
+  private checkApiConnection(): void {
+    // Treat any HTTP response with a status code (>0) as reachable; status 0 => network error
+    this.http.get(this.baseUrl, { observe: 'response', responseType: 'text' as 'json' }).subscribe({
+      next: () => this.apiConnected.set(true),
+      error: (err: HttpErrorResponse) => {
+        this.apiConnected.set(err.status > 0);
+      }
+    });
+  }
   
   logout(): void {
     this.authService.logout();
