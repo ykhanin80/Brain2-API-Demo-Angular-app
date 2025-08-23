@@ -169,7 +169,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   min-width: 60px !important;
   max-width: 60px !important;
   font-size: 16px !important;
-  font-weight: bold !important;
+  font-weight: normal;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
   padding:2px 2px;
   line-height:1.1;
@@ -199,9 +199,36 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   pointer-events: none;
 }
 .nutrition-overlay-canvas .overlay-item input:focus { outline:2px solid #1976d2; background:#fff; }
-.nutrition-overlay-canvas .overlay-item.align-right input { text-align:right; }
+.nutrition-overlay-canvas .overlay-item.align-right input { text-align:right; font-weight: 700 !important; }
 .nutrition-overlay-canvas .overlay-item.align-center input { text-align:center; }
 .nutrition-overlay-wrapper .overlay-hint { margin-top:.6rem; font-size:.6rem; text-align:center; opacity:.65; letter-spacing:.5px; }
+
+/* Ensure specific items are bold as requested */
+.nutrition-overlay-canvas .overlay-item[data-item="1"] input,
+.nutrition-overlay-canvas .overlay-item[data-item="3"] input,
+.nutrition-overlay-canvas .overlay-item[data-item="4"] input {
+  font-weight: 700 !important;
+}
+
+/* Additional %DV fields to be bold */
+.nutrition-overlay-canvas .overlay-item[data-item="21"] input,
+.nutrition-overlay-canvas .overlay-item[data-item="41"] input,
+ {
+  font-weight: 700 !important;
+}
+
+/* Exceptions: these should be regular, not bold, even if right-aligned */
+.nutrition-overlay-canvas .overlay-item[data-item="20"].align-right input,
+.nutrition-overlay-canvas .overlay-item[data-item="22"].align-right input,
+.nutrition-overlay-canvas .overlay-item[data-item="40"].align-right input,
+.nutrition-overlay-canvas .overlay-item[data-item="42"].align-right input {
+  font-weight: 400 !important;
+}
+
+/* Make Text 10 regular (not bold) */
+.nutrition-overlay-canvas .overlay-item[data-item="10"].align-right input {
+  font-weight: 400 !important;
+}
 
 :host-context(body.dark-theme) .layout-select-row select { background:#262c33; border:1px solid #3a434d; color:#e2e8f0; }
 :host-context(body.dark-theme) .nutrition-overlay-wrapper { background:#1f252c; border-color:#2c343d; }
@@ -1115,10 +1142,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
           box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25);
         }
 
-        &[readonly] {
-          background-color: #e9ecef;
-          opacity: 1;
-        }
+        
       }
 
       textarea {

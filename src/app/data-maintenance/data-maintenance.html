@@ -174,19 +174,19 @@
             <div class="overlay-item"
               [style.left]="getOverlayPosition(item.number).x + 'px'"
               [style.top]="getOverlayPosition(item.number).y + 'px'"
-              (mousedown)="startDrag($event, item.number)"
-              (touchstart)="startDrag($event, item.number)"
+              [ngClass]="{
+                'align-right': getOverlayPosition(item.number)?.align === 'right',
+                'align-center': getOverlayPosition(item.number)?.align === 'center'
+              }"
               [attr.data-item]="item.number">
               <input maxlength="8"
                 [(ngModel)]="item.textValue"
-                [ngModelOptions]="{standalone: true}"
+                [ngModelOptions]="{standalone: true}" 
                 [placeholder]="'Text ' + item.number"
                 [ngClass]="item.fontClass + ' overlay-text-input'"
                 style="color: #000 !important; background: #fff !important; opacity: 1 !important; width: 6ch !important; min-width: 6ch !important; max-width: 8ch !important; display: inline-block; margin-bottom: 8px;" />
               <span class="resize-handle" (mousedown)="startResize($event, item.number)" (touchstart)="startResize($event, item.number)"></span>
-              <span class="overlay-coords" style="margin-left:8px; font-size:12px; color:#1976d2; background:#fff; border-radius:4px; padding:2px 6px; border:1px solid #e0e0e0;">
-                ({{getOverlayPosition(item.number).x}}, {{getOverlayPosition(item.number).y}})
-              </span>
+              
             </div>
           </ng-container>
         </div>
