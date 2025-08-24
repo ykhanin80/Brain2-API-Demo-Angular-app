@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { ApiConfig } from '../api-config';
 import { Chart, registerables } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 
@@ -36,7 +37,7 @@ interface PackageRecord {
 })
 export class PackageRecordComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
   
   // Chart instance
   private chart: Chart | null = null;
@@ -123,7 +124,7 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     try {
       this.isLoadingDevices = true;
       const authHeaders = this.getAuthHeaders();
-      const response = await this.http.get<any[]>(`${this.baseUrl}/api/v1/devices`, { headers: authHeaders }).toPromise();
+  const response = await this.http.get<any[]>(`${this.apiConfig.getBaseUrl()}/api/v1/devices`, { headers: authHeaders }).toPromise();
       this.devices = response || [];
       this.debugApiResponses.devices = { timestamp: new Date().toISOString(), rawResponse: response, devices: this.devices };
     } catch (error) {
@@ -138,7 +139,7 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
   private async loadPackageTypes() {
     try {
       const authHeaders = this.getAuthHeaders();
-      const response = await this.http.get<string[]>(`${this.baseUrl}/api/v1/package-types`, { headers: authHeaders }).toPromise();
+  const response = await this.http.get<string[]>(`${this.apiConfig.getBaseUrl()}/api/v1/package-types`, { headers: authHeaders }).toPromise();
       this.packageTypes = response || [];
       this.debugApiResponses.packageTypes = { timestamp: new Date().toISOString(), rawResponse: response, packageTypes: this.packageTypes };
     } catch (error) {
@@ -185,7 +186,7 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
       
       const authHeaders = this.getAuthHeaders();
       const params = this.buildQueryParams();
-      const url = `${this.baseUrl}/api/v1/package-records${params}`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/package-records${params}`;
       
       console.log('🌐 [' + callId + '] Making HTTP GET request to:', url, 'at:', new Date().toLocaleTimeString());
       const apiStartTime = performance.now();

@@ -1,0 +1,51 @@
+<div class="label-preview-page">
+  <header class="page-header">
+    <h2>🏷️ Label Layout Preview</h2>
+    <p>Select a project, layout and PLU to generate a preview image.</p>
+    <div class="header-actions">
+      <button class="btn btn-outline back-btn" (click)="goBackToDashboard()">
+        🏠 Back to Dashboard
+      </button>
+    </div>
+  </header>
+
+  <app-label-preview-tile (debug)="onDebugEvent($event)"></app-label-preview-tile>
+
+  <!-- API Response Debug -->
+  <section class="debug-section">
+    <div class="debug-header-bar">
+      <h3>🔧 API Response Debug</h3>
+      <div class="debug-global-actions">
+        <button type="button" class="debug-tab" (click)="jsonCollapsed.set(!jsonCollapsed())">
+          {{ jsonCollapsed() ? 'Expand all JSON' : 'Collapse all JSON' }}
+        </button>
+      </div>
+    </div>
+    <div class="debug-container">
+      <div class="debug-tabs">
+        <button type="button" class="debug-tab" [class.active]="activeDebugTab()==='projects'" (click)="activeDebugTab.set('projects')">Projects</button>
+        <button type="button" class="debug-tab" [class.active]="activeDebugTab()==='layouts'" (click)="activeDebugTab.set('layouts')">Layouts</button>
+        <button type="button" class="debug-tab" [class.active]="activeDebugTab()==='pluList'" (click)="activeDebugTab.set('pluList')">PLU List</button>
+        <button type="button" class="debug-tab" [class.active]="activeDebugTab()==='pluDetails'" (click)="activeDebugTab.set('pluDetails')">PLU Details</button>
+        <button type="button" class="debug-tab" [class.active]="activeDebugTab()==='preview'" (click)="activeDebugTab.set('preview')">Preview</button>
+      </div>
+      <div class="debug-panels">
+        <div class="debug-panel" *ngIf="debugLogs()[activeDebugTab()] as log">
+          <div class="row"><strong>OK:</strong> {{ log.ok }}</div>
+          <div class="row"><strong>Status:</strong> {{ log.status || '-' }}</div>
+          <div class="row"><strong>Started:</strong> {{ log.startedAt }}</div>
+          <div class="row"><strong>Duration:</strong> {{ log.durationMs }} ms</div>
+          <div class="row"><strong>Request:</strong></div>
+          <pre class="json" [class.collapsed]="jsonCollapsed()">{{ log.request | json }}</pre>
+          <div class="row" *ngIf="log.response"><strong>Response:</strong></div>
+          <pre class="json" [class.collapsed]="jsonCollapsed()" *ngIf="log.response">{{ log.response | json }}</pre>
+          <div class="row" *ngIf="log.error"><strong>Error:</strong></div>
+          <pre class="json error" [class.collapsed]="jsonCollapsed()" *ngIf="log.error">{{ log.error | json }}</pre>
+        </div>
+        <div class="debug-panel" *ngIf="!debugLogs()[activeDebugTab()]">
+          <em>No data captured yet for this tab.</em>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

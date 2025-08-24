@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ApiConfig } from '../api-config';
 
 @Component({
   selector: 'app-capture',
@@ -13,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 export class Capture implements OnInit {
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
   
   // Form properties for filtering package records
   articleNumber = '';
@@ -82,7 +83,7 @@ export class Capture implements OnInit {
       return;
     }
     
-    const url = `${this.baseUrl}/api/v1/devices`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/devices`;
     const headers = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -183,7 +184,7 @@ export class Capture implements OnInit {
     this.lastMethod = method;
     this.lastEndpoint = endpoint;
     
-    const url = `${this.baseUrl}${endpoint}`;
+  const url = `${this.apiConfig.getBaseUrl()}${endpoint}`;
     const token = localStorage.getItem('auth_token');
     
     if (!token) {

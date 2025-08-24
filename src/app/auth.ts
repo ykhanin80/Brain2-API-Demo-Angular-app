@@ -2,6 +2,7 @@ import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
+import { ApiConfig } from './api-config';
 
 export interface LoginRequest {
   authenticationMode: 'credentials' | 'cookie';
@@ -30,7 +31,7 @@ export interface User {
 export class Auth {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly baseUrl = 'http://localhost:9997'; // Adjust this to match your API base URL
+  private readonly apiConfig = inject(ApiConfig);
   
   private readonly TOKEN_KEY = 'auth_token';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
@@ -52,7 +53,8 @@ export class Auth {
    * Authenticate user with credentials
    */
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.baseUrl}/api/v1/token`, credentials)
+  const baseUrl = this.apiConfig.getBaseUrl();
+  return this.http.post<LoginResponse>(`${baseUrl}/api/v1/token`, credentials)
       .pipe(
         tap(response => {
           this.setAuthData(response);

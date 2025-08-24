@@ -5,6 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../auth';
+import { ApiConfig } from '../api-config';
 // PapaParse will be lazy-loaded only when an import file is selected to avoid SSR/runtime issues.
 let PapaRef: any = null;
 
@@ -388,7 +389,7 @@ export class DataMaintenanceComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
 
   // Dark mode detection
   readonly isDarkMode = signal(false);
@@ -807,7 +808,7 @@ export class DataMaintenanceComponent implements OnInit {
     try{
       const payload = { number: row.number, description: row.description, items: Array.from({length:50},(_,i)=> ({ number:i+1, textValue: row.items[i+1]||'', sendFormat:false })) };
       const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json' });
-  await this.http.post(`${this.baseUrl}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers }).toPromise();
+  await this.http.post(`${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers }).toPromise();
       row.status='created';
     }catch(e:any){ row.status='failed'; row.error = e?.error?.title || e?.message || 'error'; }
   }
@@ -1228,20 +1229,20 @@ export class DataMaintenanceComponent implements OnInit {
       const jsonHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json'});
       let exists = false;
       try {
-        await this.http.get(`${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, { headers: jsonHeaders }).toPromise();
+  await this.http.get(`${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, { headers: jsonHeaders }).toPromise();
         exists = true;
       } catch(getErr:any) {
         exists = false; // 404 -> create
       }
       if(!exists){
-        await this.http.post(`${this.baseUrl}/api/v1/articles/labeler`, article, {headers: jsonHeaders}).toPromise();
+  await this.http.post(`${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`, article, {headers: jsonHeaders}).toPromise();
         row.status = 'created';
       } else {
         // Prepare patch operations (ensure basePriceDivision set like updateArticle)
         if(article.articlePLU){ article.articlePLU.basePriceDivision = 'perUnit'; }
         const patchOps = this.createPatchOperations(article as LabelerArticle);
         const patchHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json-patch+json'});
-        await this.http.patch(`${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, patchOps, {headers: patchHeaders}).toPromise();
+  await this.http.patch(`${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, patchOps, {headers: patchHeaders}).toPromise();
         row.status = 'updated';
       }
     }catch(e:any){
@@ -1304,7 +1305,7 @@ export class DataMaintenanceComponent implements OnInit {
 
       const params = this.searchParams();
       const queryString = this.buildQueryString(params);
-      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler${queryString}`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler${queryString}`;
       
       const response = await this.http.get<LabelerArticle[]>(
         requestUrl,
@@ -1329,7 +1330,7 @@ export class DataMaintenanceComponent implements OnInit {
       // Store error debug information
       const params = this.searchParams();
       const queryString = this.buildQueryString(params);
-      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler${queryString}`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler${queryString}`;
       this.debugApiResponses.listArticles = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -1351,7 +1352,7 @@ export class DataMaintenanceComponent implements OnInit {
         'Content-Type': 'application/json'
       });
 
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(articleNumber)}/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(articleNumber)}/labeler`;
       const response = await this.http.get<LabelerArticle>(
         requestUrl,
         { headers }
@@ -1395,7 +1396,7 @@ export class DataMaintenanceComponent implements OnInit {
       this.error.set(error?.error?.title || 'Failed to load article');
       
       // Store error debug information
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(articleNumber)}/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(articleNumber)}/labeler`;
       this.debugApiResponses.getArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -1435,7 +1436,7 @@ export class DataMaintenanceComponent implements OnInit {
         'Content-Type': 'application/json'
       });
 
-      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`;
       const response = await this.http.post<LabelerArticle>(
         requestUrl,
         article,
@@ -1475,7 +1476,7 @@ export class DataMaintenanceComponent implements OnInit {
       });
       
       // Store error debug information
-      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`;
       this.debugApiResponses.createArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -1504,7 +1505,7 @@ export class DataMaintenanceComponent implements OnInit {
 
       // Create JSON patch operations for the update
       const patchOperations = this.createPatchOperations(article);
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
 
       await this.http.patch(
         requestUrl,
@@ -1529,7 +1530,7 @@ export class DataMaintenanceComponent implements OnInit {
       
       // Store error debug information
       const patchOperations = this.createPatchOperations(article);
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
       this.debugApiResponses.updateArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -1569,7 +1570,7 @@ export class DataMaintenanceComponent implements OnInit {
       });
 
       // Use POST to create new article (same as createArticle)
-      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`;
       await this.http.post(requestUrl, article, { headers }).toPromise();
 
       // Store debug information
@@ -1599,7 +1600,7 @@ export class DataMaintenanceComponent implements OnInit {
       });
       
       // Store error debug information
-      const requestUrl = `${this.baseUrl}/api/v1/articles/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`;
       this.debugApiResponses.createArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -1620,7 +1621,7 @@ export class DataMaintenanceComponent implements OnInit {
         'Authorization': `Bearer ${this.auth.getToken()}`
       });
 
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(articleNumber)}`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(articleNumber)}`;
       await this.http.delete(
         requestUrl,
         { headers }
@@ -1641,7 +1642,7 @@ export class DataMaintenanceComponent implements OnInit {
       this.error.set(error?.error?.title || 'Failed to delete article');
       
       // Store error debug information
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(articleNumber)}`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(articleNumber)}`;
       this.debugApiResponses.deleteArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
@@ -1803,7 +1804,7 @@ export class DataMaintenanceComponent implements OnInit {
     });
     this.isLoading.set(true);
     this.apiResponse.set({ type: null, message: '' });
-  this.http.post(`${this.baseUrl}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers })
+  this.http.post(`${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers })
       .subscribe({
         next: (res:any)=>{
           this.apiResponse.set({type:'success', message:`Static Text ${payload.number} saved`, timestamp:new Date().toISOString()});
@@ -1841,7 +1842,7 @@ export class DataMaintenanceComponent implements OnInit {
     this.stListPage.set(targetPage);
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}` });
     const params = { page: String(targetPage), pageSize: String(pageSize) } as any;
-    this.http.get(`${this.baseUrl}/extensions/api/StaticTexts/GetAllStaticTexts`, { headers, params })
+  this.http.get(`${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/GetAllStaticTexts`, { headers, params })
       .subscribe({
         next: (res: any) => {
           // Support a few common shapes: array, {items,total}, {data,totalCount}
@@ -1925,7 +1926,7 @@ export class DataMaintenanceComponent implements OnInit {
         'Authorization': `Bearer ${this.auth.getToken()}`
       });
 
-      const requestUrl = `${this.baseUrl}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
       const fullArticle = await this.http.get<LabelerArticle>(requestUrl, { headers }).toPromise();
       
       if (fullArticle) {

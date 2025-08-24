@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ApiConfig } from '../api-config';
 
 // Enum for Start Belt on Order Start Type (matching API schema)
 enum StartBeltOnOrderStartType {
@@ -72,7 +73,7 @@ interface OrderRequest {
 export class CreateOrder implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
   
   // Expose enum for template
   readonly StartBeltOptions = StartBeltOnOrderStartType;
@@ -166,7 +167,7 @@ export class CreateOrder implements OnInit {
     this.isLoadingArticles = true;
     this.articlesError = '';
     
-    const url = `${this.baseUrl}/api/v1/articles/labeler?skip=0&take=100&sort=Number%2B`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler?skip=0&take=100&sort=Number%2B`;
     
     this.http.get<Article[]>(url).subscribe({
       next: (articles) => {
@@ -215,7 +216,7 @@ export class CreateOrder implements OnInit {
     // Update creation date to current time
     this.orderData.creationDate = new Date().toISOString();
     
-    const url = `${this.baseUrl}/api/v1/order-processing/orders`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/order-processing/orders`;
     
     this.http.post(url, this.orderData).subscribe({
       next: (response) => {

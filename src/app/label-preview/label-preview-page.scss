@@ -1,0 +1,32 @@
+.label-preview-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+
+  .page-header {
+    margin-bottom: 0.5rem;
+    h2 { margin: 0; }
+    p { color: #6c757d; margin: 0.25rem 0 0; }
+    .header-actions { margin-top: 8px; }
+  .back-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
+  }
+}
+
+/* Debug section */
+.debug-section {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #fff;
+  margin-top: 16px;
+}
+.debug-header-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; }
+.debug-header-bar h3 { margin: 0; font-size: 1rem; }
+.debug-container { padding: 8px 12px; }
+.debug-tabs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.debug-tab { padding: 6px 10px; border-radius: 6px; border: 1px solid #ced4da; background: #fff; cursor: pointer; }
+.debug-tab.active { background: #e9ecef; border-color: #adb5bd; }
+.debug-panel { border: 1px dashed #ced4da; border-radius: 6px; padding: 8px; background: #fafafa; }
+.debug-panel .row { margin: 4px 0; }
+.json { max-height: 220px; overflow: auto; background: #1e1e1e; color: #e6e6e6; padding: 8px; border-radius: 4px; }
+.json.error { background: #2b1d1e; }
+.json.collapsed { max-height: 40px; }

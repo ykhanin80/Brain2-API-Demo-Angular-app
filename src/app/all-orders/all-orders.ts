@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ApiConfig } from '../api-config';
 
 export interface ApiOrder {
   key: string;
@@ -23,7 +24,7 @@ export interface ApiOrder {
 export class AllOrders implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
   
   // Current page items and filtered view
   orders: ApiOrder[] = [];
@@ -55,7 +56,16 @@ export class AllOrders implements OnInit {
   creationDateTo = '';
   
   showFilters = false;
-  
+
+  // Debug panel state and storage
+  debugCollapsed = true;
+  activeDebugTab: 'list' | 'status' | 'action' = 'list';
+  debug: { listOrders: any; lastStatus: any; lastAction: any } = {
+    listOrders: {},
+    lastStatus: {},
+    lastAction: {}
+  };
+
   ngOnInit(): void {
     this.loadAllOrders(1);
   }
@@ -64,22 +74,36 @@ export class AllOrders implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const url = `${this.baseUrl}/extensions/api/Order-Processing/GetAllOrders`;
+    const baseUrl = this.apiConfig.getBaseUrl();
+    const url = `${baseUrl}/extensions/api/Order-Processing/GetAllOrders`;
     const params: any = { page: String(this.page), pageSize: String(this.pageSize) };
+    // Debug: capture request
+    this.debug.listOrders = { request: { url, params }, time: new Date().toISOString() };
+
     this.http.get<any>(url, { params }).subscribe({
       next: (res) => {
         const parsed = this.parseOrdersResponse(res);
         this.total = parsed.total;
         this.orders = parsed.items;
-  this.initializeData();
-  this.loadStatusesForList();
+        this.initializeData();
+        this.loadStatusesForList();
         this.isLoading = false;
+
+        // Debug: capture response
+        this.debug.listOrders = {
+          request: { url, params },
+          response: res,
+          parsed: { total: this.total, items: this.orders?.length ?? 0 },
+          time: new Date().toISOString()
+        };
       },
       error: (err) => {
         // Fallback: attempt to treat response as array when server ignores params
         this.isLoading = false;
         this.errorMessage = this.getErrorMessage(err);
         console.error('Failed to load orders:', err);
+        // Debug: capture error
+        this.debug.listOrders = { request: { url, params }, error: err, time: new Date().toISOString() };
       }
     });
   }
@@ -172,12 +196,22 @@ export class AllOrders implements OnInit {
   // Inline action execution
   private recordAction(name: string, isError: boolean, res?: any, err?: any, status?: number) {
     this.lastAction = { name, isError, response: res, error: err, status, timestamp: new Date() };
+    // Debug mirror
+    this.debug.lastAction = {
+      name,
+      isError,
+      status,
+      response: res,
+      error: err,
+      time: new Date().toISOString()
+    };
   }
 
   private doGet(endpoint: string, name: string) {
     if (!this.selectedOrder) return;
     this.actionLoading = true;
-    this.http.get(`${this.baseUrl}${endpoint}`).subscribe({
+  const baseUrl = this.apiConfig.getBaseUrl();
+  this.http.get(`${baseUrl}${endpoint}`).subscribe({
       next: (res) => { this.recordAction(name, false, res, undefined, 200); this.actionLoading = false; },
       error: (err) => { this.recordAction(name, true, undefined, err, err?.status); this.actionLoading = false; }
     });
@@ -185,7 +219,8 @@ export class AllOrders implements OnInit {
   private doPost(endpoint: string, name: string, body: any = {}) {
     if (!this.selectedOrder) return;
     this.actionLoading = true;
-    this.http.post(`${this.baseUrl}${endpoint}`, body).subscribe({
+  const baseUrl = this.apiConfig.getBaseUrl();
+  this.http.post(`${baseUrl}${endpoint}`, body).subscribe({
       next: (res) => { this.recordAction(name, false, res, undefined, 200); this.actionLoading = false; },
       error: (err) => { this.recordAction(name, true, undefined, err, err?.status); this.actionLoading = false; }
     });
@@ -212,6 +247,36 @@ export class AllOrders implements OnInit {
     this.doPost(`/api/v1/order-processing/lines/${encodeURIComponent(this.lineName.trim())}/orders/${encodeURIComponent(this.selectedOrder.key)}/cancel`, 'Cancel Order');
   }
 
+  // Navigation
+  goToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  // Debug helpers
+  copyDebug(obj: any): void {
+    try {
+      const text = JSON.stringify(obj ?? {}, null, 2);
+      if (typeof navigator !== 'undefined' && (navigator as any).clipboard?.writeText) {
+        (navigator as any).clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    } catch (e) {
+      console.warn('Copy failed', e);
+    }
+  }
+
+  clearDebug(kind: 'list' | 'status' | 'action'): void {
+    if (kind === 'list') this.debug.listOrders = {};
+    if (kind === 'status') this.debug.lastStatus = {};
+    if (kind === 'action') this.debug.lastAction = {};
+  }
+
   // Load status for each order in current list
   private loadStatusesForList() {
     this.orderStatuses = {};
@@ -225,14 +290,24 @@ export class AllOrders implements OnInit {
   private fetchOrderStatus(order: ApiOrder) {
     const key = order.key;
     this.orderStatusLoading[key] = true;
-    this.http.get<any>(`${this.baseUrl}/api/v1/order-processing/orders/${encodeURIComponent(key)}/status`).subscribe({
+  const baseUrl = this.apiConfig.getBaseUrl();
+  this.http.get<any>(`${baseUrl}/api/v1/order-processing/orders/${encodeURIComponent(key)}/status`).subscribe({
       next: (res) => {
         this.orderStatuses[key] = this.parseStatus(res);
         this.orderStatusLoading[key] = false;
+        // Debug: capture last status lookup
+        this.debug.lastStatus = {
+          orderKey: key,
+          response: res,
+          parsedStatus: this.orderStatuses[key],
+          time: new Date().toISOString()
+        };
       },
       error: (err) => {
         this.orderStatusErrors[key] = err?.message || 'Error';
         this.orderStatusLoading[key] = false;
+        // Debug: capture error
+        this.debug.lastStatus = { orderKey: key, error: err, time: new Date().toISOString() };
       }
     });
   }
@@ -279,4 +354,5 @@ export class AllOrders implements OnInit {
         return 'status-unknown';
     }
   }
+
 }

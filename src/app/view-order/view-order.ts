@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ApiConfig } from '../api-config';
 
 @Component({
   selector: 'app-view-order',
@@ -14,7 +15,7 @@ export class ViewOrder {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
   
   orderNumber = '';
   orderData: any = null;
@@ -42,7 +43,8 @@ export class ViewOrder {
     this.errorMessage = '';
     this.orderData = null;
     
-    const url = `${this.baseUrl}/api/v1/order-processing/orders/${this.orderNumber.trim()}`;
+  const baseUrl = this.apiConfig.getBaseUrl();
+  const url = `${baseUrl}/api/v1/order-processing/orders/${this.orderNumber.trim()}`;
     
     this.http.get(url).subscribe({
       next: (response) => {

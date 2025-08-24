@@ -1,0 +1,54 @@
+<div class="preview-tile">
+  <div class="tile-header">
+    <h3>🏷️ Label Layout Preview</h3>
+  </div>
+  <div class="tile-content">
+    <div class="controls">
+      <div class="control">
+        <label>Project</label>
+        <select [(ngModel)]="selectedProject" (change)="onProjectChange()">
+          <option [ngValue]="''" disabled selected>Select project</option>
+          @for (p of labelProjects; track p.labelProjectName) {
+            <option [ngValue]="p.labelProjectName">{{ p.labelProjectName }}</option>
+          }
+        </select>
+      </div>
+      <div class="control">
+        <label>Layout</label>
+        <select [(ngModel)]="selectedLayoutNumber" (change)="onLayoutChange()" [disabled]="!selectedProject">
+          <option [ngValue]="null" disabled selected>Select layout</option>
+          @for (l of labelLayouts; track l.layoutNumber) {
+            <option [ngValue]="l.layoutNumber">{{ l.layoutNumber }} - {{ l.layoutName }}</option>
+          }
+        </select>
+      </div>
+      <div class="control">
+        <label>PLU</label>
+        <select [(ngModel)]="selectedPLUNumber" (change)="onPLUChange()" [disabled]="!selectedLayoutNumber">
+          <option [ngValue]="null" disabled selected>Select PLU</option>
+          @for (a of pluList; track a.number) {
+            <option [ngValue]="a.number">{{ a.number }} - {{ a.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="control action">
+        <button class="btn btn-primary btn-sm" (click)="previewLabel()" [disabled]="!selectedProject || selectedLayoutNumber == null || selectedPLUNumber == null || isLoadingPreview">Preview</button>
+      </div>
+    </div>
+    
+    <div class="preview-area">
+      @if (isLoadingPreview) {
+        <div class="loading">Generating preview…</div>
+      }
+      @if (previewError && !isLoadingPreview) {
+        <div class="error">{{ previewError }}</div>
+      }
+      @if (previewImageDataUrl && !isLoadingPreview) {
+        <img [src]="previewImageDataUrl" alt="Label preview" />
+      }
+      @if (!previewImageDataUrl && !isLoadingPreview && !previewError) {
+        <div class="placeholder">Select Project, Layout and PLU, then click Preview.</div>
+      }
+    </div>
+  </div>
+</div>

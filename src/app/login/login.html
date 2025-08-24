@@ -15,6 +15,22 @@
           <input matInput type="password" formControlName="password" placeholder="Enter your password" autocomplete="current-password" />
           <mat-error *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">Password is required</mat-error>
         </mat-form-field>
+          <fieldset class="server-settings">
+            <legend>Server settings</legend>
+            <div class="form-row">
+              <label for="host">Server Host/IP</label>
+              <input id="host" type="text" formControlName="host" placeholder="localhost" />
+            </div>
+            <div class="form-row">
+              <label for="port">Port</label>
+              <input id="port" type="number" formControlName="port" placeholder="9997 or 9998" />
+            </div>
+            <div class="form-row checkbox-row">
+              <input id="https" type="checkbox" formControlName="useHttps" />
+              <label for="https">Use HTTPS</label>
+            </div>
+            <div class="hint">Tip: Port 9997 defaults to HTTP, 9998 defaults to HTTPS. You can override using the checkbox.</div>
+          </fieldset>
         <div class="actions">
           <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
             <span *ngIf="!isLoading">Login</span>

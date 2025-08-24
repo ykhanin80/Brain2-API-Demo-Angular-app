@@ -1,10 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
@@ -30,6 +31,10 @@ export class Dashboard {
 
   navigateToPackageRecord(): void {
     this.router.navigate(['/package-record']);
+  }
+
+  navigateToLabelPreview(): void {
+    this.router.navigate(['/label-preview']);
   }
 
   // Quick access methods

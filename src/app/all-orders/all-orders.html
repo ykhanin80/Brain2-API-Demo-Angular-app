@@ -12,6 +12,13 @@
       </button>
       <button 
         type="button" 
+        class="btn btn-secondary"
+        (click)="goToDashboard()"
+      >
+        ← Back to Dashboard
+      </button>
+      <button 
+        type="button" 
         class="btn-back" 
         (click)="goBack()"
       >
@@ -166,3 +173,55 @@
     </div>
   }
 </div>
+
+<!-- API Response Debug -->
+<section class="ao-debug-section">
+  <div class="ao-debug-header">
+    <h3>🔧 API Response Debug</h3>
+    <div class="ao-debug-actions">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="debugCollapsed = !debugCollapsed">
+        {{ debugCollapsed ? 'Expand' : 'Collapse' }}
+      </button>
+    </div>
+  </div>
+  <div class="ao-debug-body" [class.collapsed]="debugCollapsed">
+    <div class="ao-debug-tabs">
+      <button type="button" class="ao-debug-tab" [class.active]="activeDebugTab==='list'" (click)="activeDebugTab='list'">List Orders</button>
+      <button type="button" class="ao-debug-tab" [class.active]="activeDebugTab==='status'" (click)="activeDebugTab='status'">Order Status</button>
+      <button type="button" class="ao-debug-tab" [class.active]="activeDebugTab==='action'" (click)="activeDebugTab='action'">Last Action</button>
+    </div>
+
+    <div class="ao-debug-panel" *ngIf="activeDebugTab==='list'">
+      <div class="ao-debug-toolbar">
+        <span>Last list request: {{ debug.listOrders.time || '-' }}</span>
+        <span class="spacer"></span>
+        <button class="btn btn-secondary btn-sm" (click)="copyDebug(debug.listOrders)">Copy JSON</button>
+        <button class="btn btn-secondary btn-sm" (click)="clearDebug('list')">Clear</button>
+      </div>
+      <pre>{{ debug.listOrders | json }}</pre>
+    </div>
+
+    <div class="ao-debug-panel" *ngIf="activeDebugTab==='status'">
+      <div class="ao-debug-toolbar">
+        <span>Last status for order {{ debug.lastStatus.orderKey || '—' }} • {{ debug.lastStatus.time || '-' }}</span>
+        <span class="spacer"></span>
+        <button class="btn btn-secondary btn-sm" (click)="copyDebug(debug.lastStatus)">Copy JSON</button>
+        <button class="btn btn-secondary btn-sm" (click)="clearDebug('status')">Clear</button>
+      </div>
+      <pre>{{ debug.lastStatus | json }}</pre>
+    </div>
+
+    <div class="ao-debug-panel" *ngIf="activeDebugTab==='action'">
+      <div class="ao-debug-toolbar">
+        <span>Last action: {{ debug.lastAction.name || '—' }} • {{ debug.lastAction.time || '-' }}</span>
+        <span class="spacer"></span>
+        <button class="btn btn-secondary btn-sm" (click)="copyDebug(debug.lastAction)">Copy JSON</button>
+        <button class="btn btn-secondary btn-sm" (click)="clearDebug('action')">Clear</button>
+      </div>
+      <pre>{{ debug.lastAction | json }}</pre>
+    </div>
+  </div>
+  <div class="ao-debug-footer-note">Data shown here reflects the most recent API calls performed on this page.</div>
+</section>
+
+<!-- Label Layout Preview moved to Dashboard -->

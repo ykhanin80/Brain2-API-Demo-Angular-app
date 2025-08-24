@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule, JsonPipe } from '@angular/common';
+import { ApiConfig } from '../api-config';
 
 interface Quantity {
   value: number;
@@ -42,12 +43,11 @@ export class EditOrder implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
 
   orderNumber = '';
   originalOrderData: any = null;
   private originalTransferValuesSnapshot = '[]';
-
   orderData: OrderModificationData = {
     orderNumber: '',
     displayText: '',
@@ -87,7 +87,7 @@ export class EditOrder implements OnInit {
     this.isLoadingOrder = true;
     this.errorMessage = '';
 
-    const url = `${this.baseUrl}/api/v1/order-processing/orders/${this.orderNumber}`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/order-processing/orders/${this.orderNumber}`;
     this.http.get(url).subscribe({
       next: (resp: any) => {
         this.isLoadingOrder = false;
@@ -189,7 +189,7 @@ export class EditOrder implements OnInit {
     this.errorMessage = '';
     const payload = this.buildPatchPayload();
     if (payload.length === 0) { this.isLoading = false; return; }
-    const url = `${this.baseUrl}/api/v1/order-processing/orders/${this.orderNumber}`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/order-processing/orders/${this.orderNumber}`;
     this.http.patch(url, payload, { headers: { 'Content-Type': 'application/json-patch+json' } }).subscribe({
       next: (resp: any) => {
         this.isLoading = false;
@@ -258,7 +258,7 @@ export class EditOrder implements OnInit {
     this.successMessage = '';
     this.errorMessage = '';
 
-    const url = `${this.baseUrl}/api/v1/order-processing/orders/${this.orderNumber}/transfer-values`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/order-processing/orders/${this.orderNumber}/transfer-values`;
     this.http.put(url, this.orderData.transferValues).subscribe({
       next: (resp: any) => {
         this.isLoading = false;

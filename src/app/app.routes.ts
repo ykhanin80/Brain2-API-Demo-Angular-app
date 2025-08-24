@@ -12,6 +12,7 @@ import { authGuard } from './auth.guard';
 import { ActionsComponent } from './actions/actions';
 import { PackageRecordComponent } from './package-record/package-record';
 import { DataMaintenanceComponent } from './data-maintenance/data-maintenance';
+import { LabelPreviewPage } from './label-preview/label-preview-page';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
@@ -74,6 +75,11 @@ export const routes: Routes = [
   { 
     path: 'data-maintenance', 
     component: DataMaintenanceComponent,
+    canActivate: [authGuard]
+  },
+  { 
+    path: 'label-preview', 
+    component: LabelPreviewPage,
     canActivate: [authGuard]
   },
   { path: '**', redirectTo: '/dashboard' }

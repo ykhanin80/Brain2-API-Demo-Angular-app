@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { ApiConfig } from '../api-config';
 
 interface JobRequest {
   jobType: string;
@@ -31,7 +32,7 @@ interface ApiResponse {
 })
 export class ActionsComponent {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
 
   // Form model
   newJob: JobRequest = { jobType: '', parameters: {} };
@@ -92,7 +93,7 @@ export class ActionsComponent {
     this.isSubmitting = true;
     
     // Build URL with actionName query parameter
-    let url = `${this.baseUrl}/api/v1/jobs?actionName=${encodeURIComponent(this.newJob.jobType)}`;
+  let url = `${this.apiConfig.getBaseUrl()}/api/v1/jobs?actionName=${encodeURIComponent(this.newJob.jobType)}`;
     
     // Add other parameters as query string if they exist
     if (this.newJob.parameters && Object.keys(this.newJob.parameters).length > 0) {
@@ -206,7 +207,7 @@ export class ActionsComponent {
     this.isCheckingStatus = true;
     this.statusMessage = '';
     
-    const url = `${this.baseUrl}/api/v1/jobs?jobId=${encodeURIComponent(jobId)}`;
+  const url = `${this.apiConfig.getBaseUrl()}/api/v1/jobs?jobId=${encodeURIComponent(jobId)}`;
     this.getUrl = url;  // Store URL for display
     console.log(`Checking job status (attempt ${this.currentPollingAttempts + 1}):`, url);
     
@@ -261,7 +262,7 @@ export class ActionsComponent {
   loadJobs(): void {
     this.isLoadingJobs = true;
     this.errorMessage = '';
-    this.http.get<JobSummary[]>(`${this.baseUrl}/api/v1/jobs`).subscribe({
+  this.http.get<JobSummary[]>(`${this.apiConfig.getBaseUrl()}/api/v1/jobs`).subscribe({
       next: resp => {
         this.jobs = resp || [];
         this.isLoadingJobs = false;

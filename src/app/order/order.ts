@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { CommonModule, JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { ApiConfig } from '../api-config';
 
 @Component({
   selector: 'app-order',
@@ -15,7 +16,7 @@ export class Order {
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
-  private readonly baseUrl = 'http://localhost:9997';
+  private readonly apiConfig = inject(ApiConfig);
   
   // Form properties
   orderNumber = '';
@@ -257,7 +258,8 @@ export class Order {
     this.lastMethod = method;
     this.lastEndpoint = endpoint;
     
-    const url = `${this.baseUrl}${endpoint}`;
+  const baseUrl = this.apiConfig.getBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
     const token = localStorage.getItem('auth_token');
     
     if (!token) {
