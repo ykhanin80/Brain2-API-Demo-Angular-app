@@ -4,10 +4,12 @@
   padding: 1rem;
 
   .page-header {
-    margin-bottom: 0.5rem;
-    h2 { margin: 0; }
-    p { color: #6c757d; margin: 0.25rem 0 0; }
-    .header-actions { margin-top: 8px; }
+  margin-bottom: 0.5rem;
+  .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .heading { display: flex; flex-direction: column; }
+  h2 { margin: 0; }
+  p { color: #6c757d; margin: 0.25rem 0 0; }
+  .header-actions { display: flex; align-items: center; justify-content: flex-end; }
   .back-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
   }
 }
