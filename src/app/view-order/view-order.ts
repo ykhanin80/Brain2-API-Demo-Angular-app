@@ -1,8 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-view-order',
@@ -13,12 +13,22 @@ import { Router } from '@angular/router';
 export class ViewOrder {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly baseUrl = 'http://localhost:9997';
   
   orderNumber = '';
   orderData: any = null;
   isLoading = false;
   errorMessage = '';
+  
+  ngOnInit(): void {
+    // If navigated with ?orderNumber=..., prefill and auto-load
+    const param = this.route.snapshot.queryParamMap.get('orderNumber');
+    if (param && param.trim().length > 0) {
+      this.orderNumber = param.trim();
+      this.viewOrder();
+    }
+  }
   
   viewOrder(): void {
     if (!this.orderNumber || this.orderNumber.trim() === '') {
@@ -49,7 +59,8 @@ export class ViewOrder {
   }
   
   goBack(): void {
-    this.router.navigate(['/orders']);
+    // Return to All Orders list by default
+    this.router.navigate(['/all-orders']);
   }
   
   private getErrorMessage(error: any): string {

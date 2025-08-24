@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-order',
@@ -13,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 export class Order {
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
   private readonly baseUrl = 'http://localhost:9997';
   
   // Form properties
@@ -38,6 +40,37 @@ export class Order {
   // Sorting functionality for order results
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
+  
+  constructor() {
+    // Listen to query params to auto-execute actions from All Orders page
+    this.route.queryParams.subscribe(params => {
+      const number = (params['orderNumber'] || '').toString();
+      const action = (params['action'] || '').toString();
+      if (number) {
+        this.orderNumber = number;
+        // Slight delay to allow bindings if needed
+        setTimeout(() => {
+          switch (action) {
+            case 'details':
+              this.getOrderDetails();
+              break;
+            case 'results':
+              this.getOrderResults();
+              break;
+            case 'status':
+              this.getOrderStatus();
+              break;
+            case 'transfer-values':
+              this.getOrderTransferValues();
+              break;
+            default:
+              // no auto action
+              break;
+          }
+        });
+      }
+    });
+  }
   
   navigateToCreateOrder(): void {
     this.router.navigate(['/create-order']);

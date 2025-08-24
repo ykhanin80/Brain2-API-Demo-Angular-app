@@ -234,7 +234,6 @@
         <label>Description
           <input type="text" [value]="staticTextData().description" (input)="updateStaticTextDescription($event)" maxlength="64" />
         </label>
-        <button class="btn btn-primary" type="submit" [disabled]="!staticTextData().description">Save</button>
       </div>
       <!-- Nutrition label overlay preview with distributed text fields -->
       <div class="nutrition-overlay-wrapper">
@@ -270,6 +269,71 @@
       
       <div *ngIf="apiResponse().type" class="api-response" [ngClass]="'api-response-' + apiResponse().type">{{apiResponse().message}}</div>
     </form>
+
+    <!-- Existing Static Texts List -->
+    <div class="dm-card" style="margin-top:16px;">
+      <div class="table-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <h3 style="margin:0;">Existing Static Texts</h3>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-size:12px;">Page size</label>
+          <select [value]="stListPageSize()" (change)="stChangePageSize(+$any($event.target).value)">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+          </select>
+          <button class="btn btn-secondary" (click)="loadStaticTextsList(stListPage())" title="Reload list">
+            <i class="icon-refresh"></i>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="stListLoading()" class="loading" style="padding:8px 0;">
+        <div class="spinner"></div>
+        <span>Loading static texts...</span>
+      </div>
+      <div *ngIf="stListError()" class="error-message" style="margin:8px 0;">
+        <i class="icon-alert"></i>
+        {{ stListError() }}
+      </div>
+
+      <div class="table-container" *ngIf="!stListLoading()">
+        <table class="articles-table resizable-columns">
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th>Description</th>
+              <th>Items</th>
+              <th *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]">Text {{ i }}</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let it of stListItems()">
+              <td>{{ it.number }}</td>
+              <td>{{ it.description || '-' }}</td>
+              <td>{{ (it.items?.length || 0) }}</td>
+              <td *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]">{{ stGetItemText(it, i) }}</td>
+              <td class="actions">
+                <button class="btn btn-small btn-icon btn-edit" (click)="stEditStaticText(it)" title="Edit Static Text">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="stListItems().length === 0">
+              <td colspan="14">No static texts found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+        <button class="btn btn-secondary" (click)="stPrevPage()" [disabled]="!stHasPrev()">Prev</button>
+        <span>Page {{ stListPage() }}<ng-container *ngIf="stTotalPages()"> / {{ stTotalPages() }}</ng-container></span>
+        <button class="btn btn-secondary" (click)="stNextPage()" [disabled]="!stHasNext()">Next</button>
+        <span class="record-count" *ngIf="stListTotal() !== undefined">Total: {{ stListTotal() }}</span>
+      </div>
+    </div>
   </div>
 
   <!-- Loading Indicator -->
@@ -285,8 +349,8 @@
     <button class="btn btn-secondary" (click)="error.set(null)">Dismiss</button>
   </div>
 
-  <!-- Articles Table -->
-  <div *ngIf="!isLoading()" class="table-section">
+  <!-- Articles Table (only on Articles sub-tab) -->
+  <div *ngIf="!isLoading() && currentSubPage()==='articles'" class="table-section">
     <div class="table-header">
       <div class="table-info">
         <span class="record-count" [style.color]="isDarkMode() ? '#ffffff' : null">

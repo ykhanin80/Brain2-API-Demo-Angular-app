@@ -1,6 +1,6 @@
 <div class="all-orders-container">
   <div class="page-header">
-    <h2>📋 All Orders from SQL Database</h2>
+    <h2>📋 All Orders</h2>
     <div class="header-actions">
       <button 
         type="button" 
@@ -24,7 +24,7 @@
   @if (isLoading) {
     <div class="loading-section">
       <div class="loading-spinner">⏳</div>
-      <p>Loading orders from SQL database...</p>
+  <p>Loading orders...</p>
     </div>
   }
 
@@ -46,191 +46,107 @@
   <!-- Orders Table -->
   @if (orders.length > 0 && !isLoading && !errorMessage) {
     <div class="orders-section">
-      <div class="orders-header">
-        <h3>📦 All Orders ({{ filteredOrders.length }} of {{ orders.length }} total)</h3>
-        <p>Data from: [BIZERBA_BRAIN2_Process].[dbo].[OrderProcessingOrder]</p>
+      <div class="orders-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <h3 style="margin:0;">📦 All Orders</h3>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-size:12px;">Page size</label>
+          <select [value]="pageSize" (change)="changePageSize(+$any($event.target).value)">
+            <option [value]="10">10</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+          </select>
+          <span style="font-size:12px; color:#6c757d;">Total: {{ total }}</span>
+        </div>
+      </div>
+
+      <!-- Action Controls -->
+      <div class="action-toolbar" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="font-size:12px; color:#555;">Selected:</label>
+          <strong>{{ selectedOrder?.key || '—' }}</strong>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label for="lineNameInput" style="font-size:12px; color:#555;">Line Name</label>
+          <input id="lineNameInput" type="text" [(ngModel)]="lineName" placeholder="e.g., KMD" style="padding:4px 8px;" />
+        </div>
+        <div style="flex:1"></div>
+  <button class="btn btn-sm btn-outline" (click)="runGetDetails()" [disabled]="!selectedOrder || actionLoading">📄 Get Order Details</button>
+  <button class="btn btn-sm btn-outline" (click)="runGetResults()" [disabled]="!selectedOrder || actionLoading">📊 Get Order Results</button>
+  <button class="btn btn-sm btn-outline" (click)="runGetTransferValues()" [disabled]="!selectedOrder || actionLoading">🔄 Get Transfer Values</button>
+        <span style="width:8px"></span>
+  <button class="btn btn-sm btn-success" (click)="runStartOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">▶️ Start Order</button>
+  <button class="btn btn-sm btn-warning" (click)="runInterruptOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">⏸️ Interrupt Order</button>
+  <button class="btn btn-sm btn-primary" (click)="runFinishOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">✅ Finish Order</button>
+  <button class="btn btn-sm btn-danger" (click)="runCancelOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">❌ Cancel Order</button>
       </div>
       
       <div class="orders-table-container">
         <table class="orders-table">
           <thead>
-            <!-- Filter Row -->
-            <tr class="filter-row">
-              <th class="filter-cell">
-                <input 
-                  type="text" 
-                  [(ngModel)]="orderNumber" 
-                  (input)="applyFilters()"
-                  placeholder="Filter order..."
-                  class="filter-input-compact"
-                >
-              </th>
-              <th class="filter-cell">
-                <input 
-                  type="text" 
-                  [(ngModel)]="articleNumber" 
-                  (input)="applyFilters()"
-                  placeholder="Filter article..."
-                  class="filter-input-compact"
-                >
-              </th>
-              <th class="filter-cell">
-                <input 
-                  type="text" 
-                  [(ngModel)]="customerNumber" 
-                  (input)="applyFilters()"
-                  placeholder="Filter customer..."
-                  class="filter-input-compact"
-                >
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Display Text -->
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Line Group -->
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Order Qty -->
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Box Qty -->
-              </th>
-              <th class="filter-cell">
-                <select 
-                  [(ngModel)]="status" 
-                  (change)="applyFilters()"
-                  class="filter-select-compact"
-                >
-                  <option [ngValue]="null">All</option>
-                  <option [ngValue]="0">Proposed</option>
-                  <option [ngValue]="2">Finished [2]</option>
-                  <option [ngValue]="3">Interrupted</option>
-                  <option [ngValue]="4">Cancelled</option>
-                  <option [ngValue]="5">Finished [5]</option>
-                </select>
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for LOT -->
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Price -->
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Date2 -->
-              </th>
-              <th class="filter-cell">
-                <input 
-                  type="date" 
-                  [(ngModel)]="creationDateFrom" 
-                  (input)="applyFilters()"
-                  class="filter-input-compact"
-                  title="From date"
-                >
-              </th>
-              <th class="filter-cell">
-                <!-- No filter for Created By -->
-              </th>
-              <th class="filter-cell">
-                <button 
-                  type="button" 
-                  class="btn-clear-compact"
-                  (click)="clearFilters()"
-                  title="Clear all filters"
-                >
-                  🗑️
-                </button>
-              </th>
-            </tr>
-            <!-- Header Row -->
             <tr class="header-row">
-              <th class="sortable-header" (click)="sortBy('orderNumber')">
-                Order # {{ getSortIcon('orderNumber') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('articleNumber')">
-                Article # {{ getSortIcon('articleNumber') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('customerNumber')">
-                Customer # {{ getSortIcon('customerNumber') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('displayText')">
-                Display Text {{ getSortIcon('displayText') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('lineGroupName')">
-                Line Group {{ getSortIcon('lineGroupName') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('orderQuantityValue')">
-                Order Qty {{ getSortIcon('orderQuantityValue') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('boxQuantityValue')">
-                Box Qty {{ getSortIcon('boxQuantityValue') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('status')">
-                Status {{ getSortIcon('status') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('lotCode')">
-                LOT {{ getSortIcon('lotCode') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('basePrice')">
-                Price {{ getSortIcon('basePrice') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('dateField2')">
-                Date2 {{ getSortIcon('dateField2') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('creationDate')">
-                Creation Date {{ getSortIcon('creationDate') }}
-              </th>
-              <th class="sortable-header" (click)="sortBy('creationUser')">
-                Created By {{ getSortIcon('creationUser') }}
-              </th>
+              <th>Key</th>
+              <th>Display Name</th>
+              <th>Active</th>
+              <th>Status</th>
+              <th>Change Date</th>
+              <th>Creation Date</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody class="table-body-scrollable">
-            @for (order of filteredOrders; track order.id) {
-              <tr>
-                <td class="order-number">{{ order.orderNumber }}</td>
-                <td class="article-number">{{ order.articleNumber }}</td>
-                <td class="customer-number">{{ order.customerNumber }}</td>
-                <td class="display-text" [title]="order.displayText">{{ order.displayText }}</td>
-                <td>{{ order.lineGroupName }}</td>
-                <td class="quantity">
-                  {{ order.orderQuantityValue }} {{ order.orderQuantityUnit }}
-                </td>
-                <td class="quantity">
-                  {{ order.boxQuantityValue }} {{ order.boxQuantityUnit }}
-                </td>
+            @for (order of filteredOrders; track order.key) {
+              <tr (click)="selectOrder(order)" [style.background]="isSelected(order) ? '#e9f5ff' : null">
+                <td class="order-number">{{ order.key }}</td>
+                <td class="display-text" [title]="order.displayName">{{ order.displayName }}</td>
+                <td>{{ order.active ? 'Yes' : 'No' }}</td>
                 <td>
-                  <span class="status-badge" [class]="getStatusClass(order.status)">
-                    {{ getStatusText(order.status) }}
-                  </span>
+                  <ng-container *ngIf="orderStatusLoading[order.key]">
+                    <span class="status-badge status-unknown" title="Loading status...">
+                      <span class="status-dot"></span>
+                      loading
+                    </span>
+                  </ng-container>
+                  <ng-container *ngIf="!orderStatusLoading[order.key] && !orderStatusErrors[order.key]">
+                    <span class="status-badge {{ statusClass(orderStatuses[order.key]) }}" [title]="orderStatuses[order.key]">
+                      {{ orderStatuses[order.key] || '-' }}
+                    </span>
+                  </ng-container>
+                  <ng-container *ngIf="orderStatusErrors[order.key]">
+                    <span class="status-badge status-error" [title]="orderStatusErrors[order.key]">⚠️ error</span>
+                  </ng-container>
                 </td>
-                <td class="transfer-value">{{ getLotCode(order) }}</td>
-                <td class="transfer-value">{{ getBasePrice(order) }}</td>
-                <td class="transfer-value">{{ getDateField2(order) }}</td>
+                <td class="creation-date">{{ order.changeDate | date:'short' }}</td>
                 <td class="creation-date">{{ order.creationDate | date:'short' }}</td>
-                <td class="user">{{ order.creationUser }}</td>
                 <td>
-                  <div class="action-buttons">
-                    <button 
-                      type="button" 
-                      class="btn btn-sm btn-info"
-                      (click)="viewOrderDetails(order)"
-                    >
-                      👁️ View
-                    </button>
-                    <button 
-                      type="button" 
-                      class="btn btn-sm btn-warning"
-                      (click)="editOrder(order)"
-                    >
-                      ✏️ Edit
-                    </button>
+                  <div class="action-buttons" style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); viewOrder(order)">📄 Details</button>
+                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); runGetResults()" [disabled]="!isSelected(order) || actionLoading">📊 Results</button>
+                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); runGetTransferValues()" [disabled]="!isSelected(order) || actionLoading">🔄 Transfer Values</button>
+                    <button type="button" class="btn btn-sm btn-secondary" (click)="$event.stopPropagation(); editOrder(order)">✏️ Edit</button>
                   </div>
                 </td>
               </tr>
             }
           </tbody>
         </table>
+      </div>
+      
+      <!-- Action result preview -->
+      @if (lastAction) {
+        <div class="action-result" [class.error]="lastAction.isError" style="margin-top:10px; padding:8px; border-radius:6px; border:1px solid #dee2e6; background:#fafafa;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>{{ lastAction.isError ? '❌' : '✅' }} {{ lastAction.name }}</strong>
+            <small>{{ lastAction.timestamp | date:'short' }}</small>
+          </div>
+          <div style="margin-top:6px;">
+            <pre style="white-space:pre-wrap; max-height:200px; overflow:auto;">{{ (lastAction.isError ? lastAction.error : lastAction.response) | json }}</pre>
+          </div>
+        </div>
+      }
+      <div class="pagination" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+        <button class="btn btn-secondary" (click)="prevPage()" [disabled]="!hasPrev()">Prev</button>
+        <span>Page {{ page }}<ng-container *ngIf="totalPages()"> / {{ totalPages() }}</ng-container></span>
+        <button class="btn btn-secondary" (click)="nextPage()" [disabled]="!hasNext()">Next</button>
       </div>
     </div>
   }
@@ -239,7 +155,7 @@
   @if (orders.length === 0 && !isLoading && !errorMessage) {
     <div class="no-orders-section">
       <h3>📭 No Orders Found</h3>
-      <p>No orders were found in the database table [BIZERBA_BRAIN2_Process].[dbo].[OrderProcessingOrder]</p>
+      <p>No orders were found from the API.</p>
       <button 
         type="button" 
         class="btn btn-primary"

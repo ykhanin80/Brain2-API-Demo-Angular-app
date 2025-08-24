@@ -807,7 +807,7 @@ export class DataMaintenanceComponent implements OnInit {
     try{
       const payload = { number: row.number, description: row.description, items: Array.from({length:50},(_,i)=> ({ number:i+1, textValue: row.items[i+1]||'', sendFormat:false })) };
       const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json' });
-      await this.http.post(`${this.baseUrl}/extensions/api/Example/CreateAndUpdateStaticText`, payload, { headers }).toPromise();
+  await this.http.post(`${this.baseUrl}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers }).toPromise();
       row.status='created';
     }catch(e:any){ row.status='failed'; row.error = e?.error?.title || e?.message || 'error'; }
   }
@@ -1751,6 +1751,11 @@ export class DataMaintenanceComponent implements OnInit {
     this.currentSubPage.set('static-texts');
     // Collapse any article modals to base view when switching
     this.currentView.set('list');
+    // Load first page of existing static texts when entering tab
+    if (!this.stListLoadedOnce) {
+      this.loadStaticTextsList(1);
+      this.stListLoadedOnce = true;
+    }
   }
 
   // Static Text handlers (placeholder logic)
@@ -1798,7 +1803,7 @@ export class DataMaintenanceComponent implements OnInit {
     });
     this.isLoading.set(true);
     this.apiResponse.set({ type: null, message: '' });
-    this.http.post(`${this.baseUrl}/extensions/api/Example/CreateAndUpdateStaticText`, payload, { headers })
+  this.http.post(`${this.baseUrl}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers })
       .subscribe({
         next: (res:any)=>{
           this.apiResponse.set({type:'success', message:`Static Text ${payload.number} saved`, timestamp:new Date().toISOString()});
@@ -1817,6 +1822,91 @@ export class DataMaintenanceComponent implements OnInit {
     items: Array.from({length:50},(_,i)=>({number:i+1,textValue:'',sendFormat:false,fontClass:'overlay-text-regular'}))
     });
     this.staticTextDirty.set(false);
+  }
+
+  // -------- Static Texts listing (with pagination) --------
+  stListItems = signal<any[]>([]);
+  stListPage = signal(1);
+  stListPageSize = signal(10);
+  stListTotal = signal<number|undefined>(undefined);
+  stListLoading = signal(false);
+  stListError = signal<string|undefined>(undefined);
+  private stListLoadedOnce = false;
+
+  loadStaticTextsList(page?: number){
+    const targetPage = page ?? this.stListPage();
+    const pageSize = this.stListPageSize();
+    this.stListLoading.set(true);
+    this.stListError.set(undefined);
+    this.stListPage.set(targetPage);
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}` });
+    const params = { page: String(targetPage), pageSize: String(pageSize) } as any;
+    this.http.get(`${this.baseUrl}/extensions/api/StaticTexts/GetAllStaticTexts`, { headers, params })
+      .subscribe({
+        next: (res: any) => {
+          // Support a few common shapes: array, {items,total}, {data,totalCount}
+          const items = Array.isArray(res) ? res : (res?.items || res?.data || res?.results || []);
+          const total = (res?.total ?? res?.totalCount ?? res?.count);
+          this.stListItems.set(items);
+          this.stListTotal.set(typeof total === 'number' ? total : undefined);
+        },
+        error: (err:any) => {
+          const msg = err?.error?.title || err?.message || 'Failed to load static texts';
+          this.stListError.set(msg);
+        }
+      }).add(()=> this.stListLoading.set(false));
+  }
+
+  stChangePageSize(size:number){
+    this.stListPageSize.set(size);
+    this.loadStaticTextsList(1);
+  }
+
+  stHasPrev(){ return this.stListPage() > 1; }
+  stHasNext(){
+    const total = this.stListTotal();
+    if (typeof total === 'number') return this.stListPage() * this.stListPageSize() < total;
+    // Fallback: if current page returned a full page of items, assume there may be a next page
+    return this.stListItems().length === this.stListPageSize();
+  }
+  stPrevPage(){ if(this.stHasPrev()) this.loadStaticTextsList(this.stListPage() - 1); }
+  stNextPage(){ if(this.stHasNext()) this.loadStaticTextsList(this.stListPage() + 1); }
+  stTotalPages(){ const total=this.stListTotal(); return typeof total==='number' ? Math.max(1, Math.ceil(total/ this.stListPageSize())) : undefined; }
+
+  // Extract text for item n from various possible result shapes
+  stGetItemText(row:any, n:number): string {
+    // Preferred: array of { number, textValue }
+    const arr = row?.items;
+    if (Array.isArray(arr)) {
+      const hit = arr.find((x:any)=> (x?.number===n));
+      if (hit && (hit.textValue ?? hit.value ?? hit.text)) return String(hit.textValue ?? hit.value ?? hit.text);
+    }
+    // Object with staticText1..staticText50 or staticText01..staticText50
+    const st = row?.staticTexts || row?.StaticTexts || row;
+    if (st && typeof st === 'object') {
+      const k1 = `staticText${n}`;
+      const k2 = `staticText${String(n).padStart(2,'0')}`;
+      const k3 = `Text${n}`;
+      const v = st[k1] ?? st[k2] ?? st[k3];
+      if (v !== undefined && v !== null) return String(v);
+    }
+    return '';
+  }
+
+  // Populate the Add Static Text form from a selected list row
+  stEditStaticText(row:any){
+    const items = Array.from({length:50}, (_,i)=> ({
+      number: i+1,
+      textValue: this.stGetItemText(row, i+1) || '',
+      sendFormat: false,
+      fontClass: 'overlay-text-regular'
+    }));
+    const number = row?.number ?? row?.id ?? 0;
+    const description = row?.description ?? row?.name ?? '';
+    this.staticTextData.set({ number, description, items });
+    // Mark dirty so Save is enabled; scroll to form
+    this.staticTextDirty.set(true);
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
   }
 
   goToEditPage(article: LabelerArticle) {
