@@ -1,59 +1,45 @@
-# OrderApp
+<div align="center">
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.5.
+	<h1 style="margin-bottom:0.2rem">🧠 Order App — Brain2 API Demo</h1>
+	<p style="margin-top:0">
+		<img alt="Angular" src="https://img.shields.io/badge/Angular-20-E23237?logo=angular&logoColor=white" />
+		<img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
+		<img alt="RxJS" src="https://img.shields.io/badge/RxJS-7.8-B7178C?logo=ReactiveX&logoColor=white" />
+		<img alt="Node" src="https://img.shields.io/badge/Node-18%2B-339933?logo=node.js&logoColor=white" />
+	</p>
 
-## Development server
+	<p><strong>Production-like Angular app showcasing Brain2 REST APIs:</strong> Orders, Label Layout Preview, Static Texts, Devices, Package Records, Jobs, and more.</p>
+</div>
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
-```
+## ✨ Highlights
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- Label Layout Preview with project/layout/PLU selection and live image preview
+- Static Texts integration (ReadTextBlockAsync) with debug
+- Robust error handling with client-side fallbacks and diagnostics panel
+- Order Processing/ Management: create, edit, start/interrupt/finish/cancel, view
+- Data Maintenance: View, Edit, Delete Articles (PLUs) and Static Texts
+- Import PLUs and Static texts from CSV file with auto mapping. Template files downloadable from UI.
+- Device capture and Package Records submission
+- Dark theme styling
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
-```bash
-ng generate component component-name
-```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 🔌 API Endpoints (used by the app)
 
-```bash
-ng generate --help
-```
+- Auth: `POST /api/v1/token`
+- Articles/Labeler: `GET/POST/PATCH /api/v1/articles/labeler`, `GET /api/v1/articles/{number}/labeler`
+- Orders: `POST /api/v1/order-processing/orders`, lifecycle endpoints under `/api/v1/order-processing/...`
+- Label Projects/Layouts/Preview: `GET /api/v1/label-projects`, `GET /api/v1/label-layouts`, `POST /api/v1/label-preview`
+- Devices/Package Records: `GET /api/v1/devices`, `GET /api/v1/package-types`, `POST /api/v1/package-records`
+- Extensions (Static Texts): `POST /extensions/api/StaticTexts/CreateAndUpdateStaticText`, `POST /extensions/api/StaticTexts/ReadTextBlockAsync`
 
-## Building
+Note: If your backend uses a different API version (e.g., v2), update the paths in the app where `/api/v1` is referenced, or centralize the prefix.
 
-To build the project run:
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+<div align="center" style="margin-top:1rem">
+	<span style="font-size:1.1rem;color:#5e6ad2"><strong>Happy labeling and order managing!</strong></span>
+</div>
