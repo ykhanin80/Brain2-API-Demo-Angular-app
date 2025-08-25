@@ -15,12 +15,16 @@
       </div>
       <div class="control">
         <label>Layout</label>
-        <select [(ngModel)]="selectedLayoutNumber" (change)="onLayoutChange()" [disabled]="!selectedProject">
+        <select [(ngModel)]="selectedLayoutNumber" (change)="onLayoutChange()" [disabled]="!selectedProject || layoutsLoadFailed">
           <option [ngValue]="null" disabled selected>Select layout</option>
           @for (l of labelLayouts; track l.layoutNumber) {
             <option [ngValue]="l.layoutNumber">{{ l.layoutNumber }} - {{ l.layoutName }}</option>
           }
         </select>
+        @if (layoutsLoadFailed) {
+          <div class="hint error">Couldn’t load layouts from server. Enter layout number manually.</div>
+          <input type="number" min="1" max="999" [(ngModel)]="selectedLayoutNumber" (change)="onLayoutChange()" placeholder="Enter layout number" />
+        }
       </div>
       <div class="control">
         <label>PLU</label>

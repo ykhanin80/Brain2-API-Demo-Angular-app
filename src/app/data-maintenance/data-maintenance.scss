@@ -77,6 +77,8 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .import-inline.global-fixed table.mapping-table thead th,
 .import-inline.global-fixed table.preview-table thead th { position:sticky; top:0; background:#f5f5f5; z-index:2; }
 .header-right { position:relative; width:100%; display:flex; gap:12px; justify-content:flex-end; }
+.header-right .back-btn { padding: 6px 12px; font-size: 0.9rem; border:1px solid #b5c3d1; background:#fff; }
+:host-context(body.dark-theme) .header-right .back-btn { background:#2a3036; border-color:#3a434d; color:#d0d7de; }
 
 /* Dark theme variants */
 :host-context(body.dark-theme) .header-right .btn.btn-secondary { background:linear-gradient(135deg,#5d666b,#4b545a); border-color:#4b545a; box-shadow:0 4px 14px rgba(0,0,0,.55); color:#ffffff; }

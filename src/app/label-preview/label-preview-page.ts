@@ -14,7 +14,7 @@ export class LabelPreviewPage {
   private readonly router = inject(Router);
 
   // Debug storage similar to DataMaintenance (lightweight)
-  activeDebugTab = signal<'projects'|'layouts'|'pluList'|'pluDetails'|'preview'>('projects');
+  activeDebugTab = signal<'projects'|'layouts'|'pluList'|'pluDetails'|'staticTexts'|'preview'>('projects');
   jsonCollapsed = signal(true);
   debugLogs = signal<Record<string, any>>({});
 

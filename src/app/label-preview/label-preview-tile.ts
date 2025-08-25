@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ApiConfig } from '../api-config';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-label-preview-tile',
@@ -24,7 +25,7 @@ export class LabelPreviewTile implements OnInit {
   @Output() previewGenerated = new EventEmitter<string | null>();
   // Emits detailed debug info for each API interaction
   @Output() debug = new EventEmitter<{
-    category: 'projects'|'layouts'|'pluList'|'pluDetails'|'preview';
+    category: 'projects'|'layouts'|'pluList'|'pluDetails'|'staticTexts'|'preview';
     ok: boolean;
     request: { method: string; url: string; params?: any; body?: any };
     response?: any;
@@ -44,6 +45,7 @@ export class LabelPreviewTile implements OnInit {
   isLoadingPreview = false;
   previewError = '';
   previewImageDataUrl: string | null = null;
+  layoutsLoadFailed = false;
   // Local configuration for StaticTexts per project+layout, persisted in localStorage
   // Static texts are not edited manually; will be provided by API in future
 
@@ -89,6 +91,7 @@ export class LabelPreviewTile implements OnInit {
     this.pluList = [];
     this.selectedLayoutNumber = null;
     this.selectedPLUNumber = null;
+  this.layoutsLoadFailed = false;
     if (!this.selectedProject) return;
     const url = `${this.baseUrl()}/api/v1/label-layouts`;
     const params = { labelProjectName: this.selectedProject } as const;
@@ -112,6 +115,36 @@ export class LabelPreviewTile implements OnInit {
           category: 'layouts', ok: false,
           request: { method: 'GET', url, params }, error: err,
           status: err?.status, startedAt: new Date(started).toISOString(), durationMs: Date.now()-started
+        });
+        // Fallback: fetch all layouts and filter client-side if server-side filter fails (e.g., 500 mapping error)
+        const urlAll = `${this.baseUrl()}/api/v1/label-layouts`;
+        const started2 = Date.now();
+        this.http.get<any[]>(urlAll).subscribe({
+          next: (all) => {
+            const arr = Array.isArray(all) ? all : [];
+            const filtered = arr.filter((x: any) => String(x?.labelProjectName || '').toLowerCase() === this.selectedProject.toLowerCase());
+            this.labelLayouts = filtered.map((x: any) => ({
+              layoutNumber: Number(x.layoutNumber),
+              layoutName: String(x.layoutName ?? x.name ?? x.layoutNumber)
+            }));
+            this.debug.emit({
+              category: 'layouts', ok: true,
+              request: { method: 'GET', url: urlAll, params: { fallback: 'clientFilterByProject', project: this.selectedProject } }, response: { countAll: arr.length, countFiltered: filtered.length, items: filtered },
+              status: 200, startedAt: new Date(started2).toISOString(), durationMs: Date.now()-started2
+            });
+            if (this.layoutNumber != null) this.selectedLayoutNumber = this.layoutNumber;
+      this.layoutsLoadFailed = false;
+          },
+          error: (err2) => {
+            console.error('Fallback fetch of all label layouts failed', err2);
+            this.debug.emit({
+              category: 'layouts', ok: false,
+              request: { method: 'GET', url: urlAll, params: { fallback: 'clientFilterByProject', project: this.selectedProject } }, error: err2,
+              status: err2?.status, startedAt: new Date(started2).toISOString(), durationMs: Date.now()-started2
+            });
+      // Enable manual entry fallback
+      this.layoutsLoadFailed = true;
+          }
         });
       }
     });
@@ -187,8 +220,21 @@ export class LabelPreviewTile implements OnInit {
       this.previewError = 'Please select Project, Layout, and PLU.';
       return;
     }
-    const payload = this.buildPreviewPayload();
+    // If PLU assigns a static text block number, load it before building the payload
+    const aplu = (this.lastPluDetails || {}).articlePLU || {};
+    const staticTextBlock: number | null = Number.isFinite(Number(aplu?.staticText)) ? Math.trunc(Number(aplu.staticText)) : null;
     this.isLoadingPreview = true;
+    if (staticTextBlock && staticTextBlock > 0) {
+      this.fetchStaticTexts(staticTextBlock, this.selectedProject, this.selectedLayoutNumber).subscribe({
+        next: (map) => this.doPreviewWithPayload(this.buildPreviewPayload(map || {})),
+        error: () => this.doPreviewWithPayload(this.buildPreviewPayload({})),
+      });
+    } else {
+      this.doPreviewWithPayload(this.buildPreviewPayload({}));
+    }
+  }
+
+  private doPreviewWithPayload(payload: any): void {
     const url = `${this.baseUrl()}/api/v1/label-preview`;
     const started = Date.now();
     this.http.post<any>(url, payload).subscribe({
@@ -226,6 +272,43 @@ export class LabelPreviewTile implements OnInit {
     });
   }
 
+  private fetchStaticTexts(blockNumber: number, project: string, layout: number): Observable<Record<number, string>> {
+    const started = Date.now();
+    const url = `${this.baseUrl()}/extensions/api/StaticTexts/ReadTextBlockAsync`;
+    const params = { number: String(blockNumber) } as const;
+  return new Observable<Record<number, string>>((subscriber) => {
+      this.http.get<any>(url, { params }).subscribe({
+        next: (res) => {
+          // Normalize response to map {n: text}
+          const items = Array.isArray(res) ? res : (res?.items || res?.data || []);
+          const map: Record<number,string> = {};
+          if (Array.isArray(items)) {
+            for (const it of items) {
+              const n = Number(it?.number);
+              const t = it?.textValue ?? it?.value ?? it?.text;
+              if (Number.isFinite(n) && n >= 1 && n <= 50 && t != null) map[n] = String(t);
+            }
+          }
+          this.debug.emit({
+            category: 'staticTexts', ok: true,
+            request: { method: 'GET', url, params }, response: res,
+            status: 200, startedAt: new Date(started).toISOString(), durationMs: Date.now()-started
+          });
+          subscriber.next(map);
+          subscriber.complete();
+        },
+        error: (err) => {
+          this.debug.emit({
+            category: 'staticTexts', ok: false,
+            request: { method: 'GET', url, params }, error: err,
+            status: err?.status, startedAt: new Date(started).toISOString(), durationMs: Date.now()-started
+          });
+          subscriber.error(err);
+        }
+      });
+    });
+  }
+
   private storageKey(): string | null {
     if (!this.selectedProject || this.selectedLayoutNumber == null) return null;
     return `staticTexts:${this.selectedProject}:${this.selectedLayoutNumber}`;
@@ -233,7 +316,7 @@ export class LabelPreviewTile implements OnInit {
 
   
 
-  private buildPreviewPayload(): any {
+  private buildPreviewPayload(fetchedStaticTexts: Record<number,string> = {}): any {
     const article = this.lastPluDetails || {};
     const aplu = article.articlePLU || {};
     const val = (obj: any, path: string, fallback: any = null) => {
@@ -319,9 +402,11 @@ export class LabelPreviewTile implements OnInit {
     // Static texts (1..50) and General texts (1..20)
     const staticTexts: any = {};
     for (let i = 1; i <= 50; i++) {
-  // Use PLU staticText value if present; otherwise use '-' placeholder
-  const st = val(aplu, `staticText${i}`, '');
-      // Use '-' as minimal placeholder when empty to satisfy required text field values in certain layouts
+      // Priority: fetched static texts -> PLU value -> '-'
+      const fetched = fetchedStaticTexts?.[i];
+      const st = (fetched != null && String(fetched).trim().length > 0)
+        ? String(fetched)
+        : val(aplu, `staticText${i}`, '');
       const v = (st ?? '').toString();
       staticTexts[`staticText${i}`] = v.trim().length > 0 ? v : '-';
     }

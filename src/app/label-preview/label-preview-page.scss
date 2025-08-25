@@ -32,3 +32,15 @@
 .json { max-height: 220px; overflow: auto; background: #1e1e1e; color: #e6e6e6; padding: 8px; border-radius: 4px; }
 .json.error { background: #2b1d1e; }
 .json.collapsed { max-height: 40px; }
+
+/* Dark theme */
+:host-context(body.dark-theme) .label-preview-page {
+  .page-header {
+    .heading p { color: #9aa4b1; }
+  }
+}
+:host-context(body.dark-theme) .debug-section { border-color: #303b44; background: #1f252b; }
+:host-context(body.dark-theme) .debug-header-bar { background: #242b33; border-color: #303b44; }
+:host-context(body.dark-theme) .debug-tab { background: #2a3036; color: #d0d7de; border-color: #3a434d; }
+:host-context(body.dark-theme) .debug-tab.active { background: #33404a; border-color: #44515b; }
+:host-context(body.dark-theme) .debug-panel { background: #222a31; border-color: #3a434d; }

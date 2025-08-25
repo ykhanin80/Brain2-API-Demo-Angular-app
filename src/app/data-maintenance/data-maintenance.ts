@@ -1832,6 +1832,9 @@ export class DataMaintenanceComponent implements OnInit {
   stListTotal = signal<number|undefined>(undefined);
   stListLoading = signal(false);
   stListError = signal<string|undefined>(undefined);
+  // Client-side view helpers: filter by number and sort by number
+  stFilterNumber = signal<string>('');
+  stSortDir = signal<'asc'|'desc'>('asc');
   private stListLoadedOnce = false;
 
   loadStaticTextsList(page?: number){
@@ -1873,6 +1876,30 @@ export class DataMaintenanceComponent implements OnInit {
   stPrevPage(){ if(this.stHasPrev()) this.loadStaticTextsList(this.stListPage() - 1); }
   stNextPage(){ if(this.stHasNext()) this.loadStaticTextsList(this.stListPage() + 1); }
   stTotalPages(){ const total=this.stListTotal(); return typeof total==='number' ? Math.max(1, Math.ceil(total/ this.stListPageSize())) : undefined; }
+
+  // Derived view items applying filter/sort on the current page
+  stViewItems(): any[] {
+    const filter = (this.stFilterNumber() || '').trim();
+    const dir = this.stSortDir();
+    const src = this.stListItems() || [];
+    let items = src;
+    if (filter) {
+      items = items.filter((it:any)=> String(it?.number ?? it?.id ?? '').includes(filter));
+    }
+    items = [...items].sort((a:any,b:any)=> {
+      const an = Number(a?.number ?? a?.id ?? 0);
+      const bn = Number(b?.number ?? b?.id ?? 0);
+      return dir === 'asc' ? an - bn : bn - an;
+    });
+    return items;
+  }
+
+  stSetFilterNumber(val: string){
+    this.stFilterNumber.set(val ?? '');
+  }
+  stToggleSortDir(){
+    this.stSortDir.set(this.stSortDir()==='asc' ? 'desc' : 'asc');
+  }
 
   // Extract text for item n from various possible result shapes
   stGetItemText(row:any, n:number): string {
