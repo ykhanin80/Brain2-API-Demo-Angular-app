@@ -1,15 +1,9 @@
-<div align="center">
 
-	<h1 style="margin-bottom:0.2rem">🧠 Order App — Brain2 API Demo</h1>
-	<p style="margin-top:0">
-		<img alt="Angular" src="https://img.shields.io/badge/Angular-20-E23237?logo=angular&logoColor=white" />
-		<img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white" />
-		<img alt="RxJS" src="https://img.shields.io/badge/RxJS-7.8-B7178C?logo=ReactiveX&logoColor=white" />
-		<img alt="Node" src="https://img.shields.io/badge/Node-18%2B-339933?logo=node.js&logoColor=white" />
-	</p>
+	🧠 Brain2 API demo App 
+	
 
-	<p><strong>Production-like Angular app showcasing Brain2 REST APIs:</strong> Orders, Label Layout Preview, Static Texts, Devices, Package Records, Jobs, and more.</p>
-</div>
+	Production-like Angular app showcasing Brain2 REST APIs:</strong> Orders, Label Layout Preview, Static Texts, Devices, Package Records, Jobs, and more.
+
 
 ---
 

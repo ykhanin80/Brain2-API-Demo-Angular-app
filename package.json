@@ -1,9 +1,10 @@
 {
   "name": "order-app",
-  "version": "0.1.0",
+  "version": "1.0.3",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "prebuild": "node tools/bump-version.cjs",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
