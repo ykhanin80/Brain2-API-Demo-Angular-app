@@ -220,8 +220,22 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
+
+  .actions-left, .actions-right {
+    display: flex;
+    gap: 0.75rem;
+    flex: 1 1 0;
+  }
+
+  .actions-left {
+    justify-content: flex-start;
+  }
+
+  .actions-right {
+    justify-content: flex-end;
+  }
   
   @media (max-width: 768px) {
     flex-direction: column;

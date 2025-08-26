@@ -24,7 +24,9 @@ export class Capture implements OnInit {
   deviceName = '';
   startDate = '';
   endDate = '';
-  take = 100; // Default limit
+  take = 10; // Default page size
+  skip = 0;   // Pagination offset for package records
+  hasNext = false; // Whether there might be a next page for package records
   
   // Response handling
   cumulatedRecords: any[] = [];
@@ -133,7 +135,11 @@ export class Capture implements OnInit {
   }
 
   // Package Records API Method
-  getPackageRecords(): void {
+  getPackageRecords(preserveSkip: boolean = false): void {
+    // On a fresh request from the button, start from the first page
+    if (!preserveSkip) {
+      this.skip = 0;
+    }
     let endpoint = '/api/v1/package-records';
     
     // Build query parameters
@@ -144,6 +150,10 @@ export class Capture implements OnInit {
       queryParams.push(`take=${this.take}`);
     } else {
       queryParams.push('take=100'); // Default value
+    }
+    // Add Skip parameter (pagination)
+    if (this.skip > 0) {
+      queryParams.push(`skip=${this.skip}`);
     }
     
     // Add optional filters
@@ -175,7 +185,7 @@ export class Capture implements OnInit {
     }
     
     console.log('Making API call to:', endpoint);
-    this.makeApiCall('GET', endpoint, undefined, 'package');
+  this.makeApiCall('GET', endpoint, undefined, 'package');
   }
 
   // Cumulated Package Records API Method
@@ -265,12 +275,15 @@ export class Capture implements OnInit {
         // Route known response types
         if (kind === 'package') {
           this.packageRecords = Array.isArray(response) ? response : [];
+          // If we got a full page, assume there may be a next page
+          this.hasNext = this.packageRecords.length === (this.take > 0 ? this.take : 100);
         } else if (kind === 'cumulated') {
           this.cumulatedRecords = Array.isArray(response) ? response : (response ? [response] : []);
         } else if (kind === 'oee') {
           this.oeeRecords = Array.isArray(response) ? response : (response ? [response] : []);
         } else if (endpoint.includes('/package-records')) {
           this.packageRecords = Array.isArray(response) ? response : [];
+          this.hasNext = this.packageRecords.length === (this.take > 0 ? this.take : 100);
         }
         
         console.log(`${method} ${endpoint} - Success:`, response);
@@ -281,7 +294,8 @@ export class Capture implements OnInit {
         this.responseStatus = `Error ${error.status || 'Unknown'}`;
         this.responseData = error.error || error.message || error;
   // Keep lastKind set so UI knows which action was attempted
-        this.showError(`Failed to ${method} ${endpoint}: ${this.getErrorMessage(error)}`);
+  this.hasNext = false;
+  this.showError(`Failed to ${method} ${endpoint}: ${this.getErrorMessage(error)}`);
         console.error(`${method} ${endpoint} - Error:`, error);
       }
     });
@@ -321,6 +335,31 @@ export class Capture implements OnInit {
     // Reset sorting
     this.sortColumn = '';
     this.sortDirection = 'asc';
+    // Pagination reset
+    this.hasNext = false;
+  }
+
+  // Pagination controls for Package Records
+  nextPackagePage(): void {
+    if (!this.hasNext) return;
+    const step = this.take > 0 ? this.take : 100;
+    this.skip += step;
+    this.getPackageRecords(true);
+  }
+
+  prevPackagePage(): void {
+    if (this.skip <= 0) return;
+    const step = this.take > 0 ? this.take : 100;
+    this.skip = Math.max(0, this.skip - step);
+    this.getPackageRecords(true);
+  }
+
+  onPageSizeChange(value: any): void {
+    const size = Number(value);
+    if (!isFinite(size) || size <= 0) return;
+    this.take = size;
+    this.skip = 0;
+    this.getPackageRecords();
   }
 
   // Helper method to format dates for display
@@ -429,9 +468,17 @@ export class Capture implements OnInit {
         return record.actualNetWeight?.value || 0;
       case 'packageType':
         return record.packageType;
+      case 'errorFlag':
+        return this.getErrorSortValue(record);
       default:
         return '';
     }
+  }
+
+  private getErrorSortValue(record: any): number {
+    const flag = this.extractErrorFlag(record);
+    if (flag === null) return -1; // Records without flag come first
+    return Number(flag);
   }
 
   getSortIcon(column: string): string {
@@ -490,5 +537,87 @@ export class Capture implements OnInit {
     }
     
     document.body.removeChild(textArea);
+  }
+
+  // Package record error helpers
+  getPackageErrorFlag(record: any): string {
+    if (!record) return '';
+    const has = (record.errorFlag !== undefined && record.errorFlag !== null)
+      ? !!record.errorFlag
+      : (record.hasError !== undefined && record.hasError !== null)
+        ? !!record.hasError
+        : !!(record.error || record.errorInfo || record.validationError);
+    return has ? 'Yes' : 'No';
+  }
+
+  getPackageErrorType(record: any): string {
+    if (!record) return '';
+    const type = record.errorType
+      ?? record.error?.type
+      ?? record.error?.code
+      ?? record.errorInfo?.type
+      ?? record.validationError?.type
+      ?? '';
+    return typeof type === 'string' ? type : String(type ?? '');
+  }
+
+  private extractErrorFlag(record: any): number | null {
+    if (!record) return null;
+    const val = record.error?.flag ?? record.errorFlag ?? record.error_code;
+    const n = Number(val);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private mapErrorFlagToTexts(flag: number): string[] {
+    // Mapping for individual bit flags
+    const map: Record<number, string> = {
+      0: 'Good Package',
+      1: 'Internal Error',
+      2: 'No label / label error (printer or labeler)',
+      4: 'Package could not be weighed',
+      8: 'Package overload or underload',
+      16: 'Package contains metal',
+      32: 'Negative acknowledgement from secondary labeler',
+      64: 'Package data could not be sent',
+      128: 'Customer-specific formula error',
+      256: 'Data edited at invalid time',
+      512: 'Switched to transport',
+      1024: 'User activated ejection',
+      2048: 'Package too long/short',
+      4096: 'Separation error',
+      8192: 'Code readings returns error',
+      16384: 'Statistics report in process',
+      32768: 'Invalid package, but not cancelled as total already transmitted',
+      65536: 'Package marked invalid through external signal to 1/O unit',
+      131072: 'Data could not be activated fast enough using a scanner',
+      262144: 'RFID write fault error',
+      524288: 'TTI-error',
+      1048576: 'Logo is not available or defective',
+      2097152: 'Package could not be weighed during the teaching process'
+    };
+
+    if (flag === 0) return [map[0]];
+
+    const texts: string[] = [];
+    // Iterate known bits in ascending order
+    const keys = Object.keys(map)
+      .map(k => Number(k))
+      .filter(k => k !== 0)
+      .sort((a, b) => a - b);
+    for (const k of keys) {
+      if ((flag & k) === k) {
+        texts.push(map[k]);
+      }
+    }
+    if (texts.length === 0) {
+      texts.push(`Unknown Error: ${flag}`);
+    }
+    return texts;
+  }
+
+  getPackageErrorFlagText(record: any): string {
+    const flag = this.extractErrorFlag(record);
+    if (flag === null) return '';
+    return this.mapErrorFlagToTexts(flag).join(' + ');
   }
 }
