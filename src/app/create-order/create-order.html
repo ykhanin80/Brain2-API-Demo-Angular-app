@@ -37,7 +37,7 @@
       <div class="form-row">
         <div class="form-group">
           <label for="displayText">Display Text</label>
-          <input 
+            <input 
             type="text" 
             id="displayText" 
             [(ngModel)]="orderData.displayText"
@@ -45,6 +45,9 @@
             [disabled]="isLoading"
             class="form-input"
           >
+          @if (!orderData.displayText.trim()) {
+            <small class="form-hint" style="color:#c0392b">Required</small>
+          }
         </div>
         
         <div class="form-group">
@@ -343,7 +346,7 @@
       <button 
         class="btn btn-primary" 
         (click)="createOrder()" 
-        [disabled]="isLoading || !orderData.orderNumber.trim() || !orderData.articleNumber.trim()"
+        [disabled]="isLoading || !orderData.orderNumber.trim() || !orderData.articleNumber.trim() || !orderData.displayText.trim()"
       >
         @if (isLoading) {
           Creating Order...
@@ -373,4 +376,37 @@
       </div>
     </div>
   }
+
+  <!-- API Response Debug -->
+  <section class="co-debug-section">
+    <div class="co-debug-header">
+      <h3>🔧 API Response Debug</h3>
+      <div class="co-debug-actions">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="debugCollapsed = !debugCollapsed">
+          {{ debugCollapsed ? 'Expand' : 'Collapse' }}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="clearDebug()">Clear</button>
+      </div>
+    </div>
+    <div class="co-debug-body" [class.collapsed]="debugCollapsed">
+      <div class="co-debug-tabs">
+        <button type="button" class="co-debug-tab" [class.active]="activeDebugTab==='articles'" (click)="activeDebugTab='articles'">Articles</button>
+        <button type="button" class="co-debug-tab" [class.active]="activeDebugTab==='create'" (click)="activeDebugTab='create'">Create Order</button>
+      </div>
+
+      @if (activeDebugTab==='articles') {
+        <div class="co-debug-panel">
+          <h4>GET /api/v1/articles/labeler</h4>
+          <pre>{{ debug.articles | json }}</pre>
+        </div>
+      }
+
+      @if (activeDebugTab==='create') {
+        <div class="co-debug-panel">
+          <h4>POST /api/v1/order-processing/orders</h4>
+          <pre>{{ debug.create | json }}</pre>
+        </div>
+      }
+    </div>
+  </section>
 </div>

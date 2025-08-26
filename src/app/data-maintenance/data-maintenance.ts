@@ -414,8 +414,8 @@ export class DataMaintenanceComponent implements OnInit {
 
   // View states for full page navigation
   currentView = signal<'list' | 'create' | 'edit' | 'copy'>('list');
-  // Sub-page: articles vs static-texts (default articles)
-  currentSubPage = signal<'articles' | 'static-texts'>('articles');
+  // Sub-page: articles, static-texts, customers, devices (default articles)
+  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices'>('articles');
 
   // Static Text form state
   staticTextData = signal<StaticTextData>({
@@ -719,7 +719,8 @@ export class DataMaintenanceComponent implements OnInit {
     getArticle: null as any,
     createArticle: null as any,
     updateArticle: null as any,
-    deleteArticle: null as any
+  deleteArticle: null as any,
+  createCustomer: null as any
   };
 
   private readonly allowedLabelingModes = ['weight','fixedPrice','fixedWeight','fixedValue'];
@@ -1759,6 +1760,348 @@ export class DataMaintenanceComponent implements OnInit {
     }
   }
 
+  // New empty sub-pages
+  goToCustomersSubPage(){
+    this.currentSubPage.set('customers');
+    this.currentView.set('list');
+  // Focus the only kept debug panel
+  this.activeDebugTab = 'createCustomer';
+  }
+  goToDevicesSubPage(){
+    this.currentSubPage.set('devices');
+    this.currentView.set('list');
+  }
+
+  // ---------------- Customers: Modal Form State ----------------
+  customerModalOpen = signal(false);
+  customerForm = signal<any>({
+    customerNumber: '1',
+    customerName: 'John Doe',
+    title: 'Mr.',
+    firstName: 'John',
+    lastName: 'Doe',
+    eMailAddress: 'mail@john-doe.com',
+    phoneNumber1: '555-0100',
+    phoneNumber2: '555-0100',
+    mobilePhoneNumber: '555-0100',
+    faxNumber: '555-0100',
+    priceLevel: 'none',
+    discountInPercent: 25,
+    vat: 'US123456789',
+    eori: 'US123456789012345',
+    commonText1: 'Some additional text',
+    commonText2: 'Some more additional text',
+    commonNumber1: 123,
+    commonNumber2: 456,
+    additional1: 'Detailed information about the customer',
+    additional2: 'More detailed information about the customer',
+    assignedArticlesCsv: '1',
+    // Address fields for one address
+    addr_name1: 'John',
+    addr_name2: 'Doe',
+    addr_name3: 'Jr.',
+    addr_houseNumber: '123',
+    addr_street1: 'Maple Street',
+    addr_street2: 'Maple Street',
+    addr_postOfficeBox: '1032',
+    addr_city: 'Anytown',
+    addr_zipCode: '17101',
+    addr_stateCode: 'PA',
+    addr_country: 'US',
+    addr_type: 'billingAddress',
+    addr_isDefault: true,
+    addr_isMainAddress: true
+  });
+  openAddCustomerModal(){ this.customerModalOpen.set(true); try{ document.body.classList.add('has-import-open'); }catch{} }
+  closeAddCustomerModal(){ this.customerModalOpen.set(false); try{ document.body.classList.remove('has-import-open'); }catch{} }
+
+  // Customer form field helpers for template bindings
+  updateCustomerText(key: string, ev: Event){
+    const val = (ev.target as HTMLInputElement)?.value ?? '';
+    this.customerForm.update(f => ({ ...f, [key]: val }));
+  }
+  updateCustomerNumber(key: string, ev: Event){
+    const raw = (ev.target as HTMLInputElement)?.value;
+    const num = raw === '' || raw == null ? undefined : +raw;
+    this.customerForm.update(f => ({ ...f, [key]: num }));
+  }
+  updateCustomerChecked(key: string, ev: Event){
+    const checked = (ev.target as HTMLInputElement)?.checked ?? false;
+    this.customerForm.update(f => ({ ...f, [key]: checked }));
+  }
+
+  // Customers: add example customer via POST
+  addCustomer(){
+    const url = `${this.apiConfig.getBaseUrl()}/api/v1/customers`;
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${this.auth.getToken()}`,
+      'Content-Type': 'application/json'
+    });
+    const f = this.customerForm();
+    // minimal validation
+    if(!f.customerNumber || !f.customerName){
+      this.apiResponse.set({ type:'error', message:'Customer Number and Name are required.', timestamp:new Date().toISOString() });
+      this.activeDebugTab = 'createCustomer';
+      try{ this.jsonCollapsed.set(false); }catch{}
+      return;
+    }
+    const assignedArticles = String(f.assignedArticlesCsv || '')
+      .split(',')
+      .map((s:string)=>s.trim())
+      .filter((s:string)=>!!s)
+      .map((articleNumber:string)=>({ articleNumber }));
+    const payload = {
+      customerNumber: String(f.customerNumber),
+      customerName: String(f.customerName),
+      title: f.title ?? '',
+      firstName: f.firstName ?? '',
+      lastName: f.lastName ?? '',
+      eMailAddress: f.eMailAddress ?? '',
+      phoneNumber1: f.phoneNumber1 ?? '',
+      phoneNumber2: f.phoneNumber2 ?? '',
+      mobilePhoneNumber: f.mobilePhoneNumber ?? '',
+      faxNumber: f.faxNumber ?? '',
+      priceLevel: f.priceLevel ?? 'none',
+      discountInPercent: Number(f.discountInPercent ?? 0),
+      vat: f.vat ?? '',
+      eori: f.eori ?? '',
+      commonText1: f.commonText1 ?? '',
+      commonText2: f.commonText2 ?? '',
+      commonNumber1: Number(f.commonNumber1 ?? 0),
+      commonNumber2: Number(f.commonNumber2 ?? 0),
+      additional1: f.additional1 ?? '',
+      additional2: f.additional2 ?? '',
+      assignedArticles: assignedArticles.length ? assignedArticles : [{ articleNumber: '1' }],
+      addresses: [
+        {
+          name1: f.addr_name1 ?? '',
+          name2: f.addr_name2 ?? '',
+          name3: f.addr_name3 ?? '',
+          houseNumber: f.addr_houseNumber ?? '',
+          street1: f.addr_street1 ?? '',
+          street2: f.addr_street2 ?? '',
+          postOfficeBox: f.addr_postOfficeBox ?? '',
+          city: f.addr_city ?? '',
+          zipCode: f.addr_zipCode ?? '',
+          stateCode: f.addr_stateCode ?? '',
+          country: f.addr_country ?? '',
+          type: f.addr_type ?? 'billingAddress',
+          isDefault: !!f.addr_isDefault,
+          isMainAddress: !!f.addr_isMainAddress
+        }
+      ]
+    };
+  this.isLoading.set(true);
+    this.apiResponse.set({ type: null, message: '' });
+  // Focus debug panel on Create Customer and expand
+  this.activeDebugTab = 'createCustomer';
+  try { this.jsonCollapsed.set(false); } catch {}
+    this.http.post(url, payload, { headers })
+      .subscribe({
+        next: (res:any)=>{
+          // Debug info for Create Customer
+          this.debugApiResponses.createCustomer = {
+            timestamp: new Date().toISOString(),
+            requestUrl: url,
+            requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+            requestBody: payload,
+            rawResponse: res
+          };
+          this.apiResponse.set({ type:'success', message:`Customer ${payload.customerNumber} created`, timestamp:new Date().toISOString() });
+        },
+        error: (err:any)=>{
+          const msg = err?.error?.title || err?.error?.message || 'Failed to create customer';
+          // Debug info with error
+          this.debugApiResponses.createCustomer = {
+            timestamp: new Date().toISOString(),
+            requestUrl: url,
+            requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+            requestBody: payload,
+            error: err
+          };
+          this.apiResponse.set({ type:'error', message: msg, timestamp:new Date().toISOString() });
+        }
+  }).add(()=> { this.isLoading.set(false); this.closeAddCustomerModal(); });
+  }
+
+  // ---------------- Customers CSV Import ----------------
+  cuImportState = signal<{open:boolean; step:'select'|'mapping'|'preview'|'running'|'done'}>({open:false, step:'select'});
+  cuImportHeaders = signal<string[]>([]);
+  cuImportMapping = signal<{[csvHeader:string]: string}>({});
+  cuImportRawRows = signal<any[]>([]);
+  cuImportRows = signal<any[]>([]);
+  cuImportProgress = signal<{processed:number; success:number; created:number; updated:number; failed:number; percent:number; done:boolean}>({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
+  private cuImportCancelled = false; private cuImportConcurrency = 3; private cuActiveImports = 0; private cuImportQueueIndex = 0;
+  private cuImportFieldDefinitions: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = [
+    { key:'customerNumber', label:'Customer Number', required:true, synonyms:['customernumber','number','customer no','customer id','customerid'] },
+    { key:'customerName', label:'Customer Name', required:true, synonyms:['customername','name','full name'] },
+    { key:'title', label:'Title', synonyms:['title'] },
+    { key:'firstName', label:'First Name', synonyms:['firstname','first name','givenname','given name'] },
+    { key:'lastName', label:'Last Name', synonyms:['lastname','last name','surname','familyname','family name'] },
+    { key:'eMailAddress', label:'Email', synonyms:['email','e-mail','mail','emailaddress','e-mail address'] },
+    { key:'phoneNumber1', label:'Phone 1', synonyms:['phone1','phone','phone number','telephone'] },
+    { key:'phoneNumber2', label:'Phone 2', synonyms:['phone2','phone number 2','telephone2'] },
+    { key:'mobilePhoneNumber', label:'Mobile', synonyms:['mobile','mobilephone','cell','cellphone'] },
+    { key:'faxNumber', label:'Fax', synonyms:['fax','faxnumber'] },
+    { key:'priceLevel', label:'Price Level', synonyms:['pricelevel'] },
+    { key:'discountInPercent', label:'Discount %', synonyms:['discount','discountpercent','discount%'] },
+    { key:'vat', label:'VAT', synonyms:['vat','vatid','vat number'] },
+    { key:'eori', label:'EORI', synonyms:['eori'] },
+    { key:'commonText1', label:'Common Text 1', synonyms:['commontext1'] },
+    { key:'commonText2', label:'Common Text 2', synonyms:['commontext2'] },
+    { key:'commonNumber1', label:'Common Number 1', synonyms:['commonnumber1'] },
+    { key:'commonNumber2', label:'Common Number 2', synonyms:['commonnumber2'] },
+    { key:'additional1', label:'Additional 1', synonyms:['additional1','note1'] },
+    { key:'additional2', label:'Additional 2', synonyms:['additional2','note2'] },
+    { key:'assignedArticlesCsv', label:'Assigned Articles (CSV)', synonyms:['assignedarticles','articles','articlelist'] },
+    // Address fields
+    { key:'addr_name1', label:'Address Name 1', synonyms:['name1','address name1','addrname1'] },
+    { key:'addr_name2', label:'Address Name 2', synonyms:['name2','address name2','addrname2'] },
+    { key:'addr_name3', label:'Address Name 3', synonyms:['name3','address name3','addrname3'] },
+    { key:'addr_houseNumber', label:'House Number', synonyms:['housenumber','house no','house'] },
+    { key:'addr_street1', label:'Street 1', synonyms:['street1','street','address1','line1'] },
+    { key:'addr_street2', label:'Street 2', synonyms:['street2','address2','line2'] },
+    { key:'addr_postOfficeBox', label:'PO Box', synonyms:['pobox','postofficebox','po box'] },
+    { key:'addr_city', label:'City', synonyms:['city','town'] },
+    { key:'addr_zipCode', label:'ZIP', synonyms:['zip','zipcode','postalcode','post code'] },
+    { key:'addr_stateCode', label:'State Code', synonyms:['state','statecode','region','province'] },
+    { key:'addr_country', label:'Country', synonyms:['country','countrycode'] },
+    { key:'addr_type', label:'Address Type', synonyms:['type','addresstype'] },
+    { key:'addr_isDefault', label:'Is Default', synonyms:['default','isdefault'] },
+    { key:'addr_isMainAddress', label:'Is Main', synonyms:['main','ismain','mainaddress'] },
+  ];
+  get cuImportFieldDefs(){ return this.cuImportFieldDefinitions; }
+  cuOpenImportDialog(){ this.cuImportState.set({open:true, step:'select'}); this.cuImportHeaders.set([]); this.cuImportMapping.set({}); this.cuImportRows.set([]); this.cuImportRawRows.set([]); document.body.classList.add('has-import-open'); }
+  cuCloseImportDialog(){ if(this.cuImportState().step==='running' && !this.cuImportProgress().done){ this.cuImportCancelled=true; } this.cuImportState.set({open:false, step:'select'}); document.body.classList.remove('has-import-open'); }
+  cuDownloadImportTemplate(){
+    // Full template using all fields supported by import -> matches API payload shape (flattened for CSV)
+    const header = [
+      'customerNumber','customerName','title','firstName','lastName','eMailAddress','phoneNumber1','phoneNumber2','mobilePhoneNumber','faxNumber',
+      'priceLevel','discountInPercent','vat','eori','commonText1','commonText2','commonNumber1','commonNumber2','additional1','additional2',
+      // Assigned articles as comma-separated values
+      'assignedArticlesCsv',
+      // Single address fields (first/default address)
+      'addr_name1','addr_name2','addr_name3','addr_houseNumber','addr_street1','addr_street2','addr_postOfficeBox','addr_city','addr_zipCode','addr_stateCode','addr_country','addr_type','addr_isDefault','addr_isMainAddress'
+    ];
+    const row1 = [
+      '1001','John Doe','Mr.','John','Doe','mail@john-doe.com','555‑0100','555‑0100','555‑0100','555‑0100',
+      'none','0','','US123456789012345','Some additional text','Some more additional text','123','456','Detailed information about the customer','More detailed information about the customer',
+      '11',
+      'John','Doe','Jr.','123','Maple Street','Maple Street','1032','Reading','17101','PA','US','billingAddress','true','true'
+    ];
+    const row2 = [
+      '1002','Jane Smith','Ms.','Jane','Smith','jane@smith.test','555‑0102','','555‑0199','',
+      'retail','5','US-VAT-1002','EU9988776655','VIP customer','','0','0','Preferred customer','',
+      '1,2,3',
+      'Jane','','','42','Oak Ave','','','Springfield','01101','MA','US','shippingAddress','true','false'
+    ];
+    const escape = (v:any)=>{
+      const s = String(v ?? '');
+      return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+    };
+    const csv = [header.join(','), row1.map(escape).join(','), row2.map(escape).join(',')].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Customers-Import-Template-${new Date().toISOString().substring(0,10)}.csv`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  }
+  async onCuImportFileSelected(event: Event){
+    const input = event.target as HTMLInputElement; const file = input.files && input.files[0]; if(!file) return;
+    if(!PapaRef){ const mod = await import('papaparse'); PapaRef = mod.default || mod; }
+    PapaRef.parse(file, { header:true, skipEmptyLines:true, worker:true, complete: (results:any)=>{
+      const raw = (results.data||[]).slice(0,5000); const headers: string[] = (results.meta?.fields || []).map((h:string)=>h);
+      this.cuImportRawRows.set(raw); this.cuImportHeaders.set(headers); this.cuAutoMapImportHeaders(); this.cuRebuildMappedRows(); this.cuImportState.set({open:true, step:'mapping'});
+    }, error: ()=>{ this.error.set('Failed to parse CSV'); }});
+  }
+  private cuNormalize(h:string){ return h.toLowerCase().replace(/[^a-z0-9]/g,''); }
+  cuAutoMapImportHeaders(){
+    const headers = this.cuImportHeaders(); const mapping: {[k:string]:string} = { ...this.cuImportMapping() }; const used = new Set(Object.values(mapping));
+    headers.forEach(h=>{ if(mapping[h]) return; const norm=this.cuNormalize(h);
+      const direct = this.cuImportFieldDefinitions.find(d=> d.synonyms.some(s=> this.cuNormalize(s)===norm) || this.cuNormalize(d.label)===norm || d.key===norm);
+      if(direct && !used.has(direct.key)){ mapping[h]=direct.key; used.add(direct.key); }
+    });
+    this.cuImportMapping.set(mapping);
+  }
+  cuUpdateImportMapping(csvHeader:string, target:string){ const m={...this.cuImportMapping()}; if(!target) delete m[csvHeader]; else m[csvHeader]=target; const reversed:any={}; for(const [h,t] of Object.entries(m)){ if(reversed[t] && reversed[t]!==h){ delete m[reversed[t]]; } reversed[t]=h; } this.cuImportMapping.set(m); this.cuRebuildMappedRows(); }
+  private cuRebuildMappedRows(){ const raw=this.cuImportRawRows(); const rows=raw.map((r:any,i:number)=> this.cuMapImportRow(r,i+2)); this.cuImportRows.set(rows); }
+  cuRequiredImportFieldsMapped(){ const mapped = new Set(Object.values(this.cuImportMapping())); return ['customerNumber','customerName'].every(k=> mapped.has(k)); }
+  cuGoToPreviewFromMapping(){ if(this.cuRequiredImportFieldsMapped()) this.cuImportState.set({open:true, step:'preview'}); }
+  cuBackToMapping(){ if(this.cuImportState().step==='preview') this.cuImportState.set({open:true, step:'mapping'}); }
+  private cuTrim(v:any){ return (v===undefined||v===null)?'':String(v).trim(); }
+  private cuParseNumber(v:any){ const t=this.cuTrim(v); if(!t) return 0; const m=t.match(/-?\d+(?:[.,]\d+)?/); return m? parseFloat(m[0].replace(',','.')):0; }
+  private cuMapImportRow(r:any,line:number){
+    const mapping = this.cuImportMapping(); const get=(k:string)=>{ const h=Object.entries(mapping).find(([,t])=>t===k)?.[0]; return h? r[h]:''; };
+    const row:any = {
+      original:r, line,
+      customerNumber: this.cuTrim(get('customerNumber')||r.customerNumber||r.number),
+      customerName: this.cuTrim(get('customerName')||r.customerName||r.name),
+      title: this.cuTrim(get('title')||r.title),
+      firstName: this.cuTrim(get('firstName')||r.firstName),
+      lastName: this.cuTrim(get('lastName')||r.lastName),
+      eMailAddress: this.cuTrim(get('eMailAddress')||r.eMailAddress||r.email),
+      phoneNumber1: this.cuTrim(get('phoneNumber1')||r.phoneNumber1||r.phone),
+      phoneNumber2: this.cuTrim(get('phoneNumber2')||r.phoneNumber2),
+      mobilePhoneNumber: this.cuTrim(get('mobilePhoneNumber')||r.mobilePhoneNumber||r.mobile),
+      faxNumber: this.cuTrim(get('faxNumber')||r.faxNumber||r.fax),
+      priceLevel: this.cuTrim(get('priceLevel')||r.priceLevel),
+      discountInPercent: this.cuParseNumber(get('discountInPercent')||r.discountInPercent||r.discount),
+      vat: this.cuTrim(get('vat')||r.vat),
+      eori: this.cuTrim(get('eori')||r.eori),
+      commonText1: this.cuTrim(get('commonText1')||r.commonText1),
+      commonText2: this.cuTrim(get('commonText2')||r.commonText2),
+      commonNumber1: this.cuParseNumber(get('commonNumber1')||r.commonNumber1),
+      commonNumber2: this.cuParseNumber(get('commonNumber2')||r.commonNumber2),
+      additional1: this.cuTrim(get('additional1')||r.additional1),
+      additional2: this.cuTrim(get('additional2')||r.additional2),
+      assignedArticlesCsv: this.cuTrim(get('assignedArticlesCsv')||r.assignedArticlesCsv||r.assignedArticles||r.articles),
+      addr_name1: this.cuTrim(get('addr_name1')||r.addr_name1||r.name1),
+      addr_name2: this.cuTrim(get('addr_name2')||r.addr_name2||r.name2),
+      addr_name3: this.cuTrim(get('addr_name3')||r.addr_name3||r.name3),
+      addr_houseNumber: this.cuTrim(get('addr_houseNumber')||r.addr_houseNumber||r.houseNumber||r.house),
+      addr_street1: this.cuTrim(get('addr_street1')||r.addr_street1||r.street1||r.street),
+      addr_street2: this.cuTrim(get('addr_street2')||r.addr_street2||r.street2),
+      addr_postOfficeBox: this.cuTrim(get('addr_postOfficeBox')||r.addr_postOfficeBox||r.poBox||r.pobox),
+      addr_city: this.cuTrim(get('addr_city')||r.addr_city||r.city),
+      addr_zipCode: this.cuTrim(get('addr_zipCode')||r.addr_zipCode||r.zip||r.zipCode||r.postalCode),
+      addr_stateCode: this.cuTrim(get('addr_stateCode')||r.addr_stateCode||r.state||r.stateCode),
+      addr_country: this.cuTrim(get('addr_country')||r.addr_country||r.country||r.countryCode),
+      addr_type: this.cuTrim(get('addr_type')||r.addr_type||r.type||'billingAddress'),
+      addr_isDefault: /^true|1|yes$/i.test(this.cuTrim(get('addr_isDefault')||r.addr_isDefault||r.default)),
+      addr_isMainAddress: /^true|1|yes$/i.test(this.cuTrim(get('addr_isMainAddress')||r.addr_isMainAddress||r.main)) ,
+      status:'', error:''
+    };
+    if(!row.customerNumber || row.customerNumber.length>32) row.error += 'invalid number; ';
+    if(!row.customerName || row.customerName.length>128) row.error += 'invalid name; ';
+    return row;
+  }
+  cuInvalidImportRowCount(){ return this.cuImportRows().filter(r=>r.error).length; }
+  cuStartImport(){ this.cuImportCancelled=false; this.cuImportProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false}); const rows=this.cuImportRows().filter(r=>!r.error); this.cuImportRows.set(rows); this.cuImportState.set({open:true, step:'running'}); this.cuImportQueueIndex=0; this.cuActiveImports=0; for(let i=0;i<this.cuImportConcurrency;i++) this.cuPumpImportQueue(); }
+  cuCancelImport(){ this.cuImportCancelled=true; }
+  private cuPumpImportQueue(){ if(this.cuImportCancelled){ this.cuFinishImport(); return; } if(this.cuImportQueueIndex>=this.cuImportRows().length){ if(this.cuActiveImports===0) this.cuFinishImport(); return; } if(this.cuActiveImports>=this.cuImportConcurrency) return; const row=this.cuImportRows()[this.cuImportQueueIndex++]; this.cuActiveImports++; this.cuProcessImportRow(row).finally(()=>{ this.cuActiveImports--; this.cuUpdateImportProgress(); this.cuPumpImportQueue(); }); this.cuPumpImportQueue(); }
+  private async cuProcessImportRow(row:any){
+    try{
+      const assignedArticles = String(row.assignedArticlesCsv || '').split(',').map((s:string)=>s.trim()).filter(Boolean).map((articleNumber:string)=>({ articleNumber }));
+      const payload:any = {
+        customerNumber: String(row.customerNumber), customerName: String(row.customerName), title: row.title||'', firstName: row.firstName||'', lastName: row.lastName||'', eMailAddress: row.eMailAddress||'', phoneNumber1: row.phoneNumber1||'', phoneNumber2: row.phoneNumber2||'', mobilePhoneNumber: row.mobilePhoneNumber||'', faxNumber: row.faxNumber||'', priceLevel: row.priceLevel||'none', discountInPercent: Number(row.discountInPercent||0), vat: row.vat||'', eori: row.eori||'', commonText1: row.commonText1||'', commonText2: row.commonText2||'', commonNumber1: Number(row.commonNumber1||0), commonNumber2: Number(row.commonNumber2||0), additional1: row.additional1||'', additional2: row.additional2||'', assignedArticles,
+        addresses:[{ name1: row.addr_name1||'', name2: row.addr_name2||'', name3: row.addr_name3||'', houseNumber: row.addr_houseNumber||'', street1: row.addr_street1||'', street2: row.addr_street2||'', postOfficeBox: row.addr_postOfficeBox||'', city: row.addr_city||'', zipCode: row.addr_zipCode||'', stateCode: row.addr_stateCode||'', country: row.addr_country||'', type: row.addr_type||'billingAddress', isDefault: !!row.addr_isDefault, isMainAddress: !!row.addr_isMainAddress }]
+      };
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json' });
+      // Check existence
+      let exists=false; try{ await this.http.get(`${this.apiConfig.getBaseUrl()}/api/v1/customers/${encodeURIComponent(payload.customerNumber)}`, { headers }).toPromise(); exists=true; }catch{ exists=false; }
+      if(!exists){ await this.http.post(`${this.apiConfig.getBaseUrl()}/api/v1/customers`, payload, { headers }).toPromise(); row.status='created'; }
+      else { await this.http.put(`${this.apiConfig.getBaseUrl()}/api/v1/customers/${encodeURIComponent(payload.customerNumber)}`, payload, { headers }).toPromise(); row.status='updated'; }
+    }catch(e:any){
+      row.status='failed';
+      row.error = e?.error?.title || e?.message || 'error';
+      // While import fails, clear Create Customer debug panel to keep only relevant info per request
+      try { this.debugApiResponses.createCustomer = null; } catch {}
+    }
+  }
+  private cuUpdateImportProgress(){ const rows=this.cuImportRows(); const processed=rows.filter(r=>r.status).length; const created=rows.filter(r=>r.status==='created').length; const updated=rows.filter(r=>r.status==='updated').length; const success=created+updated; const failed=rows.filter(r=>r.status==='failed').length; const percent=rows.length? Math.round(processed*100/rows.length):0; const done=processed===rows.length || this.cuImportCancelled; this.cuImportProgress.set({processed, success, created, updated, failed, percent, done}); if(done) this.cuFinishImport(); }
+  private cuFinishImport(){ this.cuImportState.set({open:true, step:'done'}); }
+  cuDownloadImportErrors(){ const errs=this.cuImportRows().filter(r=>r.status==='failed'); if(!errs.length) return; const header='line,customerNumber,customerName,error\n'; const body=errs.map(r=>`${r.line},"${r.customerNumber}","${(r.customerName||'').replace(/"/g,'""')}","${(r.error||'').replace(/"/g,'""')}"`).join('\n'); const blob=new Blob([header+body],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='customers-import-errors.csv'; a.click(); URL.revokeObjectURL(url); }
   // Static Text handlers (placeholder logic)
   updateStaticTextNumber(ev: Event){
     const val = +(ev.target as HTMLInputElement).value;

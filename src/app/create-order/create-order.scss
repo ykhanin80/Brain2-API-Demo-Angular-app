@@ -308,3 +308,57 @@
     }
   }
 }
+
+/* Debug panel for Create Order */
+.co-debug-section {
+  margin-top: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-left: 4px solid #6c757d;
+
+  .co-debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    h3 { margin: 0; color:#495057; font-size:1.15rem; font-weight:600; }
+    .co-debug-actions { display:flex; gap:0.5rem; }
+  }
+
+  .co-debug-body {
+    &.collapsed { display: none; }
+
+    .co-debug-tabs {
+      display: flex;
+      gap: .5rem;
+      border-bottom: 2px solid #e9ecef;
+      margin-bottom: 0.75rem;
+      .co-debug-tab {
+        padding: 0.6rem 0.9rem;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-weight: 500;
+        color:#6c757d;
+        transition: all .2s;
+        &:hover { color:#495057; background:#f8f9fa; }
+        &.active { color:#007bff; border-bottom-color:#007bff; background:#e7f3ff; }
+      }
+    }
+
+    .co-debug-panel {
+      h4 { margin:0 0 .5rem 0; color:#343a40; font-size:1rem; font-weight:600; }
+      pre { background:#f8f9fa; border:1px solid #e9ecef; border-radius:6px; padding:1rem; max-height:360px; overflow:auto; white-space: pre-wrap; word-break: break-word; color:#495057; font-family:'Courier New', monospace; font-size:.875rem; }
+    }
+  }
+}
+
+/* Dark theme overrides */
+:host-context(body.dark-theme) .co-debug-section { background:#1f252c; border-color:#303841; box-shadow:0 4px 16px rgba(0,0,0,.55); }
+:host-context(body.dark-theme) .co-debug-section h3 { color:#cdd5dd; }
+:host-context(body.dark-theme) .co-debug-section .co-debug-tab { background:#2a3036; border-color:#3a434d; color:#9aa4b1; }
+:host-context(body.dark-theme) .co-debug-section .co-debug-tab.active { background:#1976d2; border-color:#1976d2; color:#fff; }
+:host-context(body.dark-theme) .co-debug-section pre { background:#232a31; border-color:#303841; color:#c8d1db; }

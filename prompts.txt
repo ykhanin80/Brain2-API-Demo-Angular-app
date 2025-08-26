@@ -1,0 +1,218 @@
+----------
+add extension to display all Customers with pagination
+----------
+PLU Exceptions
+/api/v1/article-exceptions/articleNumber/{articleNumber}
+
+-----------
+
+
+to edit customer - use this endpoint
+/api/v1/customers/{customerNumber}
+[
+  {
+    "op": "replace",
+    "path": "/customerName",
+    "value": "John"
+  }
+]
+
+Get a customer per #
+/api/v1/customers/{customerNumber}
+
+------------------------
+
+Capture page:
+add button Get Cumulative Package Records to the left from "Get Package Records" use same filters on this page. Only 'Take' parameter is mandatory.
+endpoint: /api/v1/cumulated-package-records
+example request:
+http://localhost:9997/api/v1/cumulated-package-records?startTimestamp=2025-08-25T00%3A00%3A00&take=10&sort=StartTimestamp-%2CArticleNumber%2B
+
+Parameters: Parameters
+Cancel
+Name	Description
+articleNumber
+string
+(query)
+Filter by article number
+
+articleNumber
+deviceName
+string
+(query)
+Filter by device name
+
+deviceName
+startTimestamp
+string($date-time)
+(query)
+Filter by date. Get all records with StartTimestamp greater than or equal to this date. Format: yyyy-MM-ddTHH:mm:ss
+
+2025-08-25T00:00:00
+endTimestamp
+string($date-time)
+(query)
+Filter by date. Get all records with EndTimestamp less than or equal to this date. Format: yyyy-MM-ddTHH:mm:ss
+
+endTimestamp
+skip
+integer($int32)
+(query)
+Offset for pagination
+
+skip
+take *
+integer($int32)
+(query)
+Max. number of returned records
+
+10
+sort
+string
+(query)
+Comma-separated list of properties which will be used for sorting. The sort-direction can be controlled for each property by a trailing + (ascending) or - (descending).
+
+StartTimestamp-,ArticleNumber+
+
+ Display table above Package Record result table. Use all columns except "decimalPlaces" and "unit". add unit in parenthesis after Min, max, avg and total Weight. Round weight to the same as number of decimal places after period. 
+Response example: {
+    "startTimestamp": "2025-08-25T15:59:27.4566667",
+    "endTimestamp": "2025-08-25T16:00:26.6166667",
+    "numberOfPackages": 50,
+    "totalWeight": 25.055000000000003,
+    "averageWeight": 0.5011000000000001,
+    "minWeight": 0.474,
+    "maxWeight": 0.526,
+    "decimalPlaces": 3,
+    "unit": "lb",
+    "deviceName": "Sim",
+    "articleName": "16",
+    "articleNumber": "16"
+  },
+  {
+
+--------------
+
+to the right from Package Records button add button "Get OEE Records". use same filters up top.
+endpoint: /api/v1/oee-records
+request URL example: http://localhost:9997/api/v1/oee-records?startDate=2025-08-25T00%3A00%3A00&take=10&sort=Start-%2CArticleNumber%2B
+Parameters
+Cancel
+Name	Description
+articleNumber
+string
+(query)
+Filter by article number
+
+articleNumber
+productionLineName
+string
+(query)
+Filter by production line name
+
+productionLineName
+masterDeviceName
+string
+(query)
+Filter by device name
+
+masterDeviceName
+articleName
+string
+(query)
+Filter by article name
+
+articleName
+startDate
+string($date-time)
+(query)
+Filter by date. The start of the requested time frame. Format: yyyy-MM-ddTHH:mm:ss
+
+2025-08-25T00:00:00
+endDate
+string($date-time)
+(query)
+Filter by date. The end of the requested time frame. Format: yyyy-MM-ddTHH:mm:ss
+
+endDate
+skip
+integer($int32)
+(query)
+Offset for pagination
+
+skip
+take *
+integer($int32)
+(query)
+Max. number of returned records
+
+10
+sort
+string
+(query)
+Comma-separated list of properties which will be used for sorting. The sort-direction can be controlled for each property by a trailing + (ascending) or - (descending).
+
+Start-,ArticleNumber+
+
+
+add drop down elements: Production line using endpoint /api/v1/production-lines use tag "type" to allow to select only lines type OEE.
+
+	
+Response body
+Download
+[
+  {
+    "startDate": "2025-08-25T20:43:18.3666667",
+    "endDate": "2025-08-25T20:45:19.0533333",
+    "productionLine": {
+      "id": "e2846618-988a-476f-bfd3-04b6b1bcd101",
+      "name": "Simulation Line 1"
+    },
+    "masterDevice": {
+      "id": "631ff99f-26e8-4c2f-9b57-25496aedf0d4",
+      "name": "My GLP maxx YK"
+    },
+    "article": {
+      "name": "My Article edited",
+      "number": "11",
+      "nominalWeight": {
+        "value": 1.5,
+        "decimalPlaces": 2,
+        "unit": "lb"
+      }
+    },
+    "quality": 100,
+    "performance": 92,
+    "availability": 50,
+    "oee": 46,
+    "operatingTime": 2,
+    "netOperatingTime": 1,
+    "goodPackages": {
+      "count": 46,
+      "weight": {
+        "value": 23,
+        "decimalPlaces": 3,
+        "unit": "lb"
+      }
+    },
+    "ejectedPackages": {
+      "count": 0,
+      "weight": {
+        "value": 0,
+        "decimalPlaces": 2,
+        "unit": "lb"
+      }
+    },
+    "totalPackages": {
+      "count": 46,
+      "weight": {
+        "value": 23,
+        "decimalPlaces": 3,
+        "unit": "lb"
+      }
+    }
+  }
+]
+
+
+

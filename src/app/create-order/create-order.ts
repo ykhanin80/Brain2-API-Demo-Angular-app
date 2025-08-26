@@ -158,6 +158,14 @@ export class CreateOrder implements OnInit {
   createdOrder: any = null;
   isLoading = false;
   errorMessage = '';
+
+  // Debug state
+  debugCollapsed = false;
+  activeDebugTab: 'articles' | 'create' = 'articles';
+  debug = {
+    articles: [] as Array<{ time: string; request: any; response?: any; error?: any }>,
+    create: [] as Array<{ time: string; request: any; response?: any; error?: any }>
+  };
   
   ngOnInit(): void {
     this.loadArticles();
@@ -168,17 +176,28 @@ export class CreateOrder implements OnInit {
     this.articlesError = '';
     
   const url = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler?skip=0&take=100&sort=Number%2B`;
+    const startedAt = new Date().toISOString();
     
     this.http.get<Article[]>(url).subscribe({
       next: (articles) => {
         this.isLoadingArticles = false;
         this.articles = articles;
         console.log('Articles loaded:', articles);
+        this.debug.articles.push({
+          time: startedAt,
+          request: { method: 'GET', url },
+          response: articles
+        });
       },
       error: (error) => {
         this.isLoadingArticles = false;
         this.articlesError = 'Failed to load articles';
         console.error('Failed to load articles:', error);
+        this.debug.articles.push({
+          time: startedAt,
+          request: { method: 'GET', url },
+          error
+        });
       }
     });
   }
@@ -191,6 +210,11 @@ export class CreateOrder implements OnInit {
     
     if (!this.orderData.articleNumber.trim()) {
       this.errorMessage = 'Please enter an article number';
+      return;
+    }
+
+    if (!this.orderData.displayText.trim()) {
+      this.errorMessage = 'Please enter a display text';
       return;
     }
     
@@ -217,17 +241,32 @@ export class CreateOrder implements OnInit {
     this.orderData.creationDate = new Date().toISOString();
     
   const url = `${this.apiConfig.getBaseUrl()}/api/v1/order-processing/orders`;
+    const startedAt = new Date().toISOString();
+    this.debug.create.push({
+      time: startedAt,
+      request: { method: 'POST', url, body: this.orderData }
+    });
     
     this.http.post(url, this.orderData).subscribe({
       next: (response) => {
         this.isLoading = false;
         this.createdOrder = response;
         console.log('Order created successfully:', response);
+        this.debug.create.push({
+          time: new Date().toISOString(),
+          request: { method: 'POST', url },
+          response
+        });
       },
       error: (error) => {
         this.isLoading = false;
         this.errorMessage = this.getErrorMessage(error);
         console.error('Failed to create order:', error);
+        this.debug.create.push({
+          time: new Date().toISOString(),
+          request: { method: 'POST', url },
+          error
+        });
       }
     });
   }
@@ -302,5 +341,11 @@ export class CreateOrder implements OnInit {
     } else {
       return 'An unexpected error occurred while creating the order';
     }
+  }
+
+  // Debug helpers
+  clearDebug(): void {
+    this.debug.articles = [];
+    this.debug.create = [];
   }
 }

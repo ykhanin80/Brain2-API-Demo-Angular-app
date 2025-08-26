@@ -2,6 +2,7 @@
   <!-- List View -->
   <div *ngIf="currentView() === 'list'" class="dm-card">
     <!-- Header -->
+    <!-- Header -->
     <div class="header">
       <div class="header-left">
         <h1>Data Maintenance</h1>
@@ -9,6 +10,8 @@
         <div class="sub-tabs">
           <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
+          <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
+          <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
         </div>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='articles'">
@@ -38,76 +41,29 @@
           <i class="icon-download"></i>
           Download CSV Template
         </button>
-  <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
+        <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
         <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
-        <button class="btn btn-outline back-btn" (click)="goToDashboard()">
-          🏠 Back to Dashboard
+        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
+      </div>
+      <div class="header-right" *ngIf="currentSubPage()==='customers'">
+        <button class="btn btn-secondary" (click)="cuOpenImportDialog()">
+          <i class="icon-upload"></i>
+          Import Customers from CSV
         </button>
+        <button class="btn btn-secondary" (click)="cuDownloadImportTemplate()">
+          <i class="icon-download"></i>
+          Download CSV Template
+        </button>
+        <button class="btn btn-primary" [disabled]="isLoading()" (click)="openAddCustomerModal()">
+          <i class="icon-plus"></i>
+          Add Customer
+        </button>
+        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
-  <!-- Full-width Import Panel (document flow, full-bleed) -->
-    <div class="import-inline full-bleed global-fixed" *ngIf="importState().open">
-      <div class="import-inline-header">
-        <strong>Import Articles</strong>
-        <div class="import-inline-tabs">
-          <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto Map</button>
-          <button class="btn btn-small btn-primary" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()" *ngIf="importState().step==='mapping'">Preview</button>
-          <button class="btn btn-small" (click)="backToMapping()" *ngIf="importState().step==='preview'">Back</button>
-          <button class="btn btn-small btn-primary" (click)="startImport()" *ngIf="importState().step==='preview' && importRows().length>0 && invalidImportRowCount()!==importRows().length">Start Import</button>
-        </div>
-        <button class="btn btn-small" (click)="closeImportDialog()">×</button>
-      </div>
-      <div class="import-scroll">
-      <div class="import-inline-body" *ngIf="importState().step === 'select'">
-        <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)" />
-        <div class="hint">Choose CSV (max 5000 rows preview).</div>
-      </div>
-      <div class="import-inline-body" *ngIf="importState().step === 'mapping'">
-        <table class="mapping-table wide">
-          <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let h of importHeaders()">
-              <td>{{ h }}</td>
-              <td>
-                <select (change)="updateImportMapping(h, $any($event.target).value)" [class.mapped]="importMapping()[h]">
-                  <option value="" [selected]="!importMapping()[h]">-- ignore --</option>
-                  <option *ngFor="let def of importFieldDefs" [value]="def.key" [selected]="importMapping()[h]===def.key">{{ def.label }}</option>
-                </select>
-              </td>
-              <td>{{ importRawRows()[0] ? importRawRows()[0][h] : '' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="import-inline-body" *ngIf="importState().step === 'preview'">
-        <div class="preview-head">
-          <span>{{ importRows().length }} rows (invalid {{ invalidImportRowCount() }})</span>
-        </div>
-        <table class="preview-table wide">
-          <thead><tr><th>#</th><th *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ h }}</th><th>error</th></tr></thead>
-          <tbody>
-            <tr *ngFor="let r of importRows().slice(0,100)">
-              <td>{{ r.line }}</td>
-              <td *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ r.original[h] }}</td>
-              <td class="err">{{ r.error }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="import-inline-body" *ngIf="importState().step === 'running'">
-        <div>{{ importProgress().processed }}/{{ importRows().length }} (ok {{ importProgress().success }}, failed {{ importProgress().failed }})</div>
-        <div class="progress-bar"><div class="bar" [style.width]="importProgress().percent + '%'" ></div></div>
-        <button class="btn btn-small" (click)="cancelImport()" [disabled]="importProgress().done">Cancel</button>
-      </div>
-      <div class="import-inline-body" *ngIf="importState().step === 'done'">
-    <div>Done: {{ importProgress().created }} created, {{ importProgress().updated }} updated, {{ importProgress().failed }} failed.</div>
-        <div class="import-done-actions">
-          <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="importProgress().failed===0">Errors CSV</button>
-          <button class="btn btn-small btn-primary" (click)="closeImportDialog()">Close</button>
-        </div>
+      <div class="header-right" *ngIf="currentSubPage()==='devices'">
+        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
   </div>
-    </div>
-    </div>
 
   <!-- Articles Section -->
   <ng-container *ngIf="currentSubPage()==='articles'">
@@ -155,6 +111,223 @@
     </div>
   </div>
   </ng-container>
+
+  <!-- Customers Section -->
+    <ng-container *ngIf="currentSubPage()==='customers'">
+      <div class="dm-placeholder">
+        <h2>👥 Customers</h2>
+        <p>Use the Add Customer button to open the dialog, edit values, then POST to API.</p>
+      </div>
+
+      <!-- Add Customer Modal -->
+      <div class="import-inline full-bleed global-fixed" *ngIf="customerModalOpen()">
+        <div class="import-inline-header">
+          <strong>Add Customer</strong>
+          <div class="import-inline-tabs"></div>
+          <button class="btn btn-small" (click)="closeAddCustomerModal()">×</button>
+        </div>
+        <div class="import-scroll">
+          <div class="import-inline-body">
+            <form (submit)="$event.preventDefault(); addCustomer();">
+              <div class="grid two-cols gap">
+                <label>Customer Number
+                  <input type="text" [value]="customerForm().customerNumber" (input)="updateCustomerText('customerNumber', $event)" />
+                </label>
+                <label>Customer Name
+                  <input type="text" [value]="customerForm().customerName" (input)="updateCustomerText('customerName', $event)" />
+                </label>
+                <label>Title
+                  <input type="text" [value]="customerForm().title" (input)="updateCustomerText('title', $event)" />
+                </label>
+                <label>First Name
+                  <input type="text" [value]="customerForm().firstName" (input)="updateCustomerText('firstName', $event)" />
+                </label>
+                <label>Last Name
+                  <input type="text" [value]="customerForm().lastName" (input)="updateCustomerText('lastName', $event)" />
+                </label>
+                <label>Email
+                  <input type="email" [value]="customerForm().eMailAddress" (input)="updateCustomerText('eMailAddress', $event)" />
+                </label>
+                <label>Phone 1
+                  <input type="text" [value]="customerForm().phoneNumber1" (input)="updateCustomerText('phoneNumber1', $event)" />
+                </label>
+                <label>Phone 2
+                  <input type="text" [value]="customerForm().phoneNumber2" (input)="updateCustomerText('phoneNumber2', $event)" />
+                </label>
+                <label>Mobile
+                  <input type="text" [value]="customerForm().mobilePhoneNumber" (input)="updateCustomerText('mobilePhoneNumber', $event)" />
+                </label>
+                <label>Fax
+                  <input type="text" [value]="customerForm().faxNumber" (input)="updateCustomerText('faxNumber', $event)" />
+                </label>
+                <label>Price Level
+                  <input type="text" [value]="customerForm().priceLevel" (input)="updateCustomerText('priceLevel', $event)" />
+                </label>
+                <label>Discount (%)
+                  <input type="number" min="0" max="100" step="1" [value]="customerForm().discountInPercent" (input)="updateCustomerNumber('discountInPercent', $event)" />
+                </label>
+                <label>VAT
+                  <input type="text" [value]="customerForm().vat" (input)="updateCustomerText('vat', $event)" />
+                </label>
+                <label>EORI
+                  <input type="text" [value]="customerForm().eori" (input)="updateCustomerText('eori', $event)" />
+                </label>
+                <label>Common Text 1
+                  <input type="text" [value]="customerForm().commonText1" (input)="updateCustomerText('commonText1', $event)" />
+                </label>
+                <label>Common Text 2
+                  <input type="text" [value]="customerForm().commonText2" (input)="updateCustomerText('commonText2', $event)" />
+                </label>
+                <label>Common Number 1
+                  <input type="number" [value]="customerForm().commonNumber1" (input)="updateCustomerNumber('commonNumber1', $event)" />
+                </label>
+                <label>Common Number 2
+                  <input type="number" [value]="customerForm().commonNumber2" (input)="updateCustomerNumber('commonNumber2', $event)" />
+                </label>
+                <label>Additional 1
+                  <input type="text" [value]="customerForm().additional1" (input)="updateCustomerText('additional1', $event)" />
+                </label>
+                <label>Additional 2
+                  <input type="text" [value]="customerForm().additional2" (input)="updateCustomerText('additional2', $event)" />
+                </label>
+                <label>Assigned Articles (CSV)
+                  <input type="text" [value]="customerForm().assignedArticlesCsv" (input)="updateCustomerText('assignedArticlesCsv', $event)" />
+                </label>
+              </div>
+
+              <h4 class="mt">Address</h4>
+              <div class="grid two-cols gap">
+                <label>Name 1
+                  <input type="text" [value]="customerForm().addr_name1" (input)="updateCustomerText('addr_name1', $event)" />
+                </label>
+                <label>Name 2
+                  <input type="text" [value]="customerForm().addr_name2" (input)="updateCustomerText('addr_name2', $event)" />
+                </label>
+                <label>Name 3
+                  <input type="text" [value]="customerForm().addr_name3" (input)="updateCustomerText('addr_name3', $event)" />
+                </label>
+                <label>House No.
+                  <input type="text" [value]="customerForm().addr_houseNumber" (input)="updateCustomerText('addr_houseNumber', $event)" />
+                </label>
+                <label>Street 1
+                  <input type="text" [value]="customerForm().addr_street1" (input)="updateCustomerText('addr_street1', $event)" />
+                </label>
+                <label>Street 2
+                  <input type="text" [value]="customerForm().addr_street2" (input)="updateCustomerText('addr_street2', $event)" />
+                </label>
+                <label>PO Box
+                  <input type="text" [value]="customerForm().addr_postOfficeBox" (input)="updateCustomerText('addr_postOfficeBox', $event)" />
+                </label>
+                <label>City
+                  <input type="text" [value]="customerForm().addr_city" (input)="updateCustomerText('addr_city', $event)" />
+                </label>
+                <label>ZIP
+                  <input type="text" [value]="customerForm().addr_zipCode" (input)="updateCustomerText('addr_zipCode', $event)" />
+                </label>
+                <label>State Code
+                  <input type="text" [value]="customerForm().addr_stateCode" (input)="updateCustomerText('addr_stateCode', $event)" />
+                </label>
+                <label>Country
+                  <input type="text" [value]="customerForm().addr_country" (input)="updateCustomerText('addr_country', $event)" />
+                </label>
+                <label>Type
+                  <input type="text" [value]="customerForm().addr_type" (input)="updateCustomerText('addr_type', $event)" />
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" [checked]="customerForm().addr_isDefault" (change)="updateCustomerChecked('addr_isDefault', $event)" /> Default
+                </label>
+                <label class="checkbox">
+                  <input type="checkbox" [checked]="customerForm().addr_isMainAddress" (change)="updateCustomerChecked('addr_isMainAddress', $event)" /> Main
+                </label>
+              </div>
+
+              <div class="preview-actions mt">
+                <button type="button" class="btn" (click)="closeAddCustomerModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="isLoading()">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Customers Import Panel -->
+      <div class="import-inline full-bleed global-fixed" *ngIf="cuImportState().open">
+        <div class="import-inline-header">
+          <strong>Import Customers</strong>
+          <div class="import-inline-tabs">
+            <button class="btn btn-small" (click)="cuAutoMapImportHeaders()">Auto Map</button>
+            <button class="btn btn-small btn-primary" [disabled]="!cuRequiredImportFieldsMapped()" (click)="cuGoToPreviewFromMapping()" *ngIf="cuImportState().step==='mapping'">Preview</button>
+            <button class="btn btn-small" (click)="cuBackToMapping()" *ngIf="cuImportState().step==='preview'">Back</button>
+            <button class="btn btn-small btn-primary" (click)="cuStartImport()" *ngIf="cuImportState().step==='preview' && cuImportRows().length>0 && cuInvalidImportRowCount()!==cuImportRows().length">Start Import</button>
+          </div>
+          <button class="btn btn-small" (click)="cuCloseImportDialog()">×</button>
+        </div>
+        <div class="import-scroll">
+          <div class="import-inline-body" *ngIf="cuImportState().step === 'select'">
+            <input type="file" accept=".csv,text/csv" (change)="onCuImportFileSelected($event)" />
+            <div class="hint">Choose CSV (max 5000 rows preview).</div>
+          </div>
+          <div class="import-inline-body" *ngIf="cuImportState().step === 'mapping'">
+            <table class="mapping-table wide">
+              <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let h of cuImportHeaders()">
+                  <td>{{ h }}</td>
+                  <td>
+                    <select (change)="cuUpdateImportMapping(h, $any($event.target).value)" [class.mapped]="cuImportMapping()[h]">
+                      <option value="" [selected]="!cuImportMapping()[h]">-- ignore --</option>
+                      <option *ngFor="let def of cuImportFieldDefs" [value]="def.key" [selected]="cuImportMapping()[h]===def.key">{{ def.label }}</option>
+                    </select>
+                  </td>
+                  <td>{{ cuImportRawRows()[0] ? cuImportRawRows()[0][h] : '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="import-inline-body" *ngIf="cuImportState().step === 'preview'">
+            <div class="preview-head">
+              <span>{{ cuImportRows().length }} rows (invalid {{ cuInvalidImportRowCount() }})</span>
+            </div>
+            <table class="preview-table wide">
+              <thead><tr><th>#</th><th>Customer Number</th><th>Name</th><th>Email</th><th>City</th><th>ZIP</th><th>error</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let r of cuImportRows().slice(0,100)">
+                  <td>{{ r.line }}</td>
+                  <td>{{ r.customerNumber }}</td>
+                  <td>{{ r.customerName }}</td>
+                  <td>{{ r.eMailAddress }}</td>
+                  <td>{{ r.addr_city }}</td>
+                  <td>{{ r.addr_zipCode }}</td>
+                  <td class="err">{{ r.error }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="import-inline-body" *ngIf="cuImportState().step === 'running'">
+            <div>{{ cuImportProgress().processed }}/{{ cuImportRows().length }} (ok {{ cuImportProgress().success }}, failed {{ cuImportProgress().failed }}, created {{ cuImportProgress().created }}, updated {{ cuImportProgress().updated }})</div>
+            <div class="progress-bar"><div class="bar" [style.width]="cuImportProgress().percent + '%'" ></div></div>
+            <button class="btn btn-small" (click)="cuCancelImport()" [disabled]="cuImportProgress().done">Cancel</button>
+          </div>
+          <div class="import-inline-body" *ngIf="cuImportState().step === 'done'">
+            <div>Done: {{ cuImportProgress().created }} created, {{ cuImportProgress().updated }} updated, {{ cuImportProgress().failed }} failed.</div>
+            <div class="import-done-actions">
+              <button class="btn btn-small" (click)="cuDownloadImportErrors()" [disabled]="cuImportProgress().failed===0">Errors CSV</button>
+              <button class="btn btn-small btn-primary" (click)="cuCloseImportDialog()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+
+
+  <!-- Devices Section (empty placeholder) -->
+    <ng-container *ngIf="currentSubPage()==='devices'">
+      <div class="dm-placeholder">
+        <h2>🖥️ Devices</h2>
+        <p>This section is under construction.</p>
+      </div>
+    </ng-container>
 
   <!-- Static Texts Section -->
   <div *ngIf="currentSubPage()==='static-texts'" class="static-texts dm-card">
@@ -244,8 +417,8 @@
               [style.left]="getOverlayPosition(item.number).x + 'px'"
               [style.top]="getOverlayPosition(item.number).y + 'px'"
               [ngClass]="{
-                'align-right': getOverlayPosition(item.number)?.align === 'right',
-                'align-center': getOverlayPosition(item.number)?.align === 'center'
+                'align-right': getOverlayPosition(item.number).align === 'right',
+                'align-center': getOverlayPosition(item.number).align === 'center'
               }"
               [attr.data-item]="item.number">
               <input maxlength="8"
@@ -253,9 +426,9 @@
                 [ngModelOptions]="{standalone: true}" 
                 [placeholder]="'Text ' + item.number"
                 [ngClass]="item.fontClass + ' overlay-text-input'"
-                [style.width.px]="getOverlayPosition(item.number)?.width || 60"
-                [style.minWidth.px]="getOverlayPosition(item.number)?.width || 60"
-                [style.maxWidth.px]="getOverlayPosition(item.number)?.width || 60"
+                [style.width.px]="getOverlayPosition(item.number).width || 60"
+                [style.minWidth.px]="getOverlayPosition(item.number).width || 60"
+                [style.maxWidth.px]="getOverlayPosition(item.number).width || 60"
                 style="color: #000 !important; background: #fff !important; opacity: 1 !important; display: inline-block; margin-bottom: 8px;" />
               <span class="resize-handle" (mousedown)="startResize($event, item.number)" (touchstart)="startResize($event, item.number)"></span>
               
@@ -412,6 +585,70 @@
             Next
             <i class="icon-chevron-right"></i>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full-width Import Panel (document flow, full-bleed) -->
+    <div class="import-inline full-bleed global-fixed" *ngIf="importState().open">
+      <div class="import-inline-header">
+        <strong>Import Articles</strong>
+        <div class="import-inline-tabs">
+          <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto Map</button>
+          <button class="btn btn-small btn-primary" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()" *ngIf="importState().step==='mapping'">Preview</button>
+          <button class="btn btn-small" (click)="backToMapping()" *ngIf="importState().step==='preview'">Back</button>
+          <button class="btn btn-small btn-primary" (click)="startImport()" *ngIf="importState().step==='preview' && importRows().length>0 && invalidImportRowCount()!==importRows().length">Start Import</button>
+        </div>
+        <button class="btn btn-small" (click)="closeImportDialog()">×</button>
+      </div>
+      <div class="import-scroll">
+        <div class="import-inline-body" *ngIf="importState().step === 'select'">
+          <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)" />
+          <div class="hint">Choose CSV (max 5000 rows preview).</div>
+        </div>
+        <div class="import-inline-body" *ngIf="importState().step === 'mapping'">
+          <table class="mapping-table wide">
+            <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let h of importHeaders()">
+                <td>{{ h }}</td>
+                <td>
+                  <select (change)="updateImportMapping(h, $any($event.target).value)" [class.mapped]="importMapping()[h]">
+                    <option value="" [selected]="!importMapping()[h]">-- ignore --</option>
+                    <option *ngFor="let def of importFieldDefs" [value]="def.key" [selected]="importMapping()[h]===def.key">{{ def.label }}</option>
+                  </select>
+                </td>
+                <td>{{ importRawRows()[0] ? importRawRows()[0][h] : '' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="import-inline-body" *ngIf="importState().step === 'preview'">
+          <div class="preview-head">
+            <span>{{ importRows().length }} rows (invalid {{ invalidImportRowCount() }})</span>
+          </div>
+          <table class="preview-table wide">
+            <thead><tr><th>#</th><th *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ h }}</th><th>error</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let r of importRows().slice(0,100)">
+                <td>{{ r.line }}</td>
+                <td *ngFor="let h of importHeaders()" [ngClass]="{'wide-text-field': isWideTextFieldHeader(h)}">{{ r.original[h] }}</td>
+                <td class="err">{{ r.error }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="import-inline-body" *ngIf="importState().step === 'running'">
+          <div>{{ importProgress().processed }}/{{ importRows().length }} (ok {{ importProgress().success }}, failed {{ importProgress().failed }})</div>
+          <div class="progress-bar"><div class="bar" [style.width]="importProgress().percent + '%'" ></div></div>
+          <button class="btn btn-small" (click)="cancelImport()" [disabled]="importProgress().done">Cancel</button>
+        </div>
+        <div class="import-inline-body" *ngIf="importState().step === 'done'">
+          <div>Done: {{ importProgress().created }} created, {{ importProgress().updated }} updated, {{ importProgress().failed }} failed.</div>
+          <div class="import-done-actions">
+            <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="importProgress().failed===0">Errors CSV</button>
+            <button class="btn btn-small btn-primary" (click)="closeImportDialog()">Close</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1252,126 +1489,29 @@
     <div class="debug-container">
       <div class="debug-tabs">
         <button 
+          *ngIf="currentSubPage()==='customers'"
           type="button" 
           class="debug-tab" 
-          [class.active]="activeDebugTab === 'list'"
-          (click)="activeDebugTab = 'list'"
-          [style.background]="isDarkMode() ? (activeDebugTab === 'list' ? '#1976d2' : '#2a3036') : null"
-          [style.border-color]="isDarkMode() ? (activeDebugTab === 'list' ? '#1976d2' : '#3a434d') : null" 
-          [style.color]="isDarkMode() ? (activeDebugTab === 'list' ? '#fff' : '#9aa4b1') : null"
-        >
-          List Articles Response
-        </button>
-        <button 
-          type="button" 
-          class="debug-tab" 
-          [class.active]="activeDebugTab === 'get'"
-          (click)="activeDebugTab = 'get'"
-          [style.background]="isDarkMode() ? (activeDebugTab === 'get' ? '#1976d2' : '#2a3036') : null"
-          [style.border-color]="isDarkMode() ? (activeDebugTab === 'get' ? '#1976d2' : '#3a434d') : null" 
-          [style.color]="isDarkMode() ? (activeDebugTab === 'get' ? '#fff' : '#9aa4b1') : null"
-        >
-          Get Article Response
-        </button>
-        <button 
-          type="button" 
-          class="debug-tab" 
-          [class.active]="activeDebugTab === 'create'"
-          (click)="activeDebugTab = 'create'"
-          [style.background]="isDarkMode() ? (activeDebugTab === 'create' ? '#1976d2' : '#2a3036') : null"
-          [style.border-color]="isDarkMode() ? (activeDebugTab === 'create' ? '#1976d2' : '#3a434d') : null" 
-          [style.color]="isDarkMode() ? (activeDebugTab === 'create' ? '#fff' : '#9aa4b1') : null"
-        >
-          Create Article Response
-        </button>
-        <button 
-          type="button" 
-          class="debug-tab" 
-          [class.active]="activeDebugTab === 'update'"
-          (click)="activeDebugTab = 'update'"
-          [style.background]="isDarkMode() ? (activeDebugTab === 'update' ? '#1976d2' : '#2a3036') : null"
-          [style.border-color]="isDarkMode() ? (activeDebugTab === 'update' ? '#1976d2' : '#3a434d') : null" 
-          [style.color]="isDarkMode() ? (activeDebugTab === 'update' ? '#fff' : '#9aa4b1') : null"
-        >
-          Update Article Response
-        </button>
-        <button 
-          type="button" 
-          class="debug-tab" 
-          [class.active]="activeDebugTab === 'delete'"
-          (click)="activeDebugTab = 'delete'"
-          [style.background]="isDarkMode() ? (activeDebugTab === 'delete' ? '#1976d2' : '#2a3036') : null"
-          [style.border-color]="isDarkMode() ? (activeDebugTab === 'delete' ? '#1976d2' : '#3a434d') : null" 
-          [style.color]="isDarkMode() ? (activeDebugTab === 'delete' ? '#fff' : '#9aa4b1') : null"
-        >
-          Delete Article Response
-        </button>
+          [class.active]="activeDebugTab === 'createCustomer'"
+          (click)="activeDebugTab = 'createCustomer'"
+          [style.background]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#2a3036') : null"
+          [style.border-color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#3a434d') : null" 
+          [style.color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#fff' : '#9aa4b1') : null"
+        >Create Customer Response</button>
       </div>
-      
+
       <div class="debug-content" [class.collapsed]="jsonCollapsed()">
-        <div *ngIf="activeDebugTab === 'list'" class="debug-panel"
+        <div *ngIf="activeDebugTab === 'createCustomer' && currentSubPage()==='customers'" class="debug-panel"
              [style.background]="isDarkMode() ? '#262d34' : null"
              [style.border-color]="isDarkMode() ? '#373f48' : null">
           <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Latest List Articles API Response</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">{{articles().length}} articles loaded</small>
-          </div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null"
-               [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.listArticles | json}}</pre>
-        </div>
-
-        <div *ngIf="activeDebugTab === 'get'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null"
-             [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get Article by Number API Response</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">Single article details</small>
-          </div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null"
-               [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.getArticle | json}}</pre>
-        </div>
-
-        <div *ngIf="activeDebugTab === 'create'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null"
-             [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create Article API Response</h4>
+            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create Customer API Response</h4>
             <small [style.color]="isDarkMode() ? '#9aa4b1' : null">POST request details</small>
           </div>
           <pre *ngIf="!jsonCollapsed()" class="debug-json"
                [style.background]="isDarkMode() ? '#10161b' : null"
                [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.createArticle | json}}</pre>
-        </div>
-
-        <div *ngIf="activeDebugTab === 'update'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null"
-             [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Update Article API Response</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">PATCH request details</small>
-          </div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null"
-               [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.updateArticle | json}}</pre>
-        </div>
-
-        <div *ngIf="activeDebugTab === 'delete'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null"
-             [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Delete Article API Response</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">DELETE request details</small>
-          </div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null"
-               [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.deleteArticle | json}}</pre>
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.createCustomer | json}}</pre>
         </div>
       </div>
     </div>
