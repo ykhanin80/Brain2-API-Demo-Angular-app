@@ -154,9 +154,6 @@ Comma-separated list of properties which will be used for sorting. The sort-dire
 
 Start-,ArticleNumber+
 
-
-add drop down elements: Production line using endpoint /api/v1/production-lines use tag "type" to allow to select only lines type OEE.
-
 	
 Response body
 Download
@@ -214,5 +211,38 @@ Download
   }
 ]
 
+----------------------
+switch (ErrFlag) 
+{
+case 0: 	{cell.Text = ("Good Package").ToString(); 		break;}
+case 1: 	{cell.Text = ("Internal Error").ToString(); 	break;}
+case 2: 	{cell.Text = ("No label / label error (printer or labeler)").ToString(); 		break;}
+case 4: 	{cell.Text = ("Package could not be weighed").ToString(); 		break;}
+case 8: 	{cell.Text = ("Package overload or underload").ToString(); 		break;}
+case 16: 	{cell.Text = ("Package contains metal").ToString(); 		break;}
+case 32: 	{cell.Text = ("Negative acknowledgement from secondary labeler").ToString(); 		break;}
+case 64: 	{cell.Text = ("Package data could not be sent").ToString(); 		break;}
+case 128: 	{cell.Text = ("Customer-specific formula error").ToString(); 		break;}
+case 256: 	{cell.Text = ("Data edited at invalid time").ToString(); 		break;}
+case 512: 	{cell.Text = ("Switched to transport").ToString(); 		break;}
+case 1024: 	{cell.Text = ("User activated ejection").ToString(); 		break;}
+case 2048: 	{cell.Text = ("Package too long/short").ToString(); 		break;}
+case 4096: 	{cell.Text = ("Separation error").ToString(); 		break;}
+case 8192: 	{cell.Text = ("Code readings returns error").ToString(); 		break;}
+case 16384: 	{cell.Text = ("Statistics report in process").ToString(); 		break;}
+case 32768: 	{cell.Text = ("Invalid package, but not cancelled as total already transmitted").ToString(); 		break;}
+case 65536: 	{cell.Text = ("Package marked invalid through external signal to 1/O unit").ToString(); 		break;}
+case 131072: 	{cell.Text = ("Data could not be activated fast enough using a scanner").ToString(); 		break;}
+case 262144: 	{cell.Text = ("RFID write fault error").ToString(); 		break;}
+case 524288: 	{cell.Text = ("TTI-error").ToString(); 		break;}
+case 1048576: 	{cell.Text = ("Logo is not available or defective").ToString(); 		break;}
+case 2097152: 	{cell.Text = ("Package could not be weighed during the teaching process").ToString(); 		break;}
+default: {cell.Text = ("Unknown Error: " + ErrFlag).ToString(); 		break;}
+}
+--------------------------
 
+Single packages error rate table:
+
+Start | Finish | Article Number | Article Name | Number of packages | Error Flag | % of total
+Min timestamp | max timestamp | Article Number | Article Name | count packages for same PLU# and same error flag| error flag description | 5 from total
 

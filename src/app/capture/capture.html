@@ -28,7 +28,7 @@
         <label for="articleNameInput">Article Name:</label>
         <input 
           id="articleNameInput"
-          type="text" 
+          type="text"
           [(ngModel)]="articleName" 
           placeholder="Enter article name"
           class="form-input"
@@ -133,6 +133,9 @@
       <div class="actions-right">
         <button class="btn btn-outline" (click)="getOeeRecords()">
           🏭 Get OEE Records
+        </button>
+        <button class="btn btn-outline" (click)="getSinglePackagesErrorRate()" title="Analyze error rate per article">
+          ⚠️ Single Packages Error Rate
         </button>
       </div>
       <button class="btn btn-secondary" (click)="clearResponse()">
@@ -343,6 +346,62 @@
           <option [value]="500">500</option>
         </select>
         <button class="btn btn-sm btn-outline" (click)="nextPackagePage()" [disabled]="!hasNext">Next</button>
+      </div>
+    </div>
+  }
+
+  <!-- Single Packages Error Rate - Grouped by Article Number -->
+  @if (lastKind === 'errorRate' && errorRateGroups && errorRateGroups.length > 0) {
+    <div class="records-section">
+      <h3>⚠️ Single Packages Error Rate</h3>
+      @for (g of errorRateGroups; track g.articleNumber) {
+        <div class="group-section">
+          <div class="group-header">
+            <div>
+              <strong>PLU:</strong> {{ g.articleNumber }} — {{ g.articleName || '—' }}
+            </div>
+            <div class="group-meta">
+              <span><strong>Start:</strong> {{ formatDate(g.start) }}</span>
+              <span><strong>Finish:</strong> {{ formatDate(g.finish) }}</span>
+              
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="records-table">
+              <thead>
+                <tr>
+                  <th>Error Flag</th>
+                  <th>Number of packages</th>
+                  <th>% of total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of g.rows; track r.errorFlag) {
+                  <tr>
+                    <td>{{ r.errorText }}</td>
+                    <td>{{ r.count }}</td>
+                    <td>{{ r.percent.toFixed(2) }} %</td>
+                  </tr>
+                }
+                <tr class="group-summary">
+                  <td class="text-right"><strong>Total:</strong></td>
+                  <td><strong>{{ g.total }}</strong></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (lastKind === 'errorRate' && (!errorRateRows || errorRateRows.length === 0) && !isLoading && isSuccess) {
+    <div class="empty-results-section">
+      <div class="empty-results-content">
+        <div class="empty-icon">📭</div>
+        <h3>No records for error rate with current filters</h3>
       </div>
     </div>
   }

@@ -35,7 +35,7 @@ export class Capture implements OnInit {
   responseData: any = null;
   lastEndpoint = '';
   lastMethod = '';
-  lastKind: '' | 'package' | 'cumulated' | 'oee' = '';
+  lastKind: '' | 'package' | 'cumulated' | 'oee' | 'errorRate' = '';
   responseStatus = '';
   isSuccess = false;
   isLoading = false;
@@ -51,6 +51,26 @@ export class Capture implements OnInit {
   
   // JSON display functionality
   isJsonExpanded = false;
+  
+  // Single Packages Error Rate view
+  errorRateRows: Array<{
+    start: string;
+    finish: string;
+    articleNumber: string;
+    articleName: string;
+    count: number;
+    errorFlag: number;
+    errorText: string;
+    percent: number;
+  }> = [];
+  errorRateGroups: Array<{
+    start: string;
+    finish: string;
+    articleNumber: string;
+    articleName: string;
+    total: number;
+    rows: Array<{ errorFlag: number; errorText: string; count: number; percent: number }>
+  }> = [];
   
   ngOnInit() {
     // Component initialization - ensure clean state
@@ -224,9 +244,28 @@ export class Capture implements OnInit {
     console.log('Making API call to:', endpoint);
     this.makeApiCall('GET', endpoint, undefined, 'oee');
   }
+  
+  // Single Packages Error Rate - fetch package records and compute aggregation
+  getSinglePackagesErrorRate(): void {
+    // Build same endpoint as getPackageRecords, but mark kind as 'errorRate'
+    this.skip = 0; // analysis from first page by default
+    let endpoint = '/api/v1/package-records';
+    const queryParams: string[] = [];
+  // For error rate analysis we want as many records as possible
+  queryParams.push('take=100000');
+    if (this.articleNumber.trim()) queryParams.push(`articleNumber=${encodeURIComponent(this.articleNumber.trim())}`);
+    if (this.articleName.trim()) queryParams.push(`articleName=${encodeURIComponent(this.articleName.trim())}`);
+    if (this.batchNumber.trim()) queryParams.push(`batchNumber=${encodeURIComponent(this.batchNumber.trim())}`);
+    if (this.orderNumber.trim()) queryParams.push(`orderNumber=${encodeURIComponent(this.orderNumber.trim())}`);
+    if (this.deviceName.trim()) queryParams.push(`deviceName=${encodeURIComponent(this.deviceName.trim())}`);
+    if (this.startDate.trim()) queryParams.push(`startDate=${encodeURIComponent(this.startDate.trim())}`);
+    if (this.endDate.trim()) queryParams.push(`endDate=${encodeURIComponent(this.endDate.trim())}`);
+    endpoint += `?${queryParams.join('&')}`;
+    this.makeApiCall('GET', endpoint, undefined, 'errorRate');
+  }
 
   // Utility Methods
-  private makeApiCall(method: string, endpoint: string, body?: any, kind?: 'package'|'cumulated'|'oee'): void {
+  private makeApiCall(method: string, endpoint: string, body?: any, kind?: 'package'|'cumulated'|'oee'|'errorRate'): void {
     this.isLoading = true;
     this.clearError();
     this.clearResponse();
@@ -281,6 +320,11 @@ export class Capture implements OnInit {
           this.cumulatedRecords = Array.isArray(response) ? response : (response ? [response] : []);
         } else if (kind === 'oee') {
           this.oeeRecords = Array.isArray(response) ? response : (response ? [response] : []);
+        } else if (kind === 'errorRate') {
+          const records = Array.isArray(response) ? response : [];
+          this.errorRateRows = this.computeErrorRateRows(records);
+          this.errorRateGroups = this.computeErrorRateGroups(records);
+          // Do not alter hasNext; analytics view is per current fetch
         } else if (endpoint.includes('/package-records')) {
           this.packageRecords = Array.isArray(response) ? response : [];
           this.hasNext = this.packageRecords.length === (this.take > 0 ? this.take : 100);
@@ -327,6 +371,8 @@ export class Capture implements OnInit {
   this.cumulatedRecords = [];
   this.oeeRecords = [];
     this.packageRecords = [];
+  this.errorRateRows = [];
+  this.errorRateGroups = [];
     this.lastEndpoint = '';
     this.lastMethod = '';
   this.lastKind = '';
@@ -619,5 +665,148 @@ export class Capture implements OnInit {
     const flag = this.extractErrorFlag(record);
     if (flag === null) return '';
     return this.mapErrorFlagToTexts(flag).join(' + ');
+  }
+
+  private computeErrorRateRows(records: any[]): Array<{start:string;finish:string;articleNumber:string;articleName:string;count:number;errorFlag:number;errorText:string;percent:number;}> {
+    type Group = {
+      articleNumber: string;
+      articleName: string;
+      minTs: number;
+      maxTs: number;
+      total: number;
+      byFlag: Map<number, number>;
+    };
+    const groups = new Map<string, Group>();
+    for (const r of records || []) {
+      const artNum: string = r.articleNumber ?? '';
+      const artName: string = r.articleName ?? '';
+      const tsStr: string = r.timestamp ?? '';
+      const ts = tsStr ? new Date(tsStr).getTime() : NaN;
+      let flag = this.extractErrorFlag(r);
+      if (flag === null) flag = 0; // treat missing as Good Package
+      const key = artNum;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          articleNumber: artNum,
+          articleName: artName,
+          minTs: isFinite(ts) ? ts : Number.POSITIVE_INFINITY,
+          maxTs: isFinite(ts) ? ts : Number.NEGATIVE_INFINITY,
+          total: 0,
+          byFlag: new Map<number, number>()
+        });
+      }
+      const g = groups.get(key)!;
+      g.total += 1;
+      if (isFinite(ts)) {
+        if (ts < g.minTs) g.minTs = ts;
+        if (ts > g.maxTs) g.maxTs = ts;
+      }
+      g.byFlag.set(flag, (g.byFlag.get(flag) || 0) + 1);
+    }
+
+    const rows: Array<{start:string;finish:string;articleNumber:string;articleName:string;count:number;errorFlag:number;errorText:string;percent:number;}> = [];
+    for (const g of groups.values()) {
+      const start = isFinite(g.minTs) ? new Date(g.minTs).toISOString() : '';
+      const finish = isFinite(g.maxTs) ? new Date(g.maxTs).toISOString() : '';
+      // Ensure a good package row exists even if upstream omitted explicit 0 flags
+      const nonZeroSum = Array.from(g.byFlag.entries()).reduce((acc, [f, c]) => f !== 0 ? acc + c : acc, 0);
+      const goodExisting = g.byFlag.get(0) || 0;
+      const goodComputed = Math.max(0, g.total - nonZeroSum);
+      if (goodExisting === 0 && goodComputed > 0) {
+        g.byFlag.set(0, goodComputed);
+      }
+      for (const [flag, cnt] of g.byFlag.entries()) {
+        const percent = g.total > 0 ? (cnt / g.total) * 100 : 0;
+        rows.push({
+          start,
+          finish,
+          articleNumber: g.articleNumber,
+          articleName: g.articleName,
+          count: cnt,
+          errorFlag: flag,
+          errorText: this.mapErrorFlagToTexts(flag).join(' + '),
+          percent
+        });
+      }
+    }
+    // Sort rows by start asc, then articleNumber, then errorFlag
+    rows.sort((a, b) => {
+      if (a.start !== b.start) return a.start < b.start ? -1 : 1;
+      if (a.articleNumber !== b.articleNumber) return a.articleNumber < b.articleNumber ? -1 : 1;
+      return a.errorFlag - b.errorFlag;
+    });
+    return rows;
+  }
+
+  private computeErrorRateGroups(records: any[]): Array<{start:string;finish:string;articleNumber:string;articleName:string;total:number;rows:Array<{errorFlag:number;errorText:string;count:number;percent:number}>}> {
+    type Group = {
+      articleNumber: string;
+      articleName: string;
+      minTs: number;
+      maxTs: number;
+      total: number;
+      byFlag: Map<number, number>;
+    };
+    const groups = new Map<string, Group>();
+    for (const r of records || []) {
+      const artNum: string = r.articleNumber ?? '';
+      const artName: string = r.articleName ?? '';
+      const tsStr: string = r.timestamp ?? '';
+      const ts = tsStr ? new Date(tsStr).getTime() : NaN;
+      let flag = this.extractErrorFlag(r);
+      if (flag === null) flag = 0;
+      const key = artNum;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          articleNumber: artNum,
+          articleName: artName,
+          minTs: isFinite(ts) ? ts : Number.POSITIVE_INFINITY,
+          maxTs: isFinite(ts) ? ts : Number.NEGATIVE_INFINITY,
+          total: 0,
+          byFlag: new Map<number, number>()
+        });
+      }
+      const g = groups.get(key)!;
+      g.total += 1;
+      if (isFinite(ts)) {
+        if (ts < g.minTs) g.minTs = ts;
+        if (ts > g.maxTs) g.maxTs = ts;
+      }
+      g.byFlag.set(flag, (g.byFlag.get(flag) || 0) + 1);
+    }
+
+    const result: Array<{start:string;finish:string;articleNumber:string;articleName:string;total:number;rows:Array<{errorFlag:number;errorText:string;count:number;percent:number}>}> = [];
+    for (const g of groups.values()) {
+      // ensure good packages row exists
+      const nonZeroSum = Array.from(g.byFlag.entries()).reduce((acc, [f, c]) => f !== 0 ? acc + c : acc, 0);
+      const goodExisting = g.byFlag.get(0) || 0;
+      const goodComputed = Math.max(0, g.total - nonZeroSum);
+      if (goodExisting === 0 && goodComputed > 0) g.byFlag.set(0, goodComputed);
+
+      const start = isFinite(g.minTs) ? new Date(g.minTs).toISOString() : '';
+      const finish = isFinite(g.maxTs) ? new Date(g.maxTs).toISOString() : '';
+      const rows = Array.from(g.byFlag.entries())
+        .map(([flag, cnt]) => ({
+          errorFlag: flag,
+          errorText: this.mapErrorFlagToTexts(flag).join(' + '),
+          count: cnt,
+          percent: g.total > 0 ? (cnt / g.total) * 100 : 0
+        }))
+        .sort((a, b) => (a.errorFlag === 0 ? -1 : b.errorFlag === 0 ? 1 : a.errorFlag - b.errorFlag));
+      result.push({
+        start,
+        finish,
+        articleNumber: g.articleNumber,
+        articleName: g.articleName,
+        total: g.total,
+        rows
+      });
+    }
+    // Sort groups by start asc then article number
+    result.sort((a, b) => {
+      if (a.start !== b.start) return a.start < b.start ? -1 : 1;
+      return a.articleNumber < b.articleNumber ? -1 : (a.articleNumber > b.articleNumber ? 1 : 0);
+    });
+    return result;
   }
 }
