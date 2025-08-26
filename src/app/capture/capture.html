@@ -6,12 +6,7 @@
     </button>
   </header>
   
-  <div class="success-message">
-    <h3>✅ Package Records Management</h3>
-    <p>Search and view package records captured by devices.</p>
-    <p>Use filters to narrow down your search results.</p>
-    <p><strong>Note:</strong> Please ensure you are logged in before making API requests.</p>
-  </div>
+  
 
   <!-- Search Filters Section -->
   <div class="capture-section">
@@ -138,17 +133,147 @@
     </div>
     
     <div class="action-group">
-      <button class="btn btn-primary" (click)="getPackageRecords()">
-        📦 Get Package Records
-      </button>
+      <div class="actions-left">
+        <button class="btn btn-secondary" (click)="getCumulatedPackageRecords()">
+          📈 Get Cumulative Package Records
+        </button>
+        <button class="btn btn-primary" (click)="getPackageRecords()">
+          📦 Get Package Records
+        </button>
+      </div>
+      <div class="actions-right">
+        <button class="btn btn-outline" (click)="getOeeRecords()">
+          🏭 Get OEE Records
+        </button>
+      </div>
       <button class="btn btn-secondary" (click)="clearResponse()">
         🧹 Clear Results
       </button>
     </div>
   </div>
 
+  <!-- Cumulated Package Records Table (shown only when requested) -->
+  @if (lastKind === 'cumulated' && cumulatedRecords && cumulatedRecords.length > 0) {
+    <div class="records-section">
+      <h3>📈 Cumulated Package Records ({{ cumulatedRecords.length }})</h3>
+      <div class="table-container">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>End</th>
+              <th># Packages</th>
+              <th>Total Weight</th>
+              <th>Avg Weight</th>
+              <th>Min Weight</th>
+              <th>Max Weight</th>
+              <th>Device</th>
+              <th>Article Name</th>
+              <th>Article Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of cumulatedRecords; track row.startTimestamp) {
+              <tr>
+                <td class="timestamp-cell">{{ formatDate(row.startTimestamp) }}</td>
+                <td class="timestamp-cell">{{ formatDate(row.endTimestamp) }}</td>
+                <td>{{ row.numberOfPackages }}</td>
+                <td class="weight-cell">{{ formatCumulatedWeight(row.totalWeight, row.decimalPlaces, row.unit) }}</td>
+                <td class="weight-cell">{{ formatCumulatedWeight(row.averageWeight, row.decimalPlaces, row.unit) }}</td>
+                <td class="weight-cell">{{ formatCumulatedWeight(row.minWeight, row.decimalPlaces, row.unit) }}</td>
+                <td class="weight-cell">{{ formatCumulatedWeight(row.maxWeight, row.decimalPlaces, row.unit) }}</td>
+                <td>{{ row.deviceName }}</td>
+                <td>{{ row.articleName }}</td>
+                <td>{{ row.articleNumber }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Cumulated Empty State -->
+  @if (lastKind === 'cumulated' && (!cumulatedRecords || cumulatedRecords.length === 0) && !isLoading && isSuccess) {
+    <div class="empty-results-section">
+      <div class="empty-results-content">
+        <div class="empty-icon">📭</div>
+        <h3>No records found for this filters</h3>
+      </div>
+    </div>
+  }
+
+  <!-- OEE Records Table (shown only when requested) -->
+  @if (lastKind === 'oee' && oeeRecords && oeeRecords.length > 0) {
+    <div class="records-section">
+      <h3>🏭 OEE Records ({{ oeeRecords.length }} found)</h3>
+      <div class="table-container">
+        <table class="records-table">
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>End</th>
+              <th>Line</th>
+              <th>Device</th>
+              <th>Article</th>
+              <th>Nominal Wt</th>
+              <th>Good Pkg (cnt)</th>
+              <th>Good Pkg (wt)</th>
+              <th>Total Pkg (cnt)</th>
+              <th>Total Pkg (wt)</th>
+              <th>Quality</th>
+              <th>Performance</th>
+              <th>Availability</th>
+              <th>OEE</th>
+              <th>Op Time</th>
+              <th>Net Op Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of oeeRecords; track r.startDate) {
+              <tr>
+                <td class="timestamp-cell">{{ formatDate(r.startDate) }}</td>
+                <td class="timestamp-cell">{{ formatDate(r.endDate) }}</td>
+                <td>{{ r.productionLine?.name }}</td>
+                <td>{{ r.masterDevice?.name }}</td>
+                <td>
+                  <div class="article-info">
+                    <strong>{{ r.article?.number }}</strong>
+                    <small>{{ r.article?.name }}</small>
+                  </div>
+                </td>
+                <td class="weight-cell">{{ formatWeightDp(r.article?.nominalWeight) }}</td>
+                <td>{{ r.goodPackages?.count }}</td>
+                <td class="weight-cell">{{ formatWeightDp(r.goodPackages?.weight) }}</td>
+                <td>{{ r.totalPackages?.count }}</td>
+                <td class="weight-cell">{{ formatWeightDp(r.totalPackages?.weight) }}</td>
+                <td>{{ formatPercent(r.quality, 2) }}</td>
+                <td>{{ formatPercent(r.performance, 2) }}</td>
+                <td>{{ formatPercent(r.availability, 2) }}</td>
+                <td><strong>{{ formatPercent(r.oee, 2) }}</strong></td>
+                <td>{{ r.operatingTime }}</td>
+                <td>{{ r.netOperatingTime }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- OEE Empty State -->
+  @if (lastKind === 'oee' && (!oeeRecords || oeeRecords.length === 0) && !isLoading && isSuccess) {
+    <div class="empty-results-section">
+      <div class="empty-results-content">
+        <div class="empty-icon">📭</div>
+        <h3>No OEE Records Found</h3>
+        <p>No OEE records found for the selected filters.</p>
+      </div>
+    </div>
+  }
+
   <!-- Package Records Table -->
-  @if (packageRecords && packageRecords.length > 0) {
+  @if (lastKind === 'package' && packageRecords && packageRecords.length > 0) {
     <div class="records-section">
       <h3>📦 Package Records ({{ packageRecords.length }} found)</h3>
       <div class="table-container">
@@ -208,7 +333,7 @@
   }
 
   <!-- Empty Results State -->
-  @if (shouldShowEmptyState()) {
+  @if (lastKind === 'package' && shouldShowEmptyState()) {
     <div class="empty-results-section">
       <div class="empty-results-content">
         <div class="empty-icon">📭</div>
@@ -231,7 +356,7 @@
   }
 
   <!-- Response Section -->
-  @if (responseData && !packageRecords.length) {
+  @if (responseData && ((lastKind === 'package' && !packageRecords.length) || (lastKind === 'cumulated' && !cumulatedRecords.length) || (lastKind === 'oee' && !oeeRecords.length))) {
     <div class="response-section">
       <h3>📤 API Response</h3>
       <div class="response-info">

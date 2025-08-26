@@ -27,10 +27,13 @@ export class Capture implements OnInit {
   take = 100; // Default limit
   
   // Response handling
+  cumulatedRecords: any[] = [];
+  oeeRecords: any[] = [];
   packageRecords: any[] = [];
   responseData: any = null;
   lastEndpoint = '';
   lastMethod = '';
+  lastKind: '' | 'package' | 'cumulated' | 'oee' = '';
   responseStatus = '';
   isSuccess = false;
   isLoading = false;
@@ -172,17 +175,55 @@ export class Capture implements OnInit {
     }
     
     console.log('Making API call to:', endpoint);
-    this.makeApiCall('GET', endpoint);
+    this.makeApiCall('GET', endpoint, undefined, 'package');
+  }
+
+  // Cumulated Package Records API Method
+  getCumulatedPackageRecords(): void {
+    let endpoint = '/api/v1/cumulated-package-records';
+    const queryParams: string[] = [];
+    // Required take
+    queryParams.push(`take=${this.take > 0 ? this.take : 100}`);
+    // Optional filters (same as page filters where applicable)
+    if (this.articleNumber.trim()) queryParams.push(`articleNumber=${encodeURIComponent(this.articleNumber.trim())}`);
+    if (this.deviceName.trim()) queryParams.push(`deviceName=${encodeURIComponent(this.deviceName.trim())}`);
+    if (this.startDate.trim()) queryParams.push(`startTimestamp=${encodeURIComponent(this.normalizeDateTimeParam(this.startDate))}`);
+    if (this.endDate.trim()) queryParams.push(`endTimestamp=${encodeURIComponent(this.normalizeDateTimeParam(this.endDate))}`);
+    // Default sort from example
+    queryParams.push(`sort=${encodeURIComponent('StartTimestamp-,ArticleNumber+')}`);
+    endpoint += `?${queryParams.join('&')}`;
+    console.log('Making API call to:', endpoint);
+    this.makeApiCall('GET', endpoint, undefined, 'cumulated');
+  }
+
+  // OEE Records API Method
+  getOeeRecords(): void {
+    let endpoint = '/api/v1/oee-records';
+    const queryParams: string[] = [];
+    // Required take
+    queryParams.push(`take=${this.take > 0 ? this.take : 10}`);
+    // Optional filters mapped to API param names
+    if (this.articleNumber.trim()) queryParams.push(`articleNumber=${encodeURIComponent(this.articleNumber.trim())}`);
+    if (this.articleName.trim()) queryParams.push(`articleName=${encodeURIComponent(this.articleName.trim())}`);
+    if (this.deviceName.trim()) queryParams.push(`masterDeviceName=${encodeURIComponent(this.deviceName.trim())}`);
+    if (this.startDate.trim()) queryParams.push(`startDate=${encodeURIComponent(this.normalizeDateTimeParam(this.startDate))}`);
+    if (this.endDate.trim()) queryParams.push(`endDate=${encodeURIComponent(this.normalizeDateTimeParam(this.endDate))}`);
+    // Default sort from example
+    queryParams.push(`sort=${encodeURIComponent('Start-,ArticleNumber+')}`);
+    endpoint += `?${queryParams.join('&')}`;
+    console.log('Making API call to:', endpoint);
+    this.makeApiCall('GET', endpoint, undefined, 'oee');
   }
 
   // Utility Methods
-  private makeApiCall(method: string, endpoint: string, body?: any): void {
+  private makeApiCall(method: string, endpoint: string, body?: any, kind?: 'package'|'cumulated'|'oee'): void {
     this.isLoading = true;
     this.clearError();
     this.clearResponse();
     
     this.lastMethod = method;
     this.lastEndpoint = endpoint;
+  this.lastKind = kind || '';
     
   const url = `${this.apiConfig.getBaseUrl()}${endpoint}`;
     const token = localStorage.getItem('auth_token');
@@ -219,10 +260,17 @@ export class Capture implements OnInit {
         this.isSuccess = true;
         this.responseStatus = 'Success';
         this.responseData = response;
+  this.lastKind = kind || this.lastKind;
         
-        // If it's package records, store them separately for table display
-        if (endpoint.includes('package-records') && Array.isArray(response)) {
-          this.packageRecords = response;
+        // Route known response types
+        if (kind === 'package') {
+          this.packageRecords = Array.isArray(response) ? response : [];
+        } else if (kind === 'cumulated') {
+          this.cumulatedRecords = Array.isArray(response) ? response : (response ? [response] : []);
+        } else if (kind === 'oee') {
+          this.oeeRecords = Array.isArray(response) ? response : (response ? [response] : []);
+        } else if (endpoint.includes('/package-records')) {
+          this.packageRecords = Array.isArray(response) ? response : [];
         }
         
         console.log(`${method} ${endpoint} - Success:`, response);
@@ -232,6 +280,7 @@ export class Capture implements OnInit {
         this.isSuccess = false;
         this.responseStatus = `Error ${error.status || 'Unknown'}`;
         this.responseData = error.error || error.message || error;
+  // Keep lastKind set so UI knows which action was attempted
         this.showError(`Failed to ${method} ${endpoint}: ${this.getErrorMessage(error)}`);
         console.error(`${method} ${endpoint} - Error:`, error);
       }
@@ -261,9 +310,12 @@ export class Capture implements OnInit {
 
   clearResponse(): void {
     this.responseData = null;
+  this.cumulatedRecords = [];
+  this.oeeRecords = [];
     this.packageRecords = [];
     this.lastEndpoint = '';
     this.lastMethod = '';
+  this.lastKind = '';
     this.responseStatus = '';
     this.isSuccess = false;
     // Reset sorting
@@ -285,6 +337,43 @@ export class Capture implements OnInit {
   formatWeight(weight: any): string {
     if (!weight || !weight.value) return '';
     return `${weight.value} ${weight.unit || ''}`;
+  }
+
+  // Format weight using its decimalPlaces if provided
+  formatWeightDp(weight: any): string {
+    if (!weight || weight.value === undefined || weight.value === null) return '';
+    const dp = Math.max(0, Number(weight.decimalPlaces || 0));
+    const val = Number(weight.value);
+    if (!isFinite(val)) return '';
+    return `${val.toFixed(dp)} ${weight.unit || ''}`;
+  }
+
+  // Format percentage with optional decimals
+  formatPercent(value: any, dp: number = 2): string {
+    const n = Number(value);
+    if (!isFinite(n)) return '';
+    return `${n.toFixed(dp)} %`;
+  }
+
+  // Helpers for cumulated records
+  private roundToDp(value: any, dp: number): string {
+    const num = Number(value);
+    if (!isFinite(num)) return '';
+    return num.toFixed(Math.max(0, dp || 0));
+  }
+  formatCumulatedWeight(value: any, dp: number, unit?: string): string {
+    if (value === null || value === undefined) return '';
+    const rounded = this.roundToDp(value, dp);
+    return unit ? `${rounded} (${unit})` : rounded;
+  }
+
+  // Normalize date-time local (yyyy-MM-ddTHH:mm) to yyyy-MM-ddTHH:mm:ss for API
+  private normalizeDateTimeParam(input: string): string {
+    const t = (input || '').trim();
+    if (!t) return '';
+    if (/T\d{2}:\d{2}:\d{2}$/.test(t)) return t;
+    if (/T\d{2}:\d{2}$/.test(t)) return `${t}:00`;
+    return t;
   }
 
   // Sorting functionality
