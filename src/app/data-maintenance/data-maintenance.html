@@ -321,11 +321,36 @@
 
 
 
-  <!-- Devices Section (empty placeholder) -->
+  <!-- Devices Section -->
     <ng-container *ngIf="currentSubPage()==='devices'">
-      <div class="dm-placeholder">
-        <h2>🖥️ Devices</h2>
-        <p>This section is under construction.</p>
+      <div class="dm-card">
+        <h2>🖥️ Devices & Production Lines</h2>
+        <div class="row" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+          <div style="min-width:280px;">
+            <label class="form-label">Devices</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select [disabled]="devicesLoading()" style="min-width:240px;">
+                <option *ngIf="devicesLoading()" disabled>Loading…</option>
+                <option *ngIf="!devicesLoading() && devices().length===0" disabled>No devices</option>
+                <option *ngFor="let d of devices()" [value]="d.id || d.deviceId || d.name">{{ d.name || d.displayName || d.id || d.deviceId }}</option>
+              </select>
+              <button class="btn btn-secondary" (click)="loadDevices()" [disabled]="devicesLoading()">Reload</button>
+            </div>
+            <div class="err" *ngIf="devicesError()">{{ devicesError() }}</div>
+          </div>
+          <div style="min-width:280px;">
+            <label class="form-label">Production Lines</label>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select [disabled]="productionLinesLoading()" style="min-width:240px;">
+                <option *ngIf="productionLinesLoading()" disabled>Loading…</option>
+                <option *ngIf="!productionLinesLoading() && productionLines().length===0" disabled>No production lines</option>
+                <option *ngFor="let p of productionLines()" [value]="p.id || p.productionLineId || p.name">{{ p.name || p.displayName || p.id || p.productionLineId }}</option>
+              </select>
+              <button class="btn btn-secondary" (click)="loadProductionLines()" [disabled]="productionLinesLoading()">Reload</button>
+            </div>
+            <div class="err" *ngIf="productionLinesError()">{{ productionLinesError() }}</div>
+          </div>
+        </div>
       </div>
     </ng-container>
 
@@ -1488,30 +1513,117 @@
     </div>
     <div class="debug-container">
       <div class="debug-tabs">
-        <button 
-          *ngIf="currentSubPage()==='customers'"
-          type="button" 
-          class="debug-tab" 
-          [class.active]="activeDebugTab === 'createCustomer'"
-          (click)="activeDebugTab = 'createCustomer'"
-          [style.background]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#2a3036') : null"
-          [style.border-color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#3a434d') : null" 
-          [style.color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#fff' : '#9aa4b1') : null"
-        >Create Customer Response</button>
+  <!-- Customers -->
+  <button *ngIf="currentSubPage()==='customers'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'createCustomer'"
+    (click)="activeDebugTab = 'createCustomer'"
+    [style.background]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#2a3036') : null"
+    [style.border-color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#3a434d') : null"
+    [style.color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#fff' : '#9aa4b1') : null">Create Customer</button>
+
+  <!-- Articles -->
+  <button *ngIf="currentSubPage()==='articles'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'listArticles'"
+    (click)="activeDebugTab = 'listArticles'">Get All Articles</button>
+  <button *ngIf="currentSubPage()==='articles'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'updateArticle'"
+    (click)="activeDebugTab = 'updateArticle'">Edit Article (PATCH)</button>
+  <button *ngIf="currentSubPage()==='articles'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'deleteArticle'"
+    (click)="activeDebugTab = 'deleteArticle'">Delete Article</button>
+
+  <!-- Static Texts -->
+  <button *ngIf="currentSubPage()==='static-texts'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'stList'"
+    (click)="activeDebugTab = 'stList'">Get All Static Texts</button>
+  <button *ngIf="currentSubPage()==='static-texts'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'stCreateOrUpdate'"
+    (click)="activeDebugTab = 'stCreateOrUpdate'">Create/Update Static Text</button>
+
+  <!-- Devices -->
+  <button *ngIf="currentSubPage()==='devices'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'devicesList'"
+    (click)="activeDebugTab = 'devicesList'">Get Devices</button>
+  <button *ngIf="currentSubPage()==='devices'" type="button" class="debug-tab"
+    [class.active]="activeDebugTab === 'productionLinesList'"
+    (click)="activeDebugTab = 'productionLinesList'">Get Production Lines</button>
       </div>
 
       <div class="debug-content" [class.collapsed]="jsonCollapsed()">
+        <!-- Customers panel -->
         <div *ngIf="activeDebugTab === 'createCustomer' && currentSubPage()==='customers'" class="debug-panel"
              [style.background]="isDarkMode() ? '#262d34' : null"
              [style.border-color]="isDarkMode() ? '#373f48' : null">
           <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create Customer API Response</h4>
+            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create Customer</h4>
             <small [style.color]="isDarkMode() ? '#9aa4b1' : null">POST request details</small>
           </div>
           <pre *ngIf="!jsonCollapsed()" class="debug-json"
                [style.background]="isDarkMode() ? '#10161b' : null"
                [style.color]="isDarkMode() ? '#b9c3cc' : null"
                [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.createCustomer | json}}</pre>
+        </div>
+
+        <!-- Articles panels -->
+        <div *ngIf="activeDebugTab === 'listArticles' && currentSubPage()==='articles'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get All Articles</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET request details</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.listArticles | json}}</pre>
+        </div>
+        <div *ngIf="activeDebugTab === 'updateArticle' && currentSubPage()==='articles'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Edit Article (PATCH)</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">PATCH request details</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.updateArticle | json}}</pre>
+        </div>
+        <div *ngIf="activeDebugTab === 'deleteArticle' && currentSubPage()==='articles'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Delete Article</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">DELETE request details</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.deleteArticle | json}}</pre>
+        </div>
+
+        <!-- Static Texts panels -->
+        <div *ngIf="activeDebugTab === 'stList' && currentSubPage()==='static-texts'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get All Static Texts</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET request details</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.stList | json}}</pre>
+        </div>
+        <div *ngIf="activeDebugTab === 'stCreateOrUpdate' && currentSubPage()==='static-texts'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create/Update Static Text</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">POST request details</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.stCreateOrUpdate | json}}</pre>
+        </div>
+
+        <!-- Devices panels -->
+        <div *ngIf="activeDebugTab === 'devicesList' && currentSubPage()==='devices'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get Devices</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET /api/v1/devices</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.devicesList | json}}</pre>
+        </div>
+        <div *ngIf="activeDebugTab === 'productionLinesList' && currentSubPage()==='devices'" class="debug-panel"
+             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get Production Lines</h4>
+            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET /api/v1/production-lines</small></div>
+          <pre *ngIf="!jsonCollapsed()" class="debug-json"
+               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.productionLinesList | json}}</pre>
         </div>
       </div>
     </div>

@@ -720,7 +720,14 @@ export class DataMaintenanceComponent implements OnInit {
     createArticle: null as any,
     updateArticle: null as any,
   deleteArticle: null as any,
-  createCustomer: null as any
+  // Customers (existing)
+  createCustomer: null as any,
+  // Static Texts
+  stList: null as any,
+  stCreateOrUpdate: null as any,
+  // Devices
+  devicesList: null as any,
+  productionLinesList: null as any
   };
 
   private readonly allowedLabelingModes = ['weight','fixedPrice','fixedWeight','fixedValue'];
@@ -809,7 +816,16 @@ export class DataMaintenanceComponent implements OnInit {
     try{
       const payload = { number: row.number, description: row.description, items: Array.from({length:50},(_,i)=> ({ number:i+1, textValue: row.items[i+1]||'', sendFormat:false })) };
       const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json' });
-  await this.http.post(`${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers }).toPromise();
+      const requestUrl = `${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/CreateAndUpdateStaticText`;
+  await this.http.post(requestUrl, payload, { headers }).toPromise();
+      // keep last debug entry for imports
+      this.debugApiResponses.stCreateOrUpdate = {
+        timestamp: new Date().toISOString(),
+        requestUrl,
+        requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+        requestBody: payload,
+        rawResponse: { status: 'ok (import row)'}
+      };
       row.status='created';
     }catch(e:any){ row.status='failed'; row.error = e?.error?.title || e?.message || 'error'; }
   }
@@ -1719,6 +1735,72 @@ export class DataMaintenanceComponent implements OnInit {
     return Math.floor((params.skip || 0) / pageSize) + 1;
   }
 
+  // ---------------- Devices & Production Lines ----------------
+  devices = signal<any[]>([]);
+  productionLines = signal<any[]>([]);
+  devicesLoading = signal(false);
+  productionLinesLoading = signal(false);
+  devicesError = signal<string|undefined>(undefined);
+  productionLinesError = signal<string|undefined>(undefined);
+  private devicesLoadedOnce = false;
+  private productionLinesLoadedOnce = false;
+
+  loadDevices(){
+    this.devicesLoading.set(true);
+    this.devicesError.set(undefined);
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}` });
+    const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/devices`;
+    this.http.get<any[]>(requestUrl, { headers }).subscribe({
+      next: (res:any)=>{
+        const items = Array.isArray(res) ? res : (res?.items || res?.data || res?.results || []);
+        this.devices.set(items);
+        this.debugApiResponses.devicesList = {
+          timestamp: new Date().toISOString(),
+          requestUrl,
+          requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+          rawResponse: res,
+          count: items?.length ?? 0
+        };
+      },
+      error: (err:any)=>{
+        this.devicesError.set(err?.error?.title || err?.message || 'Failed to load devices');
+        this.debugApiResponses.devicesList = {
+          timestamp: new Date().toISOString(),
+          requestUrl,
+          error: err
+        };
+      }
+    }).add(()=> this.devicesLoading.set(false));
+  }
+
+  loadProductionLines(){
+    this.productionLinesLoading.set(true);
+    this.productionLinesError.set(undefined);
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}` });
+    const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/production-lines`;
+    this.http.get<any[]>(requestUrl, { headers }).subscribe({
+      next: (res:any)=>{
+        const items = Array.isArray(res) ? res : (res?.items || res?.data || res?.results || []);
+        this.productionLines.set(items);
+        this.debugApiResponses.productionLinesList = {
+          timestamp: new Date().toISOString(),
+          requestUrl,
+          requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+          rawResponse: res,
+          count: items?.length ?? 0
+        };
+      },
+      error: (err:any)=>{
+        this.productionLinesError.set(err?.error?.title || err?.message || 'Failed to load production lines');
+        this.debugApiResponses.productionLinesList = {
+          timestamp: new Date().toISOString(),
+          requestUrl,
+          error: err
+        };
+      }
+    }).add(()=> this.productionLinesLoading.set(false));
+  }
+
   // Helper to calculate total pages (estimated based on current results)
   canShowNextPage(): boolean {
     const params = this.searchParams();
@@ -1770,6 +1852,9 @@ export class DataMaintenanceComponent implements OnInit {
   goToDevicesSubPage(){
     this.currentSubPage.set('devices');
     this.currentView.set('list');
+  // Lazy load devices and production lines once
+  if (!this.devicesLoadedOnce) { this.loadDevices(); this.devicesLoadedOnce = true; }
+  if (!this.productionLinesLoadedOnce) { this.loadProductionLines(); this.productionLinesLoadedOnce = true; }
   }
 
   // ---------------- Customers: Modal Form State ----------------
@@ -2147,15 +2232,31 @@ export class DataMaintenanceComponent implements OnInit {
     });
     this.isLoading.set(true);
     this.apiResponse.set({ type: null, message: '' });
-  this.http.post(`${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/CreateAndUpdateStaticText`, payload, { headers })
+    const requestUrl = `${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/CreateAndUpdateStaticText`;
+  this.http.post(requestUrl, payload, { headers })
       .subscribe({
         next: (res:any)=>{
           this.apiResponse.set({type:'success', message:`Static Text ${payload.number} saved`, timestamp:new Date().toISOString()});
       this.staticTextDirty.set(false);
+          // debug log
+          this.debugApiResponses.stCreateOrUpdate = {
+            timestamp: new Date().toISOString(),
+            requestUrl,
+            requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+            requestBody: payload,
+            rawResponse: res
+          };
         },
         error: (err:any)=>{
           const msg = err?.error?.title || err?.error?.message || 'Failed to save static text';
           this.apiResponse.set({type:'error', message: msg, timestamp:new Date().toISOString()});
+          // debug error
+          this.debugApiResponses.stCreateOrUpdate = {
+            timestamp: new Date().toISOString(),
+            requestUrl,
+            requestBody: payload,
+            error: err
+          };
         }
       }).add(()=> this.isLoading.set(false));
   }
@@ -2188,7 +2289,8 @@ export class DataMaintenanceComponent implements OnInit {
     this.stListPage.set(targetPage);
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}` });
     const params = { page: String(targetPage), pageSize: String(pageSize) } as any;
-  this.http.get(`${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/GetAllStaticTexts`, { headers, params })
+    const requestUrl = `${this.apiConfig.getBaseUrl()}/extensions/api/StaticTexts/GetAllStaticTexts`;
+  this.http.get(requestUrl, { headers, params })
       .subscribe({
         next: (res: any) => {
           // Support a few common shapes: array, {items,total}, {data,totalCount}
@@ -2196,10 +2298,27 @@ export class DataMaintenanceComponent implements OnInit {
           const total = (res?.total ?? res?.totalCount ?? res?.count);
           this.stListItems.set(items);
           this.stListTotal.set(typeof total === 'number' ? total : undefined);
+          // debug log
+          this.debugApiResponses.stList = {
+            timestamp: new Date().toISOString(),
+            requestUrl,
+            requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+            requestParams: params,
+            rawResponse: res,
+            itemsCount: items?.length ?? 0,
+            total
+          };
         },
         error: (err:any) => {
           const msg = err?.error?.title || err?.message || 'Failed to load static texts';
           this.stListError.set(msg);
+          // debug error
+          this.debugApiResponses.stList = {
+            timestamp: new Date().toISOString(),
+            requestUrl,
+            requestParams: params,
+            error: err
+          };
         }
       }).add(()=> this.stListLoading.set(false));
   }
