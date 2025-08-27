@@ -323,35 +323,16 @@
 
   <!-- Devices Section -->
     <ng-container *ngIf="currentSubPage()==='devices'">
-      <div class="dm-card">
-        <h2>🖥️ Devices & Production Lines</h2>
-        <div class="row" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
-          <div style="min-width:280px;">
-            <label class="form-label">Devices</label>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <select [disabled]="devicesLoading()" style="min-width:240px;">
-                <option *ngIf="devicesLoading()" disabled>Loading…</option>
-                <option *ngIf="!devicesLoading() && devices().length===0" disabled>No devices</option>
-                <option *ngFor="let d of devices()" [value]="d.id || d.deviceId || d.name">{{ d.name || d.displayName || d.id || d.deviceId }}</option>
-              </select>
-              <button class="btn btn-secondary" (click)="loadDevices()" [disabled]="devicesLoading()">Reload</button>
-            </div>
-            <div class="err" *ngIf="devicesError()">{{ devicesError() }}</div>
-          </div>
-          <div style="min-width:280px;">
-            <label class="form-label">Production Lines</label>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <select [disabled]="productionLinesLoading()" style="min-width:240px;">
-                <option *ngIf="productionLinesLoading()" disabled>Loading…</option>
-                <option *ngIf="!productionLinesLoading() && productionLines().length===0" disabled>No production lines</option>
-                <option *ngFor="let p of productionLines()" [value]="p.id || p.productionLineId || p.name">{{ p.name || p.displayName || p.id || p.productionLineId }}</option>
-              </select>
-              <button class="btn btn-secondary" (click)="loadProductionLines()" [disabled]="productionLinesLoading()">Reload</button>
-            </div>
-            <div class="err" *ngIf="productionLinesError()">{{ productionLinesError() }}</div>
-          </div>
-        </div>
-      </div>
+      <dm-devices 
+        [devices]="devices()" 
+        [devicesLoading]="devicesLoading()" 
+        [devicesError]="devicesError()"
+        [productionLines]="productionLines()" 
+        [productionLinesLoading]="productionLinesLoading()" 
+        [productionLinesError]="productionLinesError()"
+        [onReloadDevices]="loadDevices.bind(this)"
+        [onReloadProductionLines]="loadProductionLines.bind(this)">
+      </dm-devices>
     </ng-container>
 
   <!-- Static Texts Section -->
@@ -468,78 +449,27 @@
     </form>
 
     <!-- Existing Static Texts List -->
-    <div class="dm-card" style="margin-top:16px;">
-      <div class="table-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-        <h3 style="margin:0;">Existing Static Texts</h3>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <label style="font-size:12px;">Filter #</label>
-          <input type="text" [value]="stFilterNumber()" (input)="stSetFilterNumber($any($event.target).value)" placeholder="e.g. 1001" style="width:90px;" />
-          <label style="font-size:12px;">Page size</label>
-          <select [value]="stListPageSize()" (change)="stChangePageSize(+$any($event.target).value)">
-            <option [value]="10">10</option>
-            <option [value]="20">20</option>
-            <option [value]="50">50</option>
-          </select>
-          <button class="btn btn-secondary" (click)="loadStaticTextsList(stListPage())" title="Reload list">
-            <i class="icon-refresh"></i>
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      <div *ngIf="stListLoading()" class="loading" style="padding:8px 0;">
-        <div class="spinner"></div>
-        <span>Loading static texts...</span>
-      </div>
-      <div *ngIf="stListError()" class="error-message" style="margin:8px 0;">
-        <i class="icon-alert"></i>
-        {{ stListError() }}
-      </div>
-
-      <div class="table-container" *ngIf="!stListLoading()">
-        <table class="articles-table resizable-columns">
-          <thead>
-            <tr>
-              <th>
-                <button class="linklike" (click)="stToggleSortDir()" title="Sort by number">
-                  Number
-                  <span class="sort-ind" [attr.aria-label]="stSortDir()==='asc' ? 'ascending' : 'descending'">
-                    {{ stSortDir()==='asc' ? '▲' : '▼' }}
-                  </span>
-                </button>
-              </th>
-              <th>Description</th>
-              <th>Items</th>
-              <th *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]">Text {{ i }}</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let it of stViewItems()">
-              <td>{{ it.number }}</td>
-              <td>{{ it.description || '-' }}</td>
-              <td>{{ (it.items?.length || 0) }}</td>
-              <td *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]">{{ stGetItemText(it, i) }}</td>
-              <td class="actions">
-                <button class="btn btn-small btn-icon btn-edit" (click)="stEditStaticText(it)" title="Edit Static Text">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                </button>
-              </td>
-            </tr>
-            <tr *ngIf="stViewItems().length === 0">
-              <td colspan="14">No static texts found.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pagination" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
-        <button class="btn btn-secondary" (click)="stPrevPage()" [disabled]="!stHasPrev()">Prev</button>
-        <span>Page {{ stListPage() }}<ng-container *ngIf="stTotalPages()"> / {{ stTotalPages() }}</ng-container></span>
-        <button class="btn btn-secondary" (click)="stNextPage()" [disabled]="!stHasNext()">Next</button>
-        <span class="record-count" *ngIf="stListTotal() !== undefined">Total: {{ stListTotal() }}</span>
-      </div>
-    </div>
+    <dm-static-texts-list
+      [listLoading]="stListLoading()"
+      [listError]="stListError()"
+      [filterNumber]="stFilterNumber()"
+      [pageSize]="stListPageSize()"
+      [page]="stListPage()"
+      [total]="stListTotal()"
+      [totalPages]="stTotalPages()"
+      [hasPrev]="stHasPrev()"
+      [hasNext]="stHasNext()"
+      [sortDir]="stSortDir()"
+      [viewItems]="stViewItems()"
+      [getItemText]="stGetItemText.bind(this)"
+      (setFilterNumber)="stSetFilterNumber($event)"
+      (changePageSize)="stChangePageSize($event)"
+      (reload)="loadStaticTextsList(stListPage())"
+      (toggleSortDir)="stToggleSortDir()"
+      (prevPage)="stPrevPage()"
+      (nextPage)="stNextPage()"
+      (editRow)="stEditStaticText($event)"
+    ></dm-static-texts-list>
   </div>
 
   <!-- Loading Indicator -->
@@ -679,76 +609,13 @@
     </div>
 
     <div class="table-container">
-  <table class="articles-table resizable-columns">
-        <thead>
-          <tr>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Article Number</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Name</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Unit Price</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Tare</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Labeling Mode</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Label Param #</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Shelf Life 1</th>
-            <th [style.color]="isDarkMode() ? '#ffffff' : null">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let article of articles()" class="article-row" 
-              [class.inactive-row]="!article.active"
-              [style.background]="!article.active && isDarkMode() ? '#181d23' : null"
-              [style.opacity]="!article.active && isDarkMode() ? '0.85' : null">
-            <td class="article-number" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.number }}</td>
-            <td class="article-name" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.name || '-' }}</td>
-            <td class="unit-price" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.articlePLU.unitPriceValue }} {{ article.gxPriceCurrencyCode || 'USD' }}</td>
-            <td class="tare" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.articlePLU.tareWeightValue }} {{ article.weightUnit }}</td>
-            <td class="labeling-mode" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.articlePLU.labelingMode || '-' }}</td>
-            <td class="label-param" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.articlePLU.labelParameter }}</td>
-            <td class="shelf-life" 
-                [style.color]="!article.active && isDarkMode() ? '#b8c2cc' : null">{{ article.articlePLU.shelfLifeDays1 }}</td>
-            <td class="actions">
-              <button 
-                class="btn btn-small btn-icon btn-edit"
-                (click)="openEditModal(article)"
-                title="Edit Article"
-                aria-label="Edit Article"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-              </button>
-              <button 
-                class="btn btn-small btn-icon btn-copy"
-                (click)="openCopyModal(article)"
-                title="Copy Article"
-                aria-label="Copy Article"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
-              </button>
-              <button 
-                class="btn btn-small btn-icon btn-delete"
-                (click)="openDeleteConfirm(article)"
-                title="Delete Article"
-                aria-label="Delete Article"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-              </button>
-            </td>
-          </tr>
-          
-          <tr *ngIf="articles().length === 0" class="no-data">
-            <td colspan="8">
-              <div class="no-data-message">
-                <i class="icon-info"></i>
-                <span>No articles found. Try adjusting your search criteria or create a new article.</span>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <dm-articles-table 
+        [isDarkMode]="isDarkMode()"
+        [articles]="articles()"
+        (edit)="openEditModal($event)"
+        (copy)="openCopyModal($event)"
+        (delete)="openDeleteConfirm($event)"
+      ></dm-articles-table>
     </div>
   </div>
   </div> <!-- End List View -->
@@ -1498,134 +1365,13 @@
     </div>
   </div>
 
-  <!-- API Response Debug Window -->
-  <section class="debug-section" [style.background]="isDarkMode() ? '#1f252c' : null" [style.border-color]="isDarkMode() ? '#303841' : null">
-    <div class="debug-header-bar">
-      <h3 [style.color]="isDarkMode() ? '#ffffff' : null">🔧 API Response Debug</h3>
-      <div class="debug-global-actions">
-        <button type="button" class="debug-tab" (click)="jsonCollapsed.set(!jsonCollapsed())"
-                [style.background]="isDarkMode() ? '#2a3036' : null"
-                [style.border-color]="isDarkMode() ? '#3a434d' : null" 
-                [style.color]="isDarkMode() ? '#9aa4b1' : null">
-          {{ jsonCollapsed() ? 'Expand All' : 'Collapse All' }}
-        </button>
-      </div>
-    </div>
-    <div class="debug-container">
-      <div class="debug-tabs">
-  <!-- Customers -->
-  <button *ngIf="currentSubPage()==='customers'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'createCustomer'"
-    (click)="activeDebugTab = 'createCustomer'"
-    [style.background]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#2a3036') : null"
-    [style.border-color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#1976d2' : '#3a434d') : null"
-    [style.color]="isDarkMode() ? (activeDebugTab === 'createCustomer' ? '#fff' : '#9aa4b1') : null">Create Customer</button>
-
-  <!-- Articles -->
-  <button *ngIf="currentSubPage()==='articles'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'listArticles'"
-    (click)="activeDebugTab = 'listArticles'">Get All Articles</button>
-  <button *ngIf="currentSubPage()==='articles'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'updateArticle'"
-    (click)="activeDebugTab = 'updateArticle'">Edit Article (PATCH)</button>
-  <button *ngIf="currentSubPage()==='articles'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'deleteArticle'"
-    (click)="activeDebugTab = 'deleteArticle'">Delete Article</button>
-
-  <!-- Static Texts -->
-  <button *ngIf="currentSubPage()==='static-texts'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'stList'"
-    (click)="activeDebugTab = 'stList'">Get All Static Texts</button>
-  <button *ngIf="currentSubPage()==='static-texts'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'stCreateOrUpdate'"
-    (click)="activeDebugTab = 'stCreateOrUpdate'">Create/Update Static Text</button>
-
-  <!-- Devices -->
-  <button *ngIf="currentSubPage()==='devices'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'devicesList'"
-    (click)="activeDebugTab = 'devicesList'">Get Devices</button>
-  <button *ngIf="currentSubPage()==='devices'" type="button" class="debug-tab"
-    [class.active]="activeDebugTab === 'productionLinesList'"
-    (click)="activeDebugTab = 'productionLinesList'">Get Production Lines</button>
-      </div>
-
-      <div class="debug-content" [class.collapsed]="jsonCollapsed()">
-        <!-- Customers panel -->
-        <div *ngIf="activeDebugTab === 'createCustomer' && currentSubPage()==='customers'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null"
-             [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header">
-            <h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create Customer</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">POST request details</small>
-          </div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null"
-               [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.createCustomer | json}}</pre>
-        </div>
-
-        <!-- Articles panels -->
-        <div *ngIf="activeDebugTab === 'listArticles' && currentSubPage()==='articles'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get All Articles</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET request details</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.listArticles | json}}</pre>
-        </div>
-        <div *ngIf="activeDebugTab === 'updateArticle' && currentSubPage()==='articles'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Edit Article (PATCH)</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">PATCH request details</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.updateArticle | json}}</pre>
-        </div>
-        <div *ngIf="activeDebugTab === 'deleteArticle' && currentSubPage()==='articles'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Delete Article</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">DELETE request details</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.deleteArticle | json}}</pre>
-        </div>
-
-        <!-- Static Texts panels -->
-        <div *ngIf="activeDebugTab === 'stList' && currentSubPage()==='static-texts'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get All Static Texts</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET request details</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.stList | json}}</pre>
-        </div>
-        <div *ngIf="activeDebugTab === 'stCreateOrUpdate' && currentSubPage()==='static-texts'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Create/Update Static Text</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">POST request details</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.stCreateOrUpdate | json}}</pre>
-        </div>
-
-        <!-- Devices panels -->
-        <div *ngIf="activeDebugTab === 'devicesList' && currentSubPage()==='devices'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get Devices</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET /api/v1/devices</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.devicesList | json}}</pre>
-        </div>
-        <div *ngIf="activeDebugTab === 'productionLinesList' && currentSubPage()==='devices'" class="debug-panel"
-             [style.background]="isDarkMode() ? '#262d34' : null" [style.border-color]="isDarkMode() ? '#373f48' : null">
-          <div class="debug-header"><h4 [style.color]="isDarkMode() ? '#ffffff' : null">Get Production Lines</h4>
-            <small [style.color]="isDarkMode() ? '#9aa4b1' : null">GET /api/v1/production-lines</small></div>
-          <pre *ngIf="!jsonCollapsed()" class="debug-json"
-               [style.background]="isDarkMode() ? '#10161b' : null" [style.color]="isDarkMode() ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode() ? '#22303b' : null">{{debugApiResponses.productionLinesList | json}}</pre>
-        </div>
-      </div>
-    </div>
-  </section>
+  <dm-debug-panel 
+    [isDarkMode]="isDarkMode()"
+    [jsonCollapsed]="jsonCollapsed()"
+    (toggleCollapsed)="jsonCollapsed.set(!jsonCollapsed())"
+    [activeTab]="activeDebugTab"
+    (activeTabChange)="activeDebugTab = $event"
+    [data]="debugApiResponses"
+    [currentSubPage]="currentSubPage()"
+  ></dm-debug-panel>
 </div>

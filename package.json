@@ -1,6 +1,6 @@
 {
   "name": "order-app",
-  "version": "1.0.37",
+  "version": "1.0.44",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

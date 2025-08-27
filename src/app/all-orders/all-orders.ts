@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiConfig } from '../api-config';
+import { DebugPanelComponent } from '../data-maintenance/debug/debug-panel';
 
 export interface ApiOrder {
   key: string;
@@ -17,7 +18,7 @@ export interface ApiOrder {
 
 @Component({
   selector: 'app-all-orders',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DebugPanelComponent],
   templateUrl: './all-orders.html',
   styleUrl: './all-orders.scss'
 })
@@ -59,7 +60,7 @@ export class AllOrders implements OnInit {
 
   // Debug panel state and storage
   debugCollapsed = true;
-  activeDebugTab: 'list' | 'status' | 'action' = 'list';
+  activeDebugTab: string = 'ordersList';
   debug: { listOrders: any; lastStatus: any; lastAction: any } = {
     listOrders: {},
     lastStatus: {},

@@ -1,6 +1,10 @@
 
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DevicesComponent } from './devices/devices';
+import { StaticTextsListComponent } from './static-texts/static-texts-list';
+import { ArticlesTableComponent } from './articles/articles-table';
+import { DebugPanelComponent } from './debug/debug-panel';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +12,8 @@ import { Auth } from '../auth';
 import { ApiConfig } from '../api-config';
 // PapaParse will be lazy-loaded only when an import file is selected to avoid SSR/runtime issues.
 let PapaRef: any = null;
+import { parseCsvFile, autoMapHeaders, enforceUniqueMapping, downloadCsv, trimValue, parseNumberValue, parseBoolValue, runConcurrentQueue } from '../shared/csv-import.util';
+import { NUTRITION_OVERLAY_MAPS, NutritionOverlayMaps } from './overlay/overlay-maps';
 
 // Static Texts data structures
 interface StaticTextItem {
@@ -276,7 +282,7 @@ export interface ArticleSearchParams {
 @Component({
   selector: 'data-maintenance',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DevicesComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent],
   templateUrl: './data-maintenance.html',
   styleUrls: ['./data-maintenance.scss']
 })
@@ -425,103 +431,14 @@ export class DataMaintenanceComponent implements OnInit {
   });
   staticTextDirty = signal(false);
   isStaticTextDirty(){ return this.staticTextDirty(); }
-  // Nutrition label layout selection
-  labelLayout = signal<'standard'|'dual'|'horizontal'>('standard');
+  // Nutrition label layout selection (only 'standard' supported now)
+  labelLayout = signal<'standard'>('standard');
   setLabelLayout(ev: Event){
     const v = (ev.target as HTMLSelectElement).value as any;
-    if(v==='standard'||v==='dual'||v==='horizontal') this.labelLayout.set(v);
+    if(v==='standard') this.labelLayout.set(v);
   }
-  // Coordinate map for overlay inputs (initial sample positions; adjust to match real artwork)
-  // Units are in pixels relative to a 521x947 (standard) base; will be scaled.
-  private nutritionOverlayMaps: Record<string, { baseWidth:number; baseHeight:number; image:string; positions: Record<number,{x:number;y:number;width?:number;align?:'left'|'right'|'center';}> }> = {
-    standard: {
-      baseWidth: 680,
-      baseHeight: 947,
-      image: 'labels/nutrition-dual.png', // place image under public/labels/
-      positions: {
-        1:{x:600,y:82,width:54}, 
-        2:{x:206,y:60,width:54},
-        3:{x:478,y:160,width:54},
-        4:{x:620,y:160,width:54}, 
-        5:{x:424,y:224,width:54},               27:{x:568,y:224,width:54},
-        6:{x:498,y:224,width:54,align:'right'}, 28:{x:635,y:224,width:54,align:'right'}, 
-        7:{x:424,y:248,width:54},               29:{x:568,y:248,width:54},
-        8:{x:498,y:248,width:54,align:'right'}, 30:{x:635,y:248,width:54,align:'right'},
-        9:{x:424,y:274,width:70},              10:{x:568,y:274,width:54,align:'right'},
-        11:{x:424,y:300,width:54},              31:{x:568,y:300,width:54},
-        12:{x:498,y:300,width:54,align:'right'}, 32:{x:635,y:300,width:54,align:'right'},
-        13:{x:424,y:325,width:54},              33:{x:568,y:325,width:54},
-        14:{x:498,y:325,width:54,align:'right'}, 34:{x:635,y:325,width:54,align:'right'},
-        15:{x:424,y:350,width:54},              35:{x:568,y:350,width:54},
-        16:{x:498,y:350,width:54,align:'right'}, 36:{x:635,y:350,width:54,align:'right'},
-        17:{x:424,y:375,width:54},              37:{x:568,y:375,width:54},
-        18:{x:498,y:375,width:54,align:'right'}, 38:{x:635,y:375,width:54,align:'right'},
-        19:{x:424,y:401,width:54},              39:{x:568,y:401,width:54},
-        20:{x:424,y:427,width:54,align:'right'}, 40:{x:568,y:427,width:54,align:'right'},
-        21:{x:498,y:427,width:54},              41:{x:635,y:427,width:54},
-        22:{x:424,y:451,width:54,align:'right'}, 42:{x:568,y:451,width:54,align:'right'},
-  23:{x:424,y:492,width:130}, 43:{x:568,y:492,width:120},
-  24:{x:424,y:517,width:130}, 44:{x:568,y:517,width:120},
-  25:{x:424,y:543,width:130}, 45:{x:568,y:543,width:120},
-  26:{x:424,y:567,width:130}, 46:{x:568,y:567,width:120},
-        47:{x:150,y:475,width:54},
-        48:{x:150,y:500,width:54},
-        49:{x:150,y:525,width:54}, 
-        50:{x:150,y:550,width:54}
-               }
-    },
-    dual: {
-      // Approximated from provided dual panel image (update after real asset dropped in /public/labels/)
-      baseWidth: 949,
-      baseHeight: 658,
-      image: 'labels/nutrition-dual.png',
-      // Mapping strategy:
-      //  - Items 1-20 mirror the LEFT ("Per serving") column nutrients similar to standard layout
-      //  - Items 21-40 reserve spots for RIGHT ("Per container") column values (amounts & %DV)
-      //  - Adjust or extend as needed; refine x/y after exact pixel review
-      positions: {
-        1:{x:170,y:205,width:54},
-        2:{x:170,y:205,width:54},
-        3:{x:170,y:205,width:54},
-        4:{x:170,y:205,width:54},     // Total Fat amount (per serving)
-        5:{x:255,y:205,width:54,align:'right'}, // Total Fat %DV (per serving)
-        6:{x:170,y:235,width:55},     // Saturated Fat amount
-        7:{x:255,y:235,width:54,align:'right'}, // Saturated Fat %DV
-        8:{x:170,y:260,width:70},     // Trans Fat (no %DV typically)
-        9:{x:170,y:295,width:55},     // Cholesterol amount
-        10:{x:255,y:295,width:54,align:'right'},
-        11:{x:170,y:325,width:55},    // Sodium amount
-        12:{x:255,y:325,width:54,align:'right'},
-        13:{x:190,y:355,width:70},    // Total Carbohydrate grams
-        14:{x:255,y:355,width:54,align:'right'},
-        15:{x:190,y:385,width:70},    // Dietary Fiber grams
-        16:{x:255,y:385,width:54,align:'right'},
-        17:{x:190,y:410,width:90},    // Total Sugars grams
-        18:{x:315,y:435,width:110},   // Incl. Added Sugars grams
-        19:{x:255,y:435,width:54,align:'right'},
-        20:{x:170,y:465,width:55},    // Protein grams
-        
-        24:{x:555,y:205,width:55},    // Total Fat amount (per container) (using item 24 to separate; adjust mapping numbers to your schema)
-        25:{x:640,y:205,width:55,align:'right'},
-        26:{x:555,y:235,width:55},    // Saturated Fat amount
-        27:{x:640,y:235,width:55,align:'right'},
-        28:{x:555,y:260,width:70},    // Trans Fat
-        29:{x:555,y:295,width:55},    // Cholesterol amount
-        30:{x:640,y:295,width:55,align:'right'},
-        31:{x:555,y:325,width:55},    // Sodium amount
-        32:{x:640,y:325,width:55,align:'right'},
-        33:{x:575,y:355,width:70},    // Total Carbs grams
-        34:{x:640,y:355,width:55,align:'right'},
-        35:{x:575,y:385,width:70},    // Dietary Fiber grams
-        36:{x:640,y:385,width:55,align:'right'},
-        37:{x:575,y:410,width:90},    // Total Sugars grams
-        38:{x:700,y:435,width:110},   // Incl. Added Sugars grams
-        39:{x:640,y:435,width:55,align:'right'},
-        40:{x:555,y:465,width:55}     // Protein grams
-      }
-    },
-    
-  };
+  // Coordinate map for overlay inputs moved to overlay-maps.ts
+  private nutritionOverlayMaps: NutritionOverlayMaps = NUTRITION_OVERLAY_MAPS;
   getCurrentNutritionMap(){ return this.nutritionOverlayMaps[this.labelLayout()]; }
   getOverlayPosition(itemNumber: number){
     const map = this.getCurrentNutritionMap();
@@ -712,7 +629,7 @@ export class DataMaintenanceComponent implements OnInit {
   });
 
   // Debug functionality
-  activeDebugTab = 'list';
+  activeDebugTab = 'listArticles';
   jsonCollapsed = signal(true); // collapse debug panels by default
   debugApiResponses = {
     listArticles: null as any,
@@ -782,19 +699,18 @@ export class DataMaintenanceComponent implements OnInit {
   }
   async onStaticTextImportFileSelected(event: Event){
     const input = event.target as HTMLInputElement; const file = input.files && input.files[0]; if(!file) return;
-    if(!PapaRef){ const mod = await import('papaparse'); PapaRef = mod.default || mod; }
-    PapaRef.parse(file, { header:true, skipEmptyLines:true, worker:true, complete: (results:any)=>{
-      const raw = (results.data||[]).slice(0,5000); const headers: string[] = (results.meta?.fields||[]).map((h:string)=>h);
-      this.stImportRawRows.set(raw); this.stImportHeaders.set(headers);
+    try {
+      const { rawRows, headers } = await parseCsvFile(file, 5000);
+      this.stImportRawRows.set(rawRows); this.stImportHeaders.set(headers);
       this.stAutoMapImportHeaders(); this.stRebuildMappedRows(); this.stImportState.set({open:true, step:'mapping'});
-    }, error: ()=>{ this.error.set('Failed to parse CSV'); }});
+    } catch {
+      this.error.set('Failed to parse CSV');
+    }
   }
   stAutoMapImportHeaders(){
-    const headers = this.stImportHeaders(); const mapping: {[csvHeader:string]: string} = { ...this.stImportMapping() }; const used = new Set(Object.values(mapping));
-    headers.forEach(h=>{ const norm=h.toLowerCase().replace(/[^a-z0-9]/g,''); if(mapping[h]) return;
-      const direct = this.stImportFieldDefinitions.find(d=> d.synonyms.some(s=> s.replace(/[^a-z0-9]/g,'')===norm)); if(direct && !used.has(direct.key)){ mapping[h]=direct.key; used.add(direct.key); }
-    });
-    this.stImportMapping.set(mapping);
+  const headers = this.stImportHeaders();
+  const mapping = autoMapHeaders(headers, this.stImportFieldDefinitions, this.stImportMapping());
+  this.stImportMapping.set(enforceUniqueMapping(mapping));
   }
   stUpdateImportMapping(csvHeader:string, target:string){ const mapping={...this.stImportMapping()}; if(!target) delete mapping[csvHeader]; else mapping[csvHeader]=target; const rev: {[t:string]:string}={}; for(const [h,t] of Object.entries(mapping)){ if(rev[t]&&rev[t]!==h){ delete mapping[rev[t]]; } rev[t]=h; } this.stImportMapping.set(mapping); this.stRebuildMappedRows(); }
   private stRebuildMappedRows(){ const raw=this.stImportRawRows(); const rows = raw.map((r:any,i:number)=> this.stMapImportRow(r,i+2)); this.stImportRows.set(rows); }
@@ -809,9 +725,21 @@ export class DataMaintenanceComponent implements OnInit {
     return row;
   }
   stInvalidImportRowCount(){ return this.stImportRows().filter(r=>r.error).length; }
-  stStartImport(){ this.stImportCancelled=false; this.stImportProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false}); const rows=this.stImportRows().filter(r=>!r.error); this.stImportRows.set(rows); this.stImportState.set({open:true, step:'running'}); this.stImportQueueIndex=0; this.stActiveImports=0; for(let i=0;i<this.stImportConcurrency;i++) this.stPumpImportQueue(); }
+  stStartImport(){
+    this.stImportCancelled=false;
+    this.stImportProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
+    const rows=this.stImportRows().filter(r=>!r.error);
+    this.stImportRows.set(rows);
+    this.stImportState.set({open:true, step:'running'});
+    runConcurrentQueue(rows, (row)=> this.stProcessImportRow(row), {
+      concurrency: this.stImportConcurrency,
+      getCancelled: () => this.stImportCancelled,
+      onItemDone: () => this.stUpdateImportProgress(),
+      onDone: () => { /* handled in stUpdateImportProgress */ }
+    });
+  }
   stCancelImport(){ this.stImportCancelled=true; }
-  private stPumpImportQueue(){ if(this.stImportCancelled){ this.stFinishImport(); return; } if(this.stImportQueueIndex>=this.stImportRows().length){ if(this.stActiveImports===0) this.stFinishImport(); return; } if(this.stActiveImports>=this.stImportConcurrency) return; const row=this.stImportRows()[this.stImportQueueIndex++]; this.stActiveImports++; this.stProcessImportRow(row).finally(()=>{ this.stActiveImports--; this.stUpdateImportProgress(); this.stPumpImportQueue(); }); this.stPumpImportQueue(); }
+  private stPumpImportQueue(){ /* replaced by runConcurrentQueue */ }
   private async stProcessImportRow(row:any){
     try{
       const payload = { number: row.number, description: row.description, items: Array.from({length:50},(_,i)=> ({ number:i+1, textValue: row.items[i+1]||'', sendFormat:false })) };
@@ -831,7 +759,11 @@ export class DataMaintenanceComponent implements OnInit {
   }
   private stUpdateImportProgress(){ const rows=this.stImportRows(); const processed=rows.filter(r=>r.status).length; const created=rows.filter(r=>r.status==='created').length; const updated=rows.filter(r=>r.status==='updated').length; const success=created+updated; const failed=rows.filter(r=>r.status==='failed').length; const percent=rows.length? Math.round(processed*100/rows.length):0; const done=processed===rows.length || this.stImportCancelled; this.stImportProgress.set({processed, success, created, updated, failed, percent, done}); if(done) this.stFinishImport(); }
   private stFinishImport(){ this.stImportState.set({open:true, step:'done'}); }
-  stDownloadImportErrors(){ const errs=this.stImportRows().filter(r=>r.status==='failed'); if(!errs.length) return; const header='line,number,error\n'; const body=errs.map(r=>`${r.line},"${r.number}","${(r.error||'').replace(/"/g,'""')}"`).join('\n'); const blob=new Blob([header+body],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='static-text-import-errors.csv'; a.click(); URL.revokeObjectURL(url); }
+  stDownloadImportErrors(){
+    const errs=this.stImportRows().filter(r=>r.status==='failed'); if(!errs.length) return;
+    const rows = errs.map(r=>`${r.line},"${r.number}","${(r.error||'').replace(/"/g,'""')}"`);
+    downloadCsv('static-text-import-errors.csv','line,number,error\n',rows);
+  }
   private stImportCancelled = false; private stImportConcurrency = 3; private stActiveImports = 0; private stImportQueueIndex = 0;
 
   private buildImportFieldDefinitions(){
@@ -988,82 +920,55 @@ export class DataMaintenanceComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files && input.files[0];
     if(!file) return;
-    if(!PapaRef){
-      const mod = await import('papaparse');
-      PapaRef = mod.default || mod; // handle CJS / ESM
+    try {
+      const { rawRows, headers } = await parseCsvFile(file, 5000);
+      this.importRawRows.set(rawRows);
+      this.importHeaders.set(headers);
+      // attempt auto map
+      this.autoMapImportHeaders();
+      this.rebuildMappedRows();
+      // Always show mapping step so user can see what auto-mapped
+      this.importState.set({open:true, step:'mapping'});
+    } catch {
+      this.error.set('Failed to parse CSV');
     }
-    PapaRef.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      worker: true,
-      complete: (results:any)=>{
-        const raw = (results.data||[]).slice(0,5000);
-        const headers: string[] = (results.meta?.fields || []).map((h:string)=>h);
-        this.importRawRows.set(raw);
-        this.importHeaders.set(headers);
-        // attempt auto map
-        this.autoMapImportHeaders();
-        this.rebuildMappedRows();
-  // Always show mapping step so user can see what auto-mapped
-  this.importState.set({open:true, step:'mapping'});
-      },
-      error: ()=>{
-        this.error.set('Failed to parse CSV');
-      }
-    });
   }
   private normalizeHeaderName(h:string){ return h.toLowerCase().replace(/[^a-z0-9]/g,''); }
   autoMapImportHeaders(){
     const headers = this.importHeaders();
-    const mapping: {[csvHeader:string]: string} = { ...this.importMapping() };
-    const usedTargets = new Set(Object.values(mapping));
-    headers.forEach(h=>{
-        // Normalize header: join lines, remove spaces, lowercase
-        let norm = h.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim().toLowerCase();
-        norm = norm.replace(/[^a-z0-9 ]/g, '');
-        const normCompact = norm.replace(/ /g,''); // no-space version for relaxed matching
-        // Special handling: plain 'date text field X' -> Text variant, explicit number tokens -> Number variant
-        const dtPlainMatch = norm.match(/^date text field (\d)$/);
-        if(dtPlainMatch){
-          const idx = dtPlainMatch[1];
-          const target = `dateTextField${idx}Text`;
-          if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
+    const existing = this.importMapping();
+    const mapping = autoMapHeaders(headers, this.importFieldDefinitions, existing, {
+      extraMatcher: (norm, compact, used) => {
+        // Prefer text variant when bare "date text field X" appears
+        let m = norm.match(/^date text field (\d)$/);
+        if (m) {
+          const key = `dateTextField${m[1]}Text`;
+          if (!used.has(key)) return key;
         }
-        const dtSpecificNumber = norm.match(/^date text field (\d) number$/) || norm.match(/^date text field (\d) num$/) || norm.match(/^date text field (\d) nbr$/);
-        if(dtSpecificNumber){
-          const idx = dtSpecificNumber[1];
-          const target = `dateTextField${idx}Number`;
-          if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
-          return;
+        // Explicit number tokens
+        m = norm.match(/^date text field (\d) number$/) || norm.match(/^date text field (\d) num$/) || norm.match(/^date text field (\d) nbr$/);
+        if (m) {
+          const key = `dateTextField${m[1]}Number`;
+          if (!used.has(key)) return key;
         }
-        // New: handle exported form 'Date text field no. X' (becomes 'date text field no x') -> Number variant
-        const dtNoVariant = norm.match(/^date text field no (\d)$/);
-        if(dtNoVariant){
-          const idx = dtNoVariant[1];
-          const target = `dateTextField${idx}Number`;
-          if(!usedTargets.has(target)){ mapping[h] = target; usedTargets.add(target); }
-          return;
+        // "Date text field no X" -> Number variant
+        m = norm.match(/^date text field no (\d)$/) || compact.match(/^datetextfieldno(\d)$/) as any;
+        if (m) {
+          const idx = Array.isArray(m) ? m[1] : (m as any)[1];
+          const key = `dateTextField${idx}Number`;
+          if (!used.has(key)) return key;
         }
-      if(mapping[h]) return; // already mapped
-      // direct synonym match
-      for(const def of this.importFieldDefinitions){
-        if(usedTargets.has(def.key)) continue;
-          if(def.synonyms.includes(norm) || def.synonyms.includes(normCompact)){ mapping[h] = def.key; usedTargets.add(def.key); return; }
+        // Series helpers
+        m = compact.match(/^simpletext(\d{1,2})$/) as any; if (m) { const n=parseInt(m[1],10); if(n>=1&&n<=30) return `simpleText${n}`; }
+        m = compact.match(/^generalnumber(\d{1,2})$/) as any; if (m) { const n=parseInt(m[1],10); if(n>=1&&n<=20) return `generalNumber${n}`; }
+        m = compact.match(/^logo(\d{1,2})$/) as any; if (m) { const n=parseInt(m[1],10); if(n>=1&&n<=10) return `logoField${n}`; }
+        m = compact.match(/^codenumber(\d)$/) as any; if (m) { return `codeField${m[1]}`; }
+        m = compact.match(/^codesubstring(\d)$/) as any; if (m) { return `codeString${m[1]}`; }
+        m = compact.match(/^generaltextfieldno(\d)$/) as any; if (m) { return `textField${m[1]}`; }
+        return undefined;
       }
-        // Special case: 'Date Text Field 1', 'Date Text Field 2', 'Date Text Field 3' should map to 'dateTextField1Text', etc.
-        for(let i=1;i<=3;i++){
-          // Already handled above
-        }
-      // pattern simpleTextXX
-      const simpleTextMatch = norm.match(/^simpletext(\d{1,2})$/); if(simpleTextMatch){ const n=parseInt(simpleTextMatch[1],10); if(n>=1&&n<=30){ mapping[h] = `simpleText${n}`; return; }}
-      const generalNumberMatch = norm.match(/^generalnumber(\d{1,2})$/); if(generalNumberMatch){ const n=parseInt(generalNumberMatch[1],10); if(n>=1&&n<=20){ mapping[h] = `generalNumber${n}`; return; }}
-      const logoMatch = norm.match(/^logo(\d{1,2})$/); if(logoMatch){ const n=parseInt(logoMatch[1],10); if(n>=1&&n<=10){ mapping[h] = `logoField${n}`; return; }}
-      const codeNumMatch = norm.match(/^codenumber(\d)$/); if(codeNumMatch){ mapping[h] = `codeField${codeNumMatch[1]}`; return; }
-      const codeSubMatch = norm.match(/^codesubstring(\d)$/); if(codeSubMatch){ mapping[h] = `codeString${codeSubMatch[1]}`; return; }
-      const dateTextMatch = normCompact.match(/^datetextfieldno(\d)$/); if(dateTextMatch){ const idx=dateTextMatch[1]; const target=`dateTextField${idx}Number`; if(!usedTargets.has(target)){ mapping[h]=target; usedTargets.add(target);} return; }
-      const generalTextFieldMatch = norm.match(/^generaltextfieldno(\d)$/); if(generalTextFieldMatch){ mapping[h] = `textField${generalTextFieldMatch[1]}`; return; }
     });
-    this.importMapping.set(mapping);
+    this.importMapping.set(enforceUniqueMapping(mapping));
   }
   updateImportMapping(csvHeader:string, target:string){
     const mapping = { ...this.importMapping() };
@@ -1164,27 +1069,19 @@ export class DataMaintenanceComponent implements OnInit {
   invalidImportRowCount(){ return this.importRows().filter(r=>r.error).length; }
   startImport(){
     this.importCancelled = false;
-  this.importProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
-    // filter valid rows only for now
+    this.importProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
     const rows = this.importRows().filter(r=>!r.error);
     this.importRows.set(rows);
     this.importState.set({open:true, step:'running'});
-    this.importQueueIndex = 0; this.activeImports = 0;
-    for(let i=0;i<this.importConcurrency;i++) this.pumpImportQueue();
+    runConcurrentQueue(rows, (row)=> this.processImportRow(row), {
+      concurrency: this.importConcurrency,
+      getCancelled: () => this.importCancelled,
+      onItemDone: () => this.updateImportProgress(),
+      onDone: () => { /* updateImportProgress will decide finish */ }
+    });
   }
   cancelImport(){ this.importCancelled = true; }
-  private pumpImportQueue(){
-    if(this.importCancelled){ this.finishImport(); return; }
-    if(this.importQueueIndex >= this.importRows().length){
-      if(this.activeImports===0) this.finishImport();
-      return;
-    }
-    if(this.activeImports>=this.importConcurrency) return;
-    const row = this.importRows()[this.importQueueIndex++];
-    this.activeImports++;
-    this.processImportRow(row).finally(()=>{ this.activeImports--; this.updateImportProgress(); this.pumpImportQueue(); });
-    this.pumpImportQueue();
-  }
+  private pumpImportQueue(){ /* replaced by runConcurrentQueue */ }
   private async processImportRow(row:any){
     try{
       const emptyPLU = this.createEmptyArticlePLU();
@@ -1299,15 +1196,10 @@ export class DataMaintenanceComponent implements OnInit {
     return n>=1 && n<=10;
   }
   downloadImportErrors(){
-    const errs = this.importRows().filter(r=>r.status==='failed');
-    if(!errs.length) return;
-    const header = 'line,number,name,error\n';
-    const body = errs.map(r=>`${r.line},"${r.number}","${r.name}","${(r.error||'').replace(/"/g,'""')}"`).join('\n');
-    const blob = new Blob([header+body], {type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'import-errors.csv'; a.click();
-    URL.revokeObjectURL(url);
+  const errs = this.importRows().filter(r=>r.status==='failed');
+  if(!errs.length) return;
+  const rows = errs.map(r=>`${r.line},"${r.number}","${r.name}","${(r.error||'').replace(/"/g,'""')}"`);
+  downloadCsv('import-errors.csv','line,number,name,error\n',rows);
   }
 
   async loadArticles() {
@@ -1826,6 +1718,7 @@ export class DataMaintenanceComponent implements OnInit {
   // Sub-page navigation helpers
   goToArticlesSubPage(){
     this.currentSubPage.set('articles');
+  this.activeDebugTab = 'listArticles';
     // Ensure an articles view is active
     if(['create','edit','copy','list'].indexOf(this.currentView())===-1){
       this.currentView.set('list');
@@ -1833,6 +1726,7 @@ export class DataMaintenanceComponent implements OnInit {
   }
   goToStaticTextsSubPage(){
     this.currentSubPage.set('static-texts');
+  this.activeDebugTab = 'stList';
     // Collapse any article modals to base view when switching
     this.currentView.set('list');
     // Load first page of existing static texts when entering tab
@@ -1852,6 +1746,7 @@ export class DataMaintenanceComponent implements OnInit {
   goToDevicesSubPage(){
     this.currentSubPage.set('devices');
     this.currentView.set('list');
+  this.activeDebugTab = 'devicesList';
   // Lazy load devices and production lines once
   if (!this.devicesLoadedOnce) { this.loadDevices(); this.devicesLoadedOnce = true; }
   if (!this.productionLinesLoadedOnce) { this.loadProductionLines(); this.productionLinesLoadedOnce = true; }
@@ -2094,67 +1989,66 @@ export class DataMaintenanceComponent implements OnInit {
   }
   async onCuImportFileSelected(event: Event){
     const input = event.target as HTMLInputElement; const file = input.files && input.files[0]; if(!file) return;
-    if(!PapaRef){ const mod = await import('papaparse'); PapaRef = mod.default || mod; }
-    PapaRef.parse(file, { header:true, skipEmptyLines:true, worker:true, complete: (results:any)=>{
-      const raw = (results.data||[]).slice(0,5000); const headers: string[] = (results.meta?.fields || []).map((h:string)=>h);
-      this.cuImportRawRows.set(raw); this.cuImportHeaders.set(headers); this.cuAutoMapImportHeaders(); this.cuRebuildMappedRows(); this.cuImportState.set({open:true, step:'mapping'});
-    }, error: ()=>{ this.error.set('Failed to parse CSV'); }});
+    try {
+      const { rawRows, headers } = await parseCsvFile(file, 5000);
+      this.cuImportRawRows.set(rawRows);
+      this.cuImportHeaders.set(headers);
+      this.cuAutoMapImportHeaders();
+      this.cuRebuildMappedRows();
+      this.cuImportState.set({open:true, step:'mapping'});
+    } catch {
+      this.error.set('Failed to parse CSV');
+    }
   }
-  private cuNormalize(h:string){ return h.toLowerCase().replace(/[^a-z0-9]/g,''); }
   cuAutoMapImportHeaders(){
-    const headers = this.cuImportHeaders(); const mapping: {[k:string]:string} = { ...this.cuImportMapping() }; const used = new Set(Object.values(mapping));
-    headers.forEach(h=>{ if(mapping[h]) return; const norm=this.cuNormalize(h);
-      const direct = this.cuImportFieldDefinitions.find(d=> d.synonyms.some(s=> this.cuNormalize(s)===norm) || this.cuNormalize(d.label)===norm || d.key===norm);
-      if(direct && !used.has(direct.key)){ mapping[h]=direct.key; used.add(direct.key); }
-    });
-    this.cuImportMapping.set(mapping);
+  const headers = this.cuImportHeaders();
+  const mapping = autoMapHeaders(headers, this.cuImportFieldDefinitions, this.cuImportMapping());
+  this.cuImportMapping.set(enforceUniqueMapping(mapping));
   }
   cuUpdateImportMapping(csvHeader:string, target:string){ const m={...this.cuImportMapping()}; if(!target) delete m[csvHeader]; else m[csvHeader]=target; const reversed:any={}; for(const [h,t] of Object.entries(m)){ if(reversed[t] && reversed[t]!==h){ delete m[reversed[t]]; } reversed[t]=h; } this.cuImportMapping.set(m); this.cuRebuildMappedRows(); }
   private cuRebuildMappedRows(){ const raw=this.cuImportRawRows(); const rows=raw.map((r:any,i:number)=> this.cuMapImportRow(r,i+2)); this.cuImportRows.set(rows); }
   cuRequiredImportFieldsMapped(){ const mapped = new Set(Object.values(this.cuImportMapping())); return ['customerNumber','customerName'].every(k=> mapped.has(k)); }
   cuGoToPreviewFromMapping(){ if(this.cuRequiredImportFieldsMapped()) this.cuImportState.set({open:true, step:'preview'}); }
   cuBackToMapping(){ if(this.cuImportState().step==='preview') this.cuImportState.set({open:true, step:'mapping'}); }
-  private cuTrim(v:any){ return (v===undefined||v===null)?'':String(v).trim(); }
-  private cuParseNumber(v:any){ const t=this.cuTrim(v); if(!t) return 0; const m=t.match(/-?\d+(?:[.,]\d+)?/); return m? parseFloat(m[0].replace(',','.')):0; }
   private cuMapImportRow(r:any,line:number){
     const mapping = this.cuImportMapping(); const get=(k:string)=>{ const h=Object.entries(mapping).find(([,t])=>t===k)?.[0]; return h? r[h]:''; };
     const row:any = {
-      original:r, line,
-      customerNumber: this.cuTrim(get('customerNumber')||r.customerNumber||r.number),
-      customerName: this.cuTrim(get('customerName')||r.customerName||r.name),
-      title: this.cuTrim(get('title')||r.title),
-      firstName: this.cuTrim(get('firstName')||r.firstName),
-      lastName: this.cuTrim(get('lastName')||r.lastName),
-      eMailAddress: this.cuTrim(get('eMailAddress')||r.eMailAddress||r.email),
-      phoneNumber1: this.cuTrim(get('phoneNumber1')||r.phoneNumber1||r.phone),
-      phoneNumber2: this.cuTrim(get('phoneNumber2')||r.phoneNumber2),
-      mobilePhoneNumber: this.cuTrim(get('mobilePhoneNumber')||r.mobilePhoneNumber||r.mobile),
-      faxNumber: this.cuTrim(get('faxNumber')||r.faxNumber||r.fax),
-      priceLevel: this.cuTrim(get('priceLevel')||r.priceLevel),
-      discountInPercent: this.cuParseNumber(get('discountInPercent')||r.discountInPercent||r.discount),
-      vat: this.cuTrim(get('vat')||r.vat),
-      eori: this.cuTrim(get('eori')||r.eori),
-      commonText1: this.cuTrim(get('commonText1')||r.commonText1),
-      commonText2: this.cuTrim(get('commonText2')||r.commonText2),
-      commonNumber1: this.cuParseNumber(get('commonNumber1')||r.commonNumber1),
-      commonNumber2: this.cuParseNumber(get('commonNumber2')||r.commonNumber2),
-      additional1: this.cuTrim(get('additional1')||r.additional1),
-      additional2: this.cuTrim(get('additional2')||r.additional2),
-      assignedArticlesCsv: this.cuTrim(get('assignedArticlesCsv')||r.assignedArticlesCsv||r.assignedArticles||r.articles),
-      addr_name1: this.cuTrim(get('addr_name1')||r.addr_name1||r.name1),
-      addr_name2: this.cuTrim(get('addr_name2')||r.addr_name2||r.name2),
-      addr_name3: this.cuTrim(get('addr_name3')||r.addr_name3||r.name3),
-      addr_houseNumber: this.cuTrim(get('addr_houseNumber')||r.addr_houseNumber||r.houseNumber||r.house),
-      addr_street1: this.cuTrim(get('addr_street1')||r.addr_street1||r.street1||r.street),
-      addr_street2: this.cuTrim(get('addr_street2')||r.addr_street2||r.street2),
-      addr_postOfficeBox: this.cuTrim(get('addr_postOfficeBox')||r.addr_postOfficeBox||r.poBox||r.pobox),
-      addr_city: this.cuTrim(get('addr_city')||r.addr_city||r.city),
-      addr_zipCode: this.cuTrim(get('addr_zipCode')||r.addr_zipCode||r.zip||r.zipCode||r.postalCode),
-      addr_stateCode: this.cuTrim(get('addr_stateCode')||r.addr_stateCode||r.state||r.stateCode),
-      addr_country: this.cuTrim(get('addr_country')||r.addr_country||r.country||r.countryCode),
-      addr_type: this.cuTrim(get('addr_type')||r.addr_type||r.type||'billingAddress'),
-      addr_isDefault: /^true|1|yes$/i.test(this.cuTrim(get('addr_isDefault')||r.addr_isDefault||r.default)),
-      addr_isMainAddress: /^true|1|yes$/i.test(this.cuTrim(get('addr_isMainAddress')||r.addr_isMainAddress||r.main)) ,
+  original:r, line,
+  customerNumber: trimValue(get('customerNumber')||r.customerNumber||r.number),
+  customerName: trimValue(get('customerName')||r.customerName||r.name),
+  title: trimValue(get('title')||r.title),
+  firstName: trimValue(get('firstName')||r.firstName),
+  lastName: trimValue(get('lastName')||r.lastName),
+  eMailAddress: trimValue(get('eMailAddress')||r.eMailAddress||r.email),
+  phoneNumber1: trimValue(get('phoneNumber1')||r.phoneNumber1||r.phone),
+  phoneNumber2: trimValue(get('phoneNumber2')||r.phoneNumber2),
+  mobilePhoneNumber: trimValue(get('mobilePhoneNumber')||r.mobilePhoneNumber||r.mobile),
+  faxNumber: trimValue(get('faxNumber')||r.faxNumber||r.fax),
+  priceLevel: trimValue(get('priceLevel')||r.priceLevel),
+  discountInPercent: parseNumberValue(get('discountInPercent')||r.discountInPercent||r.discount),
+  vat: trimValue(get('vat')||r.vat),
+  eori: trimValue(get('eori')||r.eori),
+  commonText1: trimValue(get('commonText1')||r.commonText1),
+  commonText2: trimValue(get('commonText2')||r.commonText2),
+  commonNumber1: parseNumberValue(get('commonNumber1')||r.commonNumber1),
+  commonNumber2: parseNumberValue(get('commonNumber2')||r.commonNumber2),
+  additional1: trimValue(get('additional1')||r.additional1),
+  additional2: trimValue(get('additional2')||r.additional2),
+  assignedArticlesCsv: trimValue(get('assignedArticlesCsv')||r.assignedArticlesCsv||r.assignedArticles||r.articles),
+  addr_name1: trimValue(get('addr_name1')||r.addr_name1||r.name1),
+  addr_name2: trimValue(get('addr_name2')||r.addr_name2||r.name2),
+  addr_name3: trimValue(get('addr_name3')||r.addr_name3||r.name3),
+  addr_houseNumber: trimValue(get('addr_houseNumber')||r.addr_houseNumber||r.houseNumber||r.house),
+  addr_street1: trimValue(get('addr_street1')||r.addr_street1||r.street1||r.street),
+  addr_street2: trimValue(get('addr_street2')||r.addr_street2||r.street2),
+  addr_postOfficeBox: trimValue(get('addr_postOfficeBox')||r.addr_postOfficeBox||r.poBox||r.pobox),
+  addr_city: trimValue(get('addr_city')||r.addr_city||r.city),
+  addr_zipCode: trimValue(get('addr_zipCode')||r.addr_zipCode||r.zip||r.zipCode||r.postalCode),
+  addr_stateCode: trimValue(get('addr_stateCode')||r.addr_stateCode||r.state||r.stateCode),
+  addr_country: trimValue(get('addr_country')||r.addr_country||r.country||r.countryCode),
+  addr_type: trimValue(get('addr_type')||r.addr_type||r.type||'billingAddress'),
+  addr_isDefault: parseBoolValue(get('addr_isDefault')||r.addr_isDefault||r.default),
+  addr_isMainAddress: parseBoolValue(get('addr_isMainAddress')||r.addr_isMainAddress||r.main) ,
       status:'', error:''
     };
     if(!row.customerNumber || row.customerNumber.length>32) row.error += 'invalid number; ';
@@ -2162,9 +2056,21 @@ export class DataMaintenanceComponent implements OnInit {
     return row;
   }
   cuInvalidImportRowCount(){ return this.cuImportRows().filter(r=>r.error).length; }
-  cuStartImport(){ this.cuImportCancelled=false; this.cuImportProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false}); const rows=this.cuImportRows().filter(r=>!r.error); this.cuImportRows.set(rows); this.cuImportState.set({open:true, step:'running'}); this.cuImportQueueIndex=0; this.cuActiveImports=0; for(let i=0;i<this.cuImportConcurrency;i++) this.cuPumpImportQueue(); }
+  cuStartImport(){
+    this.cuImportCancelled=false;
+    this.cuImportProgress.set({processed:0, success:0, created:0, updated:0, failed:0, percent:0, done:false});
+    const rows=this.cuImportRows().filter(r=>!r.error);
+    this.cuImportRows.set(rows);
+    this.cuImportState.set({open:true, step:'running'});
+    runConcurrentQueue(rows, (row)=> this.cuProcessImportRow(row), {
+      concurrency: this.cuImportConcurrency,
+      getCancelled: () => this.cuImportCancelled,
+      onItemDone: () => this.cuUpdateImportProgress(),
+      onDone: () => { /* handled in cuUpdateImportProgress */ }
+    });
+  }
   cuCancelImport(){ this.cuImportCancelled=true; }
-  private cuPumpImportQueue(){ if(this.cuImportCancelled){ this.cuFinishImport(); return; } if(this.cuImportQueueIndex>=this.cuImportRows().length){ if(this.cuActiveImports===0) this.cuFinishImport(); return; } if(this.cuActiveImports>=this.cuImportConcurrency) return; const row=this.cuImportRows()[this.cuImportQueueIndex++]; this.cuActiveImports++; this.cuProcessImportRow(row).finally(()=>{ this.cuActiveImports--; this.cuUpdateImportProgress(); this.cuPumpImportQueue(); }); this.cuPumpImportQueue(); }
+  private cuPumpImportQueue(){ /* replaced by runConcurrentQueue */ }
   private async cuProcessImportRow(row:any){
     try{
       const assignedArticles = String(row.assignedArticlesCsv || '').split(',').map((s:string)=>s.trim()).filter(Boolean).map((articleNumber:string)=>({ articleNumber }));
