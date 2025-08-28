@@ -2,6 +2,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DevicesComponent } from './devices/devices';
+import { ExceptionsComponent } from './exceptions/exceptions';
 import { StaticTextsListComponent } from './static-texts/static-texts-list';
 import { ArticlesTableComponent } from './articles/articles-table';
 import { DebugPanelComponent } from './debug/debug-panel';
@@ -282,7 +283,7 @@ export interface ArticleSearchParams {
 @Component({
   selector: 'data-maintenance',
   standalone: true,
-  imports: [CommonModule, FormsModule, DevicesComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent],
+  imports: [CommonModule, FormsModule, DevicesComponent, ExceptionsComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent],
   templateUrl: './data-maintenance.html',
   styleUrls: ['./data-maintenance.scss']
 })
@@ -402,6 +403,7 @@ export class DataMaintenanceComponent implements OnInit {
 
   // State signals
   articles = signal<LabelerArticle[]>([]);
+  get articleOptions(){ return (this.articles()||[]).map(a=>({ number: a.number, name: a.name })); }
   selectedArticle = signal<LabelerArticle | null>(null);
   isLoading = signal(false);
   error = signal<string | null>(null);
@@ -420,8 +422,8 @@ export class DataMaintenanceComponent implements OnInit {
 
   // View states for full page navigation
   currentView = signal<'list' | 'create' | 'edit' | 'copy'>('list');
-  // Sub-page: articles, static-texts, customers, devices (default articles)
-  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices'>('articles');
+  // Sub-page: articles, static-texts, customers, devices, exceptions (default articles)
+  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices' | 'exceptions'>('articles');
 
   // Static Text form state
   staticTextData = signal<StaticTextData>({
@@ -644,10 +646,106 @@ export class DataMaintenanceComponent implements OnInit {
   stCreateOrUpdate: null as any,
   // Devices
   devicesList: null as any,
-  productionLinesList: null as any
+  productionLinesList: null as any,
+  // Exceptions
+  exPut: null as any
   };
 
   private readonly allowedLabelingModes = ['weight','fixedPrice','fixedWeight','fixedValue'];
+
+  // ---------------- Exceptions: State ----------------
+  exceptions = {
+    articleNumber: '',
+    allCustomers: true,
+    customerNumber: '',
+    deviceSystemName: '',
+    deviceSystemType: 'allDevices' as 'allDevices'|'device'|'deviceGroup',
+    attributes: [] as Array<{ attribute: string; value: string }>,
+    loading: false,
+    error: null as string | null,
+    response: null as any
+  };
+  attributeOptions: string[] = [
+    'dateTextField1','dateTextField2','dateTextField3',
+    ...Array.from({length:20},(_,i)=>`textField${i+1}`),
+    ...Array.from({length:10},(_,i)=>`logoField${i+1}`),
+    ...Array.from({length:7},(_,i)=>`codeField${i+1}`),
+    ...Array.from({length:7},(_,i)=>`codeString${i+1}`),
+    ...Array.from({length:20},(_,i)=>`generalNumber${i+1}`),
+    ...Array.from({length:30},(_,i)=>`simpleText${i+1}`),
+    'total1PreselectedValueForPiece','total2PreselectedValueForPiece','total3PreselectedValueForPiece',
+    'printChannelInternalConfiguration',
+    ...'ABCDEFGHIJK'.split('').map(s=>`printChannel${s}Configuration`),
+    'unitPrice','basePriceDivision','specialUnitPrice','recalculateUnitPriceType',
+    'shelfLifeDays1','shelfLifeDays2','date1','date2','date3','time1PrintConfiguration','time2PrintConfiguration',
+    'tareWeight','tareNumber','fixedWeight','minWeight','maxWeight',
+    'scannerCompulsory','scanningRule','labelScanningRule','productGroupNumber','tendencyControl','staticText',
+    'automaticLabelParameter','labelParameter','piecesPerPackage','numberOfSuccessiveLabels','numberOfLabelCopies','labelingMode',
+    'ingredientsProportion','alternateLabelDataOutputChannel','alternateLabelCriteria','labelLanguage','countrySecondCurrency','printConversionRate',
+    'template','weightClass','metalDetectorProductNumber','productNumberLDI','productNumberLCE','codepage','macroModeT',
+    'packageLength','packageLengthTolerance','articleText','packagesPerMinute',
+    'preselectedTableTotal1Weight','preselectedTableTotal1Price','preselectedTableTotal1Pieces',
+    'preselectedTableTotal2Weight','preselectedTableTotal2Price','preselectedTableTotal2Pieces','preselectedTableTotal2NumberOfTotal1'
+  ];
+
+  setExArticleNumber = (v: string) => { this.exceptions.articleNumber = v.trim(); };
+  toggleExAllCustomers = () => { this.exceptions.allCustomers = !this.exceptions.allCustomers; if(this.exceptions.allCustomers){ this.exceptions.customerNumber=''; } };
+  setExCustomerNumber = (v: string) => { this.exceptions.customerNumber = v.trim(); };
+  setExDeviceSystemName = (v: string) => { this.exceptions.deviceSystemName = v; };
+  setExDeviceSystemType = (v: string) => { if(v==='allDevices'||v==='device'||v==='deviceGroup') this.exceptions.deviceSystemType = v; };
+  addExAttribute = () => { this.exceptions.attributes.push({ attribute: this.attributeOptions[0], value: '' }); };
+  removeExAttribute = (i: number) => { this.exceptions.attributes.splice(i,1); };
+  setExAttributeName = (i: number, v: string) => { this.exceptions.attributes[i].attribute = v; };
+  setExAttributeValue = (i: number, v: string) => { this.exceptions.attributes[i].value = v; };
+
+  async putExceptions(){
+    const articleNumber = this.exceptions.articleNumber.trim(); if(!articleNumber){ this.exceptions.error='Article number is required'; return; }
+    if(!this.exceptions.allCustomers && !this.exceptions.customerNumber.trim()){
+      this.exceptions.error = 'Customer number is required when All Customers is unchecked';
+      return;
+    }
+    // Payload based on previous spec; sending articleNumber and exception fields via PUT
+    const payload: any = {
+      articleNumber,
+      state: 'active',
+      deviceSystem: { name: this.exceptions.deviceSystemName || 'All', type: this.exceptions.deviceSystemType },
+      attributes: this.exceptions.attributes.map(a=>({ attribute: a.attribute, value: a.value }))
+    };
+    if(!this.exceptions.allCustomers){
+      payload.customerNumber = this.exceptions.customerNumber.trim();
+    }
+    this.exceptions.loading = true; this.exceptions.error=null; this.exceptions.response=null;
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type': 'application/json' });
+  const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/article-exceptions/articleNumber/${encodeURIComponent(articleNumber)}`;
+    try{
+      const res = await this.http.put(requestUrl, payload, { headers, observe: 'response' as const }).toPromise();
+      // Build a richer response, especially for 204 No Content
+      this.exceptions.response = {
+        status: res?.status,
+        statusText: res?.statusText,
+        headers: {
+          location: res?.headers?.get('Location') || null,
+          contentType: res?.headers?.get('Content-Type') || null
+        },
+        body: res?.body ?? null,
+        message: res?.status === 204 ? 'Exception saved (No Content).' : 'Exception saved.'
+      };
+      this.debugApiResponses.exPut = {
+        timestamp: new Date().toISOString(), requestUrl,
+        requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+        requestBody: payload, rawResponse: res
+      };
+    }catch(e:any){
+      this.exceptions.error = e?.error?.title || e?.message || 'PUT failed';
+  // Surface error payload into the Response panel for easier debugging
+  this.exceptions.response = e?.error ?? { status: e?.status, message: e?.message, url: requestUrl };
+      this.debugApiResponses.exPut = {
+        timestamp: new Date().toISOString(), requestUrl,
+        requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+        requestBody: payload, rawError: e
+      };
+    } finally { this.exceptions.loading = false; }
+  }
 
   // Raw input buffers to preserve user typing (avoid premature numeric coercion)
   unitPriceInput = signal<string>('0');
@@ -1751,6 +1849,17 @@ export class DataMaintenanceComponent implements OnInit {
   if (!this.devicesLoadedOnce) { this.loadDevices(); this.devicesLoadedOnce = true; }
   if (!this.productionLinesLoadedOnce) { this.loadProductionLines(); this.productionLinesLoadedOnce = true; }
   }
+
+  goToExceptionsSubPage(){
+    this.currentSubPage.set('exceptions');
+    this.currentView.set('list');
+  this.activeDebugTab = 'exPut';
+  }
+
+  // Exceptions modal dialog state
+  exceptionsModalOpen = signal(false);
+  openExceptionsModal(){ this.exceptionsModalOpen.set(true); document.body.classList.add('has-import-open'); }
+  closeExceptionsModal(){ this.exceptionsModalOpen.set(false); document.body.classList.remove('has-import-open'); }
 
   // ---------------- Customers: Modal Form State ----------------
   customerModalOpen = signal(false);

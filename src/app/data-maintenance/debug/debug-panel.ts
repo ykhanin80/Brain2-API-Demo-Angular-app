@@ -81,6 +81,10 @@ import { CommonModule } from '@angular/common';
         <button *ngIf="currentSubPage==='devices'" type="button" class="debug-tab"
                 [class.active]="activeTab === 'productionLinesList'"
                 (click)="activeTabChange.emit('productionLinesList')">Get Production Lines</button>
+
+  <button *ngIf="currentSubPage==='exceptions'" type="button" class="debug-tab"
+    [class.active]="activeTab === 'exPut'"
+    (click)="activeTabChange.emit('exPut')">PUT Exception</button>
       </div>
 
       <div class="debug-content" [class.collapsed]="jsonCollapsed">
@@ -177,6 +181,15 @@ import { CommonModule } from '@angular/common';
                [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
                [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.productionLinesList | json}}</pre>
         </div>
+
+        <div *ngIf="activeTab === 'exPut' && currentSubPage==='exceptions'" class="debug-panel"
+             [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">PUT Exception</h4>
+            <small [style.color]="isDarkMode ? '#9aa4b1' : null">PUT /api/v1/article-exceptions/articleNumber/:articleNumber</small></div>
+          <pre *ngIf="!jsonCollapsed" class="debug-json"
+               [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.exPut | json}}</pre>
+        </div>
       </div>
     </div>
   </section>
@@ -191,5 +204,5 @@ export class DebugPanelComponent {
   @Output() activeTabChange = new EventEmitter<string>();
 
   @Input() data: any;
-  @Input() currentSubPage: 'articles'|'static-texts'|'customers'|'devices'|'orders' = 'articles';
+  @Input() currentSubPage: 'articles'|'static-texts'|'customers'|'devices'|'orders'|'exceptions' = 'articles';
 }

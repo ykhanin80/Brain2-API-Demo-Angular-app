@@ -12,6 +12,7 @@
           <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
+          <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
         </div>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='articles'">
@@ -61,6 +62,13 @@
         <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='devices'">
+        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
+      </div>
+      <div class="header-right" *ngIf="currentSubPage()==='exceptions'">
+        <button class="btn btn-primary" (click)="openExceptionsModal()">
+          <i class="icon-plus"></i>
+          Add Exception
+        </button>
         <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
   </div>
@@ -333,6 +341,44 @@
         [onReloadDevices]="loadDevices.bind(this)"
         [onReloadProductionLines]="loadProductionLines.bind(this)">
       </dm-devices>
+    </ng-container>
+
+  <!-- Exceptions Section (modal only) -->
+    <ng-container *ngIf="currentSubPage()==='exceptions'">
+      <div class="import-inline full-bleed global-fixed" *ngIf="exceptionsModalOpen()">
+        <div class="import-inline-header">
+          <strong>Add Exception</strong>
+          <div class="import-inline-tabs"></div>
+          <button class="btn btn-small" (click)="closeExceptionsModal()">×</button>
+        </div>
+        <div class="import-scroll">
+          <div class="import-inline-body">
+            <dm-exceptions
+              [articleNumber]="exceptions.articleNumber"
+              [setArticleNumber]="setExArticleNumber"
+              [articleOptions]="articleOptions"
+              [allCustomers]="exceptions.allCustomers"
+              [toggleAllCustomers]="toggleExAllCustomers"
+              [customerNumber]="exceptions.customerNumber"
+              [setCustomerNumber]="setExCustomerNumber"
+              [deviceSystemName]="exceptions.deviceSystemName"
+              [deviceSystemType]="exceptions.deviceSystemType"
+              [setDeviceSystemName]="setExDeviceSystemName"
+              [setDeviceSystemType]="setExDeviceSystemType"
+              [attributes]="exceptions.attributes"
+              [attributeOptions]="attributeOptions"
+              [addAttribute]="addExAttribute"
+              [removeAttribute]="removeExAttribute"
+              [setAttributeName]="setExAttributeName"
+              [setAttributeValue]="setExAttributeValue"
+              [onPutExceptions]="putExceptions.bind(this)"
+              [loading]="exceptions.loading"
+              [error]="exceptions.error"
+              [response]="exceptions.response"
+            ></dm-exceptions>
+          </div>
+        </div>
+      </div>
     </ng-container>
 
   <!-- Static Texts Section -->
