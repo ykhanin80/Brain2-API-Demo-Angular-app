@@ -2,6 +2,7 @@
   <!-- List View -->
   <div *ngIf="currentView() === 'list'" class="dm-card">
     <!-- Header -->
+    
     <!-- Header -->
     <div class="header">
       <div class="header-left">
@@ -68,6 +69,14 @@
         <button class="btn btn-primary" (click)="openExceptionsModal()">
           <i class="icon-plus"></i>
           Add Exception
+        </button>
+        <button class="btn btn-secondary" (click)="exOpenImportDialog()">
+          <i class="icon-upload"></i>
+          Import CSV
+        </button>
+        <button class="btn btn-secondary" (click)="exDownloadImportTemplate()">
+          <i class="icon-download"></i>
+          Download CSV Template
         </button>
         <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
@@ -345,6 +354,85 @@
 
   <!-- Exceptions Section (modal only) -->
     <ng-container *ngIf="currentSubPage()==='exceptions'">
+      <!-- Exceptions Import Panel -->
+      <div class="import-inline full-bleed global-fixed" *ngIf="exImportState().open && currentSubPage()==='exceptions'">
+        <div class="import-inline-header">
+          <strong>Import Article Exceptions</strong>
+          <div class="import-inline-tabs">
+            <button class="btn btn-small" (click)="exAutoMapImportHeaders()">Auto Map</button>
+            <button class="btn btn-small btn-primary" [disabled]="!exRequiredImportFieldsMapped()" (click)="exGoToPreviewFromMapping()" *ngIf="exImportState().step==='mapping'">Preview</button>
+            <button class="btn btn-small" (click)="exBackToMapping()" *ngIf="exImportState().step==='preview'">Back</button>
+            <button class="btn btn-small btn-primary" (click)="exStartImport()" *ngIf="exImportState().step==='preview' && exImportRows().length>0 && exInvalidImportRowCount()!==exImportRows().length">Start Import</button>
+          </div>
+          <button class="btn btn-small" (click)="exCloseImportDialog()">×</button>
+        </div>
+        <div class="import-scroll">
+          <div class="import-inline-body" *ngIf="exImportState().step === 'select'">
+            <input type="file" accept=".csv,text/csv" (change)="onExImportFileSelected($event)" />
+            <div class="hint">Choose CSV (max 5000 rows preview). Columns: Article number | Customer number | Device System Name | device type&#123;allDevices,device,deviceGroup&#125; | Attribute | value</div>
+          </div>
+          <div class="import-inline-body" *ngIf="exImportState().step === 'mapping'">
+            <table class="mapping-table wide">
+              <thead><tr><th style="width:260px">CSV Header</th><th style="width:300px">Maps To Field</th><th>Sample</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let h of exImportHeaders()">
+                  <td>{{ h }}</td>
+                  <td>
+                    <select (change)="exUpdateImportMapping(h, $any($event.target).value)" [class.mapped]="exImportMapping()[h]">
+                      <option value="" [selected]="!exImportMapping()[h]">-- ignore --</option>
+                      <option *ngFor="let def of exImportFieldDefs" [value]="def.key" [selected]="exImportMapping()[h]===def.key">{{ def.label }}</option>
+                    </select>
+                  </td>
+                  <td>{{ exImportRawRows()[0] ? exImportRawRows()[0][h] : '' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="import-inline-body" *ngIf="exImportState().step === 'preview'">
+            <div class="preview-head">
+              <span>{{ exImportRows().length }} rows (invalid {{ exInvalidImportRowCount() }})</span>
+            </div>
+            <table class="preview-table wide">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Article</th>
+                  <th>Customer</th>
+                  <th>Device Name</th>
+                  <th>Device Type</th>
+                  <th>Attribute</th>
+                  <th>Value</th>
+                  <th>error</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of exImportRows().slice(0,100)">
+                  <td>{{ r.line }}</td>
+                  <td>{{ r.articleNumber }}</td>
+                  <td>{{ r.customerNumber || '(all customers)' }}</td>
+                  <td>{{ r.deviceSystemName || 'All' }}</td>
+                  <td>{{ r.deviceSystemType || 'allDevices' }}</td>
+                  <td>{{ r.attribute }}</td>
+                  <td>{{ r.value }}</td>
+                  <td class="err">{{ r.error }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="import-inline-body" *ngIf="exImportState().step === 'running'">
+            <div>{{ exImportProgress().processed }}/{{ exImportRows().length }} (ok {{ exImportProgress().success }}, failed {{ exImportProgress().failed }})</div>
+            <div class="progress-bar"><div class="bar" [style.width]="exImportProgress().percent + '%'" ></div></div>
+            <button class="btn btn-small" (click)="exCancelImport()" [disabled]="exImportProgress().done">Cancel</button>
+          </div>
+          <div class="import-inline-body" *ngIf="exImportState().step === 'done'">
+            <div>Done: {{ exImportProgress().success }} success, {{ exImportProgress().failed }} failed.</div>
+            <div class="import-done-actions">
+              <button class="btn btn-small" (click)="exDownloadImportErrors()" [disabled]="exImportProgress().failed===0">Errors CSV</button>
+              <button class="btn btn-small btn-primary" (click)="exCloseImportDialog()">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="import-inline full-bleed global-fixed" *ngIf="exceptionsModalOpen()">
         <div class="import-inline-header">
           <strong>Add Exception</strong>

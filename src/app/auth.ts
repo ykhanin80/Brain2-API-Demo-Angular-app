@@ -34,6 +34,7 @@ export class Auth {
   private readonly apiConfig = inject(ApiConfig);
   
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly TOKEN_ISSUED_AT_KEY = 'token_issued_at';
   private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly USER_KEY = 'auth_user';
   
@@ -129,6 +130,8 @@ export class Auth {
     
     // Store token
     localStorage.setItem(this.TOKEN_KEY, response.token);
+  // Mark token issue time for expiry fallback when JWT exp is not present
+  localStorage.setItem(this.TOKEN_ISSUED_AT_KEY, String(Date.now()));
     
     // Store user data
     localStorage.setItem(this.USER_KEY, JSON.stringify(response.user));
@@ -148,9 +151,41 @@ export class Auth {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+  localStorage.removeItem(this.TOKEN_ISSUED_AT_KEY);
     
     this._isAuthenticated.next(false);
     this._currentUser.next(null);
+  }
+
+  /** Get token issued-at timestamp (ms since epoch) if recorded */
+  getTokenIssuedAt(): number | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    const v = localStorage.getItem(this.TOKEN_ISSUED_AT_KEY);
+    const n = v ? Number(v) : NaN;
+    return Number.isFinite(n) ? n : null;
+  }
+
+  /**
+   * Try to compute token expiry (epoch ms).
+   * 1) If token is JWT with exp (seconds), use that.
+   * 2) Else fallback to issuedAt + defaultTtlMs (default 24h).
+   */
+  getTokenExpiryMs(defaultTtlMs: number = 24*60*60*1000): number | null {
+    const token = this.getToken();
+    if (!token) return null;
+    // Try decode JWT exp
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload && typeof payload.exp === 'number') {
+          return payload.exp * 1000;
+        }
+      }
+    } catch {}
+    // Fallback: issuedAt + default TTL (assumed 24h)
+    const issuedAt = this.getTokenIssuedAt();
+    return issuedAt ? issuedAt + defaultTtlMs : null;
   }
   
   private hasValidToken(): boolean {

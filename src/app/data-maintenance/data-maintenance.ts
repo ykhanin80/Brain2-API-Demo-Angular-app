@@ -288,6 +288,8 @@ export interface ArticleSearchParams {
   styleUrls: ['./data-maintenance.scss']
 })
 export class DataMaintenanceComponent implements OnInit {
+  // Auth-specific UI elements are handled in the app header; no token countdown here
+  isAuthenticated = () => this.auth.isAuthenticated();
   // Save overlay field positions to persist user changes
   saveOverlayPositions() {
     const map = this.getCurrentNutritionMap();
@@ -697,6 +699,117 @@ export class DataMaintenanceComponent implements OnInit {
   removeExAttribute = (i: number) => { this.exceptions.attributes.splice(i,1); };
   setExAttributeName = (i: number, v: string) => { this.exceptions.attributes[i].attribute = v; };
   setExAttributeValue = (i: number, v: string) => { this.exceptions.attributes[i].value = v; };
+
+  // ---------------- Exceptions: CSV Import ----------------
+  exImportState = signal<{open:boolean; step:'select'|'mapping'|'preview'|'running'|'done'}>({open:false, step:'select'});
+  exImportHeaders = signal<string[]>([]);
+  exImportMapping = signal<{[csvHeader:string]: string}>({});
+  exImportRawRows = signal<any[]>([]);
+  exImportRows = signal<any[]>([]);
+  exImportProgress = signal<{processed:number; success:number; failed:number; percent:number; done:boolean}>({processed:0, success:0, failed:0, percent:0, done:false});
+  private exImportCancelled = false;
+  private exImportConcurrency = 3;
+  private exImportFieldDefinitions: Array<{key:string; label:string; required?:boolean; synonyms:string[]}> = [
+    { key:'articleNumber', label:'Article Number', required:true, synonyms:['article number','articlenumber','plu','number','article no','article_no','article'] },
+    { key:'customerNumber', label:'Customer Number', required:false, synonyms:['customer number','customernumber','customer','customer no','customer_no'] },
+    { key:'deviceSystemName', label:'Device System Name', required:false, synonyms:['device system name','devicesystemname','device name','devicename','device'] },
+    { key:'deviceSystemType', label:'Device Type', required:false, synonyms:['device type','devicetype','type','device system type'] },
+    { key:'attribute', label:'Attribute', required:true, synonyms:['attribute','attr'] },
+    { key:'value', label:'Value', required:true, synonyms:['value','val'] }
+  ];
+  get exImportFieldDefs(){ return this.exImportFieldDefinitions; }
+  exOpenImportDialog(){ this.exImportState.set({open:true, step:'select'}); this.exImportHeaders.set([]); this.exImportMapping.set({}); this.exImportRows.set([]); this.exImportRawRows.set([]); try{ document.body.classList.add('has-import-open'); }catch{} }
+  exCloseImportDialog(){ if(this.exImportState().step==='running' && !this.exImportProgress().done){ this.exImportCancelled=true; } this.exImportState.set({open:false, step:'select'}); try{ document.body.classList.remove('has-import-open'); }catch{} }
+  exDownloadImportTemplate(){
+    const header = ['Article number','Customer number','Device System Name','device type','Attribute','value'];
+    const rows = [
+      ['15','', 'Top heads','deviceGroup','simpleText1','Fresh daily'],
+      ['16','2', 'All','allDevices','labelingMode','fixedWeight']
+    ];
+    const esc=(s:any)=>{ const v=String(s??''); return /[",\n]/.test(v)? '"'+v.replace(/"/g,'""')+'"' : v; };
+    const csv = [header.join(','), ...rows.map(r=>r.map(esc).join(','))].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Article-Exceptions-Template-${new Date().toISOString().substring(0,10)}.csv`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  }
+  async onExImportFileSelected(event: Event){
+    const input = event.target as HTMLInputElement; const file = input.files && input.files[0]; if(!file) return;
+    try {
+      const { rawRows, headers } = await parseCsvFile(file, 5000);
+      this.exImportRawRows.set(rawRows);
+      this.exImportHeaders.set(headers);
+      this.exAutoMapImportHeaders();
+      this.exRebuildMappedRows();
+      this.exImportState.set({open:true, step:'mapping'});
+    } catch {
+      this.error.set('Failed to parse CSV');
+    }
+  }
+  exAutoMapImportHeaders(){
+    const mapping = autoMapHeaders(this.exImportHeaders(), this.exImportFieldDefinitions, this.exImportMapping());
+    this.exImportMapping.set(enforceUniqueMapping(mapping));
+  }
+  exUpdateImportMapping(csvHeader:string, target:string){ const m={...this.exImportMapping()}; if(!target) delete m[csvHeader]; else m[csvHeader]=target; const rev:any={}; for(const [h,t] of Object.entries(m)){ if(rev[t] && rev[t]!==h){ delete m[rev[t]]; } rev[t]=h; } this.exImportMapping.set(m); this.exRebuildMappedRows(); }
+  private exRebuildMappedRows(){ const raw=this.exImportRawRows(); const rows=raw.map((r:any,i:number)=> this.exMapImportRow(r,i+2)); this.exImportRows.set(rows); }
+  exRequiredImportFieldsMapped(){ const mapped=new Set(Object.values(this.exImportMapping())); return ['articleNumber','attribute','value'].every(k=> mapped.has(k)); }
+  exGoToPreviewFromMapping(){ if(this.exRequiredImportFieldsMapped()) this.exImportState.set({open:true, step:'preview'}); }
+  exBackToMapping(){ if(this.exImportState().step==='preview') this.exImportState.set({open:true, step:'mapping'}); }
+  private exMapImportRow(r:any,line:number){
+    const get=(k:string)=>{ const h=Object.entries(this.exImportMapping()).find(([,t])=>t===k)?.[0]; return h? r[h]:''; };
+    const row:any = {
+      original:r, line,
+      articleNumber: trimValue(get('articleNumber')||r.articleNumber||r['Article number']),
+      customerNumber: trimValue(get('customerNumber')||r.customerNumber||r['Customer number']),
+      deviceSystemName: trimValue(get('deviceSystemName')||r.deviceSystemName||r['Device System Name']),
+      deviceSystemType: (trimValue(
+        get('deviceSystemType')||
+        r.deviceSystemType||
+        r['device type']||
+        r['device type{allDevices,device,deviceGroup}']
+      )||'allDevices') as 'allDevices'|'device'|'deviceGroup',
+      attribute: trimValue(get('attribute')||r.attribute||r['Attribute']),
+      value: trimValue(get('value')||r.value||r['value']),
+      status:'', error:''
+    };
+    // Validate
+    if(!row.articleNumber) row.error += 'missing articleNumber; ';
+    const allowed = ['allDevices','device','deviceGroup'];
+    if(row.deviceSystemType && !allowed.includes(row.deviceSystemType)) row.error += 'deviceType; ';
+    if(!row.attribute) row.error += 'missing attribute; ';
+    return row;
+  }
+  exInvalidImportRowCount(){ return this.exImportRows().filter(r=>r.error).length; }
+  exStartImport(){
+    this.exImportCancelled=false;
+    this.exImportProgress.set({processed:0, success:0, failed:0, percent:0, done:false});
+    const rows=this.exImportRows().filter(r=>!r.error);
+    this.exImportRows.set(rows);
+    this.exImportState.set({open:true, step:'running'});
+    runConcurrentQueue(rows, (row)=> this.exProcessImportRow(row), {
+      concurrency: this.exImportConcurrency,
+      getCancelled: () => this.exImportCancelled,
+      onItemDone: () => this.exUpdateImportProgress(),
+      onDone: () => { /* handled in exUpdateImportProgress */ }
+    });
+  }
+  exCancelImport(){ this.exImportCancelled=true; }
+  private async exProcessImportRow(row:any){
+    try{
+      const payload:any = {
+        articleNumber: row.articleNumber,
+        state: 'active',
+        deviceSystem: { name: row.deviceSystemName || 'All', type: row.deviceSystemType || 'allDevices' },
+        attributes: [{ attribute: row.attribute, value: row.value }]
+      };
+      if(row.customerNumber) payload.customerNumber = row.customerNumber;
+      const headers = new HttpHeaders({ 'Authorization': `Bearer ${this.auth.getToken()}`, 'Content-Type':'application/json' });
+      const url = `${this.apiConfig.getBaseUrl()}/api/v1/article-exceptions/articleNumber/${encodeURIComponent(row.articleNumber)}`;
+      await this.http.put(url, payload, { headers }).toPromise();
+      row.status='created';
+    }catch(e:any){ row.status='failed'; row.error = e?.error?.title || e?.message || 'error'; }
+  }
+  private exUpdateImportProgress(){ const rows=this.exImportRows(); const processed=rows.filter(r=>r.status).length; const success=rows.filter(r=>r.status==='created').length; const failed=rows.filter(r=>r.status==='failed').length; const percent=rows.length? Math.round(processed*100/rows.length):0; const done=processed===rows.length || this.exImportCancelled; this.exImportProgress.set({processed, success, failed, percent, done}); if(done) this.exFinishImport(); }
+  private exFinishImport(){ this.exImportState.set({open:true, step:'done'}); }
+  exDownloadImportErrors(){ const errs=this.exImportRows().filter(r=>r.status==='failed'); if(!errs.length) return; const header='line,articleNumber,attribute,error\n'; const body=errs.map(r=>`${r.line},"${(r.articleNumber||'').replace(/"/g,'""')}","${(r.attribute||'').replace(/"/g,'""')}","${(r.error||'').replace(/"/g,'""')}"`).join('\n'); const blob=new Blob([header+body],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='exceptions-import-errors.csv'; a.click(); URL.revokeObjectURL(url); }
 
   async putExceptions(){
     const articleNumber = this.exceptions.articleNumber.trim(); if(!articleNumber){ this.exceptions.error='Article number is required'; return; }

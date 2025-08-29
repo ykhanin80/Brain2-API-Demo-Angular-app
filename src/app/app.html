@@ -1,4 +1,4 @@
-﻿<header class="app-header" *ngIf="isAuthenticated$ | async">
+﻿<header class="app-header">
   <nav>
     <h1>Brain2 API Demo App</h1>
     <div class="nav-actions">
@@ -16,16 +16,28 @@
         </span>
         <span class="status-item">
           <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">Auth:</span>
-          <span class="status-value" [style.color]="(isAuthenticated$ | async) ? (darkMode() ? '#38bdf8' : '#17a2b8') : (darkMode() ? '#f87171' : '#dc3545')">
-            {{ (isAuthenticated$ | async) ? 'Active' : 'Logged out' }}
+          <ng-container *ngIf="(isAuthenticated$ | async); else notAuth">
+            <span class="status-value" [style.color]="darkMode() ? '#38bdf8' : '#17a2b8'">Active</span>
+          </ng-container>
+          <ng-template #notAuth>
+            <span class="status-value" [style.color]="darkMode() ? '#f87171' : '#dc3545'">Not authenticated</span>
+          </ng-template>
+        </span>
+        <span class="status-item" *ngIf="(isAuthenticated$ | async)">
+          <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">Token expires in:</span>
+          <span class="status-value" [style.color]="darkMode() ? '#ffffff' : '#212529'">
+            {{ tokenSecondsLeft() === null ? '—' : formatSeconds(tokenSecondsLeft()!) }}
           </span>
         </span>
       </div>
       <button mat-button type="button" (click)="toggleDarkMode()" class="mode-toggle-btn">
         {{ darkMode() ? 'Light Mode' : 'Dark Mode' }}
       </button>
-      <span>Welcome, {{ (currentUser$ | async)?.name }}</span>
-      <button (click)="logout()" class="logout-btn">Logout</button>
+      <span *ngIf="(isAuthenticated$ | async); else pleaseLogin">Welcome, {{ (currentUser$ | async)?.name }}</span>
+      <ng-template #pleaseLogin>
+        <span>Please log in</span>
+      </ng-template>
+      <button *ngIf="(isAuthenticated$ | async)" (click)="logout()" class="logout-btn">Logout</button>
     </div>
   </nav>
 </header>
