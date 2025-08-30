@@ -2828,6 +2828,11 @@ export class DataMaintenanceComponent implements OnInit {
     this.searchParams.update(params => ({ ...params, articleNumber: value }));
   }
 
+  // Direct setter used by Exceptions modal search field (avoids Event typing)
+  setSearchArticleNumberDirect = (value: string) => {
+    this.searchParams.update(params => ({ ...params, articleNumber: value }));
+  }
+
   // Form updates - General Article Fields
   updateNewArticleField(field: keyof LabelerArticle, event: Event) {
     const target = event.target as HTMLInputElement;

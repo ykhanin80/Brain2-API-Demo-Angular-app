@@ -9,10 +9,16 @@ import { FormsModule } from '@angular/forms';
   template: `
   <div class="dm-card">
     <h2>⚠️ Article Exceptions</h2>
+    <!-- Pagination placed above the article dropdown to avoid being covered by the menu -->
+  <div class="row" style="display:flex; justify-content:flex-start; gap:8px; align-items:center; margin: 4px 0 8px;">
+      <button class="btn btn-small" type="button" (click)="onPrevPage()" [disabled]="!canPrev">Prev</button>
+      <span style="font-size:.85rem;">Page {{currentPage}}</span>
+      <button class="btn btn-small" type="button" (click)="onNextPage()" [disabled]="!canNext">Next</button>
+    </div>
     <div class="row" style="display:flex; gap:16px; flex-wrap:wrap;">
-      <label style="min-width:280px;">
+  <label style="min-width:320px;">
         <div class="form-label">Article Number</div>
-  <select [ngModel]="articleNumber" (ngModelChange)="setArticleNumber($any($event))" [ngModelOptions]="{standalone: true}" style="min-width:260px;">
+        <select [ngModel]="articleNumber" (ngModelChange)="setArticleNumber($any($event))" [ngModelOptions]="{standalone: true}" style="min-width:260px;">
           <option value="">Select article…</option>
           <option *ngFor="let a of articleOptions" [value]="a.number">{{a.number}} — {{a.name}}</option>
         </select>
@@ -104,4 +110,13 @@ export class ExceptionsComponent {
   @Input() loading = false;
   @Input() error: string | null = null;
   @Input() response: any = null;
+
+  // Pagination (provided by container)
+  @Input() onPrevPage: () => void = () => {};
+  @Input() onNextPage: () => void = () => {};
+  @Input() canPrev: boolean = false;
+  @Input() canNext: boolean = true;
+  @Input() currentPage: number = 1;
+  // pageSize controls were removed from UI; keep inputs optional if needed in future
+  @Input() pageSize: number = 10;
 }
