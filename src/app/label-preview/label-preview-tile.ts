@@ -344,8 +344,12 @@ export class LabelPreviewTile implements OnInit {
     for (let i = 1; i <= 7; i++) {
       const num = val(aplu, `codeField${i}`, 0);
       const str = val(aplu, `codeString${i}`, '');
-      codeFields[`codeNumber${i}`] = Number.isFinite(Number(num)) ? Math.trunc(Number(num)) : 0;
-      codeFields[`codeSubstring${i}`] = str ?? '';
+      const codeNum = Number.isFinite(Number(num)) ? Math.trunc(Number(num)) : 0;
+      let codeStr = (str ?? '').toString();
+      // Fail-safe: when a code is selected but substring is empty, provide a minimal placeholder
+      if (codeNum > 0 && codeStr.trim().length === 0) codeStr = '0';
+      codeFields[`codeNumber${i}`] = codeNum;
+      codeFields[`codeSubstring${i}`] = codeStr;
     }
 
   const dateFields: any = {};
@@ -396,7 +400,9 @@ export class LabelPreviewTile implements OnInit {
     const simpleTexts: any = {};
     for (let i = 1; i <= 30; i++) {
       const st = val(aplu, `simpleText${i}`, '');
-      simpleTexts[`simpleText${i}`] = st ?? '';
+      const v = (st ?? '').toString();
+      // Fail-safe: use '-' when a simple text is missing to satisfy preview API
+      simpleTexts[`simpleText${i}`] = v.trim().length > 0 ? v : '-';
     }
 
     // Static texts (1..50) and General texts (1..20)
