@@ -477,7 +477,7 @@
 
   <!-- Device Parameters Section -->
     <ng-container *ngIf="currentSubPage()==='device-parameters'">
-      <dm-device-parameters></dm-device-parameters>
+      <dm-device-parameters (debug)="debugApiResponses.amparImport = $event; activeDebugTab = 'amparImport'"></dm-device-parameters>
     </ng-container>
 
   <!-- Static Texts Section -->

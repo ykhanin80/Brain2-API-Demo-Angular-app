@@ -651,7 +651,8 @@ export class DataMaintenanceComponent implements OnInit {
   devicesList: null as any,
   productionLinesList: null as any,
   // Exceptions
-  exPut: null as any
+  exPut: null as any,
+  amparImport: null as any
   };
 
   private readonly allowedLabelingModes = ['weight','fixedPrice','fixedWeight','fixedValue'];

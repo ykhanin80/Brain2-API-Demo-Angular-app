@@ -50,8 +50,16 @@ export function autoMapHeaders(
       if (k && !used.has(k)) { mapping[h] = k; used.add(k); continue; }
     }
 
-    // Synonym-based matching
-    const def = defs.find(d => !used.has(d.key) && (d.synonyms.includes(norm) || d.synonyms.includes(compact)));
+    // Match by synonyms OR by normalized key/label fallback
+    let def = defs.find(d => !used.has(d.key) && (d.synonyms.includes(norm) || d.synonyms.includes(compact)));
+    if (!def) {
+      def = defs.find(d => {
+        if (used.has(d.key)) return false;
+        const keyNorm = normalizeHeaderName(d.key);
+        const labelNorm = normalizeHeaderName(d.label);
+        return norm === keyNorm || norm === labelNorm || compact === normalizeCompact(d.key) || compact === normalizeCompact(d.label);
+      });
+    }
     if (def) { mapping[h] = def.key; used.add(def.key); }
   }
   return enforceUniqueMapping(mapping);

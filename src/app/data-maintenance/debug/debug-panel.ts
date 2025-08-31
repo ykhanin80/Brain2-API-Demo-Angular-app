@@ -82,6 +82,10 @@ import { CommonModule } from '@angular/common';
                 [class.active]="activeTab === 'productionLinesList'"
                 (click)="activeTabChange.emit('productionLinesList')">Get Production Lines</button>
 
+  <button *ngIf="currentSubPage==='device-parameters'" type="button" class="debug-tab"
+    [class.active]="activeTab === 'amparImport'"
+    (click)="activeTabChange.emit('amparImport')">AMPAR Import</button>
+
   <button *ngIf="currentSubPage==='exceptions'" type="button" class="debug-tab"
     [class.active]="activeTab === 'exPut'"
     (click)="activeTabChange.emit('exPut')">PUT Exception</button>
@@ -180,6 +184,15 @@ import { CommonModule } from '@angular/common';
           <pre *ngIf="!jsonCollapsed" class="debug-json"
                [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
                [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.productionLinesList | json}}</pre>
+        </div>
+
+        <div *ngIf="activeTab === 'amparImport' && currentSubPage==='device-parameters'" class="debug-panel"
+             [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">AMPAR Import</h4>
+            <small [style.color]="isDarkMode ? '#9aa4b1' : null">POST /extensions/api/DeviceParameters/WriteAutoLabelerParameterAsync</small></div>
+          <pre *ngIf="!jsonCollapsed" class="debug-json"
+               [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.amparImport | json}}</pre>
         </div>
 
         <div *ngIf="activeTab === 'exPut' && currentSubPage==='exceptions'" class="debug-panel"

@@ -1,6 +1,18 @@
 <div class="dm-card">
   <h2>Data Maintenance | Device Parameters</h2>
   <div class="row" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+    <div style="min-width:360px;">
+      <label class="form-label">Devices</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select [disabled]="devicesLoading" style="min-width:300px;"
+                [(ngModel)]="selectedDeviceId" [ngModelOptions]="{standalone: true}">
+          <option value="" disabled selected>{{ devicesLoading ? 'Loading…' : 'Select device…' }}</option>
+          <option *ngFor="let d of devices" [value]="getDeviceId(d)">{{ getDeviceName(d) }} ({{ getDeviceId(d) }})</option>
+        </select>
+        <button class="btn btn-secondary" (click)="loadDevices()" [disabled]="devicesLoading">Reload</button>
+      </div>
+      <div class="err" *ngIf="devicesError">{{ devicesError }}</div>
+    </div>
     <div style="min-width:320px;">
       <label class="form-label">Device Groups</label>
       <div style="display:flex; gap:8px; align-items:center;">
@@ -28,7 +40,7 @@
   </div>
   <div style="margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
     <button class="btn btn-primary" (click)="openImportDialog()">Import AMPAR from CSV</button>
-    <button class="btn btn-secondary" (click)="downloadImportTemplate()" title="Download CSV Template">Download CSV template</button>
+    <button class="btn btn-secondary" (click)="downloadAllAmparsCsv()" title="Export all AMPARs to CSV">Download all AMPARs to CSV</button>
   </div>
 
   <!-- Simple Import Modal -->
@@ -56,12 +68,12 @@
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:center;">
           <div style="font-weight:600;">CSV Header</div>
           <div style="font-weight:600;">Target Field</div>
-          <ng-container *ngFor="let h of importHeaders">
+      <ng-container *ngFor="let h of importHeaders; trackBy: trackHeader">
             <div>{{ h }}</div>
             <div>
               <select [ngModel]="importMapping[h]" (ngModelChange)="updateImportMapping(h,$event)" [ngModelOptions]="{standalone:true}" style="min-width:260px;">
                 <option [ngValue]="''">— ignore —</option>
-                <option *ngFor="let f of fieldDefs" [ngValue]="f.key">{{ f.label }} ({{ f.key }})</option>
+        <option *ngFor="let f of fieldDefs" [ngValue]="f.key">{{ f.label }} ({{ f.key }})</option>
               </select>
             </div>
           </ng-container>
@@ -74,6 +86,14 @@
           <button class="btn btn-secondary" (click)="backToMapping()">Back</button>
           <span>Preview first {{ importRows.length }} rows</span>
           <button class="btn btn-small" (click)="resolveGroupIdsFromDevices()" [disabled]="resolvingGroups">Resolve missing Device Group IDs via /api/v1/devices</button>
+          <button class="btn btn-primary" (click)="startImport()" [disabled]="importing || !importRows.length">Import</button>
+          <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="!hasImportErrors()">Errors CSV</button>
+        </div>
+        <div *ngIf="importing || importProgress.processed>0" style="margin-bottom:8px;">
+          <div>Processed {{ importProgress.processed }}/{{ importRows.length }} • Success {{ importProgress.success }} • Failed {{ importProgress.failed }} ({{ importProgress.percent }}%)</div>
+          <div style="height:8px; background:#eee; border-radius:4px; overflow:hidden;">
+            <div [style.width.%]="importProgress.percent" style="height:8px; background:#1e88e5;"></div>
+          </div>
         </div>
         <div style="max-height:50vh; overflow:auto; border:1px solid #eee;">
           <table class="table" style="width:100%; border-collapse:collapse;">
@@ -90,7 +110,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let r of importRows">
+              <tr *ngFor="let r of importRows; trackBy: trackRow">
                 <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.line }}</td>
                 <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.systemId }}</td>
                 <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.number }}</td>
