@@ -1,0 +1,109 @@
+<div class="dm-card">
+  <h2>Data Maintenance | Device Parameters</h2>
+  <div class="row" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+    <div style="min-width:320px;">
+      <label class="form-label">Device Groups</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select [disabled]="deviceGroupsLoading" style="min-width:260px;"
+                [(ngModel)]="selectedGroupId" [ngModelOptions]="{standalone: true}">
+          <option value="" disabled selected>{{ deviceGroupsLoading ? 'Loading…' : 'Select group…' }}</option>
+          <option *ngFor="let g of deviceGroups" [value]="getGroupId(g)">{{ getGroupName(g) }} ({{ getGroupId(g) }})</option>
+        </select>
+        <button class="btn btn-secondary" (click)="loadDeviceGroups()" [disabled]="deviceGroupsLoading">Reload</button>
+      </div>
+      <div class="err" *ngIf="deviceGroupsError">{{ deviceGroupsError }}</div>
+    </div>
+    <div style="min-width:360px;">
+      <label class="form-label">All Auto Labeler Parameters</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select [disabled]="autoParamsLoading" style="min-width:300px;"
+                [(ngModel)]="selectedAutoParamId" [ngModelOptions]="{standalone: true}">
+          <option value="" disabled selected>{{ autoParamsLoading ? 'Loading…' : 'Select parameter…' }}</option>
+          <option *ngFor="let p of autoParams" [value]="getParamId(p)">{{ getParamName(p) }} ({{ getParamId(p) }})</option>
+        </select>
+        <button class="btn btn-secondary" (click)="loadAutoParams()" [disabled]="autoParamsLoading">Reload</button>
+      </div>
+      <div class="err" *ngIf="autoParamsError">{{ autoParamsError }}</div>
+    </div>
+  </div>
+  <div style="margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <button class="btn btn-primary" (click)="openImportDialog()">Import AMPAR from CSV</button>
+    <button class="btn btn-secondary" (click)="downloadImportTemplate()" title="Download CSV Template">Download CSV template</button>
+  </div>
+
+  <!-- Simple Import Modal -->
+  <div class="modal" *ngIf="importState.open" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:flex-start; justify-content:center; padding-top:5vh;">
+    <div style="background:#fff; color:#000; width:min(100%, 900px); max-height:85vh; overflow:auto; border-radius:6px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <h3 style="margin:0;">Import AMPAR from CSV</h3>
+        <button class="btn" (click)="closeImportDialog()">Close</button>
+      </div>
+
+      <!-- Step: file select -->
+      <div *ngIf="importState.step==='select'" style="margin-top:12px;">
+        <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)">
+        <div class="hint">Choose CSV (max 5000 rows preview). We'll auto-map headers when possible.</div>
+        <div class="err" *ngIf="importError" style="margin-top:8px; color:#b00020;">{{ importError }}</div>
+      </div>
+
+      <!-- Step: mapping -->
+      <div *ngIf="importState.step==='mapping'" style="margin-top:12px;">
+        <div style="margin-bottom:8px; display:flex; gap:8px; align-items:center;">
+          <span>Map CSV headers to fields</span>
+          <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto-map</button>
+          <button class="btn btn-primary" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()">Preview rows</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:center;">
+          <div style="font-weight:600;">CSV Header</div>
+          <div style="font-weight:600;">Target Field</div>
+          <ng-container *ngFor="let h of importHeaders">
+            <div>{{ h }}</div>
+            <div>
+              <select [ngModel]="importMapping[h]" (ngModelChange)="updateImportMapping(h,$event)" [ngModelOptions]="{standalone:true}" style="min-width:260px;">
+                <option [ngValue]="''">— ignore —</option>
+                <option *ngFor="let f of fieldDefs" [ngValue]="f.key">{{ f.label }} ({{ f.key }})</option>
+              </select>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Step: preview -->
+      <div *ngIf="importState.step==='preview'" style="margin-top:12px;">
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <button class="btn btn-secondary" (click)="backToMapping()">Back</button>
+          <span>Preview first {{ importRows.length }} rows</span>
+          <button class="btn btn-small" (click)="resolveGroupIdsFromDevices()" [disabled]="resolvingGroups">Resolve missing Device Group IDs via /api/v1/devices</button>
+        </div>
+        <div style="max-height:50vh; overflow:auto; border:1px solid #eee;">
+          <table class="table" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">line</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">systemId</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">number</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">deviceGroupId</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">deviceGroupName</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">labelPosition</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">released</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">error</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of importRows">
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.line }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.systemId }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.number }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.deviceGroupId }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.deviceGroupName }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.labelPosition }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.released }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0; color:#b00020;">{{ r.error }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

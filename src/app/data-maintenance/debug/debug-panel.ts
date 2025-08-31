@@ -204,5 +204,5 @@ export class DebugPanelComponent {
   @Output() activeTabChange = new EventEmitter<string>();
 
   @Input() data: any;
-  @Input() currentSubPage: 'articles'|'static-texts'|'customers'|'devices'|'orders'|'exceptions' = 'articles';
+  @Input() currentSubPage: 'articles'|'static-texts'|'customers'|'devices'|'orders'|'exceptions'|'device-parameters' = 'articles';
 }

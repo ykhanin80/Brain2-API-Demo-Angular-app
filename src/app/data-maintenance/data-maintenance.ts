@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { DevicesComponent } from './devices/devices';
 import { ExceptionsComponent } from './exceptions/exceptions';
 import { StaticTextsListComponent } from './static-texts/static-texts-list';
+import { DeviceParametersComponent } from './device-parameters/device-parameters';
 import { ArticlesTableComponent } from './articles/articles-table';
 import { DebugPanelComponent } from './debug/debug-panel';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -283,7 +284,7 @@ export interface ArticleSearchParams {
 @Component({
   selector: 'data-maintenance',
   standalone: true,
-  imports: [CommonModule, FormsModule, DevicesComponent, ExceptionsComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent],
+  imports: [CommonModule, FormsModule, DevicesComponent, ExceptionsComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent, DeviceParametersComponent],
   templateUrl: './data-maintenance.html',
   styleUrls: ['./data-maintenance.scss']
 })
@@ -424,8 +425,8 @@ export class DataMaintenanceComponent implements OnInit {
 
   // View states for full page navigation
   currentView = signal<'list' | 'create' | 'edit' | 'copy'>('list');
-  // Sub-page: articles, static-texts, customers, devices, exceptions (default articles)
-  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices' | 'exceptions'>('articles');
+  // Sub-page: articles, static-texts, customers, devices, exceptions, device-parameters (default articles)
+  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices' | 'exceptions' | 'device-parameters'>('articles');
 
   // Static Text form state
   staticTextData = signal<StaticTextData>({
@@ -1967,6 +1968,12 @@ export class DataMaintenanceComponent implements OnInit {
     this.currentSubPage.set('exceptions');
     this.currentView.set('list');
   this.activeDebugTab = 'exPut';
+  }
+
+  goToDeviceParametersSubPage(){
+    this.currentSubPage.set('device-parameters');
+    this.currentView.set('list');
+    this.activeDebugTab = 'devicesList';
   }
 
   // Exceptions modal dialog state

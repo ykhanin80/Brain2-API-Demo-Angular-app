@@ -14,6 +14,7 @@
           <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
+          <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Device Parameters</button>
         </div>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='articles'">
@@ -472,6 +473,11 @@
           </div>
         </div>
       </div>
+    </ng-container>
+
+  <!-- Device Parameters Section -->
+    <ng-container *ngIf="currentSubPage()==='device-parameters'">
+      <dm-device-parameters></dm-device-parameters>
     </ng-container>
 
   <!-- Static Texts Section -->

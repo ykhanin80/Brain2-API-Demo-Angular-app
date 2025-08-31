@@ -1,0 +1,17 @@
+.placeholder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px dashed #a0aec0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.placeholder .icon { font-size: 1.5rem; }
+.placeholder .text { color: #64748b; }
+
+:host-context(body.dark-theme) .placeholder {
+  border-color: #334155;
+  background: #1f2937;
+}
+.dm-card h2 { margin-top: 0; }
