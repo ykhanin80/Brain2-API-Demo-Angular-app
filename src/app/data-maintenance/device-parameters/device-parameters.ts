@@ -288,20 +288,20 @@ export class DeviceParametersComponent {
     return 'Undefined';
   }
   private buildPayloadFromRow(r:any): any {
-    const enumWrap = (v:any)=> ({ value: String(v||'') });
+    // API expects plain strings for enum-like fields (not { value: ... })
     const safeBool = (v:any)=> !!(String(v).toLowerCase()==='true' || v===true || v===1 || v==='1');
     const sysType = this.normalizeEnumValue(r.systemType);
     let systemId = String(r.systemId||'');
     if (!systemId && sysType==='DeviceGroup' && r.deviceGroupId) systemId = String(r.deviceGroupId);
     const p:any = {
       systemId: systemId || null,
-      systemType: { value: sysType },
+      systemType: sysType,
       number: Number(r.number||0),
       description: r.description || null,
-      referencePointLabelDistance: enumWrap(r.referencePointLabelDistance||'TrailingEdge'),
-      labelPosition: enumWrap(r.labelPosition||'Top1'),
-      operatingMode: enumWrap(r.operatingMode||'GSDefault'),
-      labelerConveyingMode: enumWrap(r.labelerConveyingMode||'Passage'),
+      referencePointLabelDistance: String(r.referencePointLabelDistance||'TrailingEdge'),
+      labelPosition: String(r.labelPosition||'Top1'),
+      operatingMode: String(r.operatingMode||'GSDefault'),
+      labelerConveyingMode: String(r.labelerConveyingMode||'Passage'),
       lightBarrier1SuspensionPath: Number(r.lightBarrier1SuspensionPath||0),
       lightBarrier2SuspensionPath: Number(r.lightBarrier2SuspensionPath||0),
       labelDistance: Number(r.labelDistance||0),
