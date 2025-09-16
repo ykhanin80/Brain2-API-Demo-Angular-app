@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { parseCsvFile, autoMapHeaders, enforceUniqueMapping, downloadCsv, runConcurrentQueue } from '../../shared/csv-import.util';
 import { ApiConfig } from '../../api-config';
@@ -381,18 +381,28 @@ export class DeviceParametersComponent {
       const err = this.validateRow(row);
       if (err) { row.status='failed'; row.error = err; return; }
       const payload = this.buildPayloadFromRow(row);
+      // API expects systemType, systemId and number as query parameters
+      const sysType = this.normalizeEnumValue(row.systemType);
+      let systemId = String(row.systemId||'');
+      if (!systemId && sysType==='DeviceGroup' && row.deviceGroupId) systemId = String(row.deviceGroupId);
+      const params = new HttpParams()
+        .set('systemType', sysType)
+        .set('systemId', systemId)
+        .set('number', String(row.number||0));
+      const body: any = { ...payload };
+      delete body.systemType; delete body.systemId; delete body.number;
       const urlForPost = `${url}`;
       try {
-        const resp = await this.http.post(urlForPost, payload).toPromise();
+        const resp = await this.http.post(urlForPost, body, { params }).toPromise();
         this.debug.emit({
           area: 'device-parameters', action: 'AMPAR Import', phase: 'success',
-          request: { url: urlForPost, body: payload }, response: resp, row: row.line, time: new Date().toISOString()
+          request: { url: urlForPost, params: { systemType: sysType, systemId, number: String(row.number||0) }, body }, response: resp, row: row.line, time: new Date().toISOString()
         });
         row.status='success'; row.error='';
       } catch(e:any) {
         this.debug.emit({
           area: 'device-parameters', action: 'AMPAR Import', phase: 'error',
-          request: { url: urlForPost, body: payload }, error: (e?.error || e), message: e?.message, row: row.line, time: new Date().toISOString()
+          request: { url: urlForPost, params: { systemType: sysType, systemId, number: String(row.number||0) }, body }, error: (e?.error || e), message: e?.message, row: row.line, time: new Date().toISOString()
         });
         row.status='failed'; row.error = e?.error?.title || e?.message || 'request failed';
       }
