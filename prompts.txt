@@ -241,8 +241,17 @@ default: {cell.Text = ("Unknown Error: " + ErrFlag).ToString(); 		break;}
 }
 --------------------------
 
-Single packages error rate table:
+Single packages error rate table: group by PLU # (Article Number)
 
 Start | Finish | Article Number | Article Name | Number of packages | Error Flag | % of total
-Min timestamp | max timestamp | Article Number | Article Name | count packages for same PLU# and same error flag| error flag description | 5 from total
+Min timestamp | max timestamp | Article Number | Article Name | count packages for same PLU# and same error flag| error flag description | % = number of packages with this error / total number of packages from this group*100.
 
+
+
+------------------------------
+exceptions
+add import from csv feature.
+
+columns: Article number|Customer number|Device System Name|device type{allDevices,device,deviceGroup}|Attribute|value
+
+make downloadable template.

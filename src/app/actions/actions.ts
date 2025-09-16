@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ApiConfig } from '../api-config';
+import { Router } from '@angular/router';
 
 interface JobRequest {
   jobType: string;
@@ -33,6 +34,7 @@ interface ApiResponse {
 export class ActionsComponent {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);
+  private readonly router = inject(Router);
 
   // Form model
   newJob: JobRequest = { jobType: '', parameters: {} };
@@ -307,5 +309,10 @@ export class ActionsComponent {
     if (error?.error?.message) return error.error.message;
     if (error?.message) return error.message;
     return 'Unknown error';
+  }
+
+  // Navigate back to Dashboard
+  returnToDashboard(): void {
+    this.router.navigate(['/dashboard']);
   }
 }

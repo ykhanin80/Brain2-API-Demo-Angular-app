@@ -26,12 +26,12 @@
       <div class="err" *ngIf="deviceGroupsError">{{ deviceGroupsError }}</div>
     </div>
     <div style="min-width:360px;">
-      <label class="form-label">All Auto Labeler Parameters</label>
+    <label class="form-label">All Auto Labeler Parameters</label>
       <div style="display:flex; gap:8px; align-items:center;">
         <select [disabled]="autoParamsLoading" style="min-width:300px;"
                 [(ngModel)]="selectedAutoParamId" [ngModelOptions]="{standalone: true}">
-          <option value="" disabled selected>{{ autoParamsLoading ? 'Loading…' : 'Select parameter…' }}</option>
-          <option *ngFor="let p of autoParams" [value]="getParamId(p)">{{ getParamName(p) }} ({{ getParamId(p) }})</option>
+      <option value="" disabled selected>{{ autoParamsLoading ? 'Loading…' : 'Select parameter…' }}</option>
+      <option *ngFor="let p of autoParams" [value]="getParamId(p)">{{ formatAutoParamOption(p) }}</option>
         </select>
         <button class="btn btn-secondary" (click)="loadAutoParams()" [disabled]="autoParamsLoading">Reload</button>
       </div>

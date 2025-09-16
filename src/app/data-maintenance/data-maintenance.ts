@@ -786,8 +786,8 @@ export class DataMaintenanceComponent implements OnInit {
     const rows=this.exImportRows().filter(r=>!r.error);
     this.exImportRows.set(rows);
     this.exImportState.set({open:true, step:'running'});
-    runConcurrentQueue(rows, (row)=> this.exProcessImportRow(row), {
-      concurrency: this.exImportConcurrency,
+    runConcurrentQueue(rows, (row)=> this.exProcessImportRow(row).then(()=> this.sleep(200)), {
+      concurrency: 1,
       getCancelled: () => this.exImportCancelled,
       onItemDone: () => this.exUpdateImportProgress(),
       onDone: () => { /* handled in exUpdateImportProgress */ }
@@ -944,8 +944,8 @@ export class DataMaintenanceComponent implements OnInit {
     const rows=this.stImportRows().filter(r=>!r.error);
     this.stImportRows.set(rows);
     this.stImportState.set({open:true, step:'running'});
-    runConcurrentQueue(rows, (row)=> this.stProcessImportRow(row), {
-      concurrency: this.stImportConcurrency,
+    runConcurrentQueue(rows, (row)=> this.stProcessImportRow(row).then(()=> this.sleep(200)), {
+      concurrency: 1,
       getCancelled: () => this.stImportCancelled,
       onItemDone: () => this.stUpdateImportProgress(),
       onDone: () => { /* handled in stUpdateImportProgress */ }
@@ -1050,7 +1050,7 @@ export class DataMaintenanceComponent implements OnInit {
     return defs;
   }
   private importCancelled = false;
-  private importConcurrency = 3;
+  private importConcurrency = 1;
   private activeImports = 0;
   private importQueueIndex = 0;
 
@@ -1243,14 +1243,15 @@ export class DataMaintenanceComponent implements OnInit {
       codeString1: trim(getVal('codeString1')||r.codeString1||''),
       codeString2: trim(getVal('codeString2')||r.codeString2||''),
       codeString3: trim(getVal('codeString3')||r.codeString3||''),
-      dateTextField1: parseInt(trim(getVal('dateTextField1')||r.dateTextField1||'-1'))||-1,
-      dateTextField2: parseInt(trim(getVal('dateTextField2')||r.dateTextField2||'-1'))||-1,
+  // Do not default text field numbers to -1; only set if explicitly provided
+  dateTextField1: ((): any => { const raw = trim(getVal('dateTextField1')||r.dateTextField1||''); const n = raw!=='' ? parseInt(raw) : undefined; return Number.isFinite(n as any) ? n : undefined; })(),
+  dateTextField2: ((): any => { const raw = trim(getVal('dateTextField2')||r.dateTextField2||''); const n = raw!=='' ? parseInt(raw) : undefined; return Number.isFinite(n as any) ? n : undefined; })(),
       fixedWeightValue: parseNumber(getVal('fixedWeightValue')||r.fixedWeightValue),
       generalNumber1: parseInt(trim(getVal('generalNumber1')||r.generalNumber1||'0'))||0,
       generalNumber2: parseInt(trim(getVal('generalNumber2')||r.generalNumber2||'0'))||0,
-      textField1: parseInt(trim(getVal('textField1')||r.textField1||'-1'))||-1,
-      textField2: parseInt(trim(getVal('textField2')||r.textField2||'-1'))||-1,
-      textField3: parseInt(trim(getVal('textField3')||r.textField3||'-1'))||-1,
+  textField1: ((): any => { const raw = trim(getVal('textField1')||r.textField1||''); const n = raw!=='' ? parseInt(raw) : undefined; return Number.isFinite(n as any) ? n : undefined; })(),
+  textField2: ((): any => { const raw = trim(getVal('textField2')||r.textField2||''); const n = raw!=='' ? parseInt(raw) : undefined; return Number.isFinite(n as any) ? n : undefined; })(),
+  textField3: ((): any => { const raw = trim(getVal('textField3')||r.textField3||''); const n = raw!=='' ? parseInt(raw) : undefined; return Number.isFinite(n as any) ? n : undefined; })(),
       logoField1: parseInt(trim(getVal('logoField1')||r.logoField1||'0'))||0,
       maxWeightValue: parseNumber(getVal('maxWeightValue')||r.maxWeightValue),
       minWeightValue: parseNumber(getVal('minWeightValue')||r.minWeightValue),
@@ -1266,11 +1267,17 @@ export class DataMaintenanceComponent implements OnInit {
     for(let i=1;i<=7;i++){ if(mappingKeys.includes(`codeField${i}`)) row[`codeField${i}`] = parseInt(trim(getVal(`codeField${i}`)||'0'))||0; }
     for(let i=1;i<=7;i++){ if(mappingKeys.includes(`codeString${i}`)) row[`codeString${i}`] = trim(getVal(`codeString${i}`)); }
     for(let i=1;i<=20;i++){
-      if(mappingKeys.includes(`textField${i}Number`)) row[`textField${i}Number`] = parseInt(trim(getVal(`textField${i}Number`)||'-1'))||-1;
+      if(mappingKeys.includes(`textField${i}Number`)){
+        const raw = trim(getVal(`textField${i}Number`)||'');
+        if(raw!=='') { const n = parseInt(raw); if(Number.isFinite(n)) row[`textField${i}Number`] = n; }
+      }
       if(mappingKeys.includes(`textField${i}Text`)) row[`textField${i}Text`] = trim(getVal(`textField${i}Text`));
     }
     for(let i=1;i<=3;i++){
-      if(mappingKeys.includes(`dateTextField${i}Number`)) row[`dateTextField${i}Number`] = parseInt(trim(getVal(`dateTextField${i}Number`)||'-1'))||-1;
+      if(mappingKeys.includes(`dateTextField${i}Number`)){
+        const raw = trim(getVal(`dateTextField${i}Number`)||'');
+        if(raw!=='') { const n = parseInt(raw); if(Number.isFinite(n)) row[`dateTextField${i}Number`] = n; }
+      }
       if(mappingKeys.includes(`dateTextField${i}Text`)) row[`dateTextField${i}Text`] = trim(getVal(`dateTextField${i}Text`));
     }
     if(!row.number || row.number.length>20) row.error += 'invalid number; ';
@@ -1286,7 +1293,7 @@ export class DataMaintenanceComponent implements OnInit {
     const rows = this.importRows().filter(r=>!r.error);
     this.importRows.set(rows);
     this.importState.set({open:true, step:'running'});
-    runConcurrentQueue(rows, (row)=> this.processImportRow(row), {
+    runConcurrentQueue(rows, (row)=> this.processImportRow(row).then(()=> this.sleep(200)), {
       concurrency: this.importConcurrency,
       getCancelled: () => this.importCancelled,
       onItemDone: () => this.updateImportProgress(),
@@ -1295,6 +1302,7 @@ export class DataMaintenanceComponent implements OnInit {
   }
   cancelImport(){ this.importCancelled = true; }
   private pumpImportQueue(){ /* replaced by runConcurrentQueue */ }
+  private sleep(ms:number){ return new Promise<void>(res=>setTimeout(res, ms)); }
   private async processImportRow(row:any){
     try{
       const emptyPLU = this.createEmptyArticlePLU();
@@ -1327,15 +1335,25 @@ export class DataMaintenanceComponent implements OnInit {
           codeString1: row.codeString1 || '',
           codeString2: row.codeString2 || '',
           codeString3: row.codeString3 || '',
-          dateTextField1: { number: row.dateTextField1 ?? row.dateTextField1Number ?? -1, text: row.dateTextField1Text || null },
-          dateTextField2: { number: row.dateTextField2 ?? row.dateTextField2Number ?? -1, text: row.dateTextField2Text || null },
-          dateTextField3: { number: row.dateTextField3 ?? row.dateTextField3Number ?? -1, text: row.dateTextField3Text || null },
+          // When inline text is provided, force number to -1 to avoid creating/updating General Text records.
+          dateTextField1: {
+            number: (row.dateTextField1Text != null && String(row.dateTextField1Text).trim() !== '') ? -1 : (row.dateTextField1 ?? row.dateTextField1Number ?? -1),
+            text: row.dateTextField1Text || null
+          },
+          dateTextField2: {
+            number: (row.dateTextField2Text != null && String(row.dateTextField2Text).trim() !== '') ? -1 : (row.dateTextField2 ?? row.dateTextField2Number ?? -1),
+            text: row.dateTextField2Text || null
+          },
+          dateTextField3: {
+            number: (row.dateTextField3Text != null && String(row.dateTextField3Text).trim() !== '') ? -1 : (row.dateTextField3 ?? row.dateTextField3Number ?? -1),
+            text: row.dateTextField3Text || null
+          },
           fixedWeightValue: row.fixedWeightValue || 0,
           generalNumber1: row.generalNumber1 || 0,
           generalNumber2: row.generalNumber2 || 0,
-          textField1: { ...emptyPLU.textField1, number: row.textField1 ?? row.textField1Number ?? -1, text: row.textField1Text || null },
-          textField2: { ...emptyPLU.textField2, number: row.textField2 ?? row.textField2Number ?? -1, text: row.textField2Text || null },
-          textField3: { ...emptyPLU.textField3, number: row.textField3 ?? row.textField3Number ?? -1, text: row.textField3Text || null },
+          textField1: { ...emptyPLU.textField1, number: (row.textField1Text != null && String(row.textField1Text).trim() !== '') ? -1 : (row.textField1 ?? row.textField1Number ?? -1), text: row.textField1Text || null },
+          textField2: { ...emptyPLU.textField2, number: (row.textField2Text != null && String(row.textField2Text).trim() !== '') ? -1 : (row.textField2 ?? row.textField2Number ?? -1), text: row.textField2Text || null },
+          textField3: { ...emptyPLU.textField3, number: (row.textField3Text != null && String(row.textField3Text).trim() !== '') ? -1 : (row.textField3 ?? row.textField3Number ?? -1), text: row.textField3Text || null },
           logoField1: row.logoField1 || 0,
           maxWeightValue: row.maxWeightValue || 0,
           minWeightValue: row.minWeightValue || 0,
@@ -1349,8 +1367,24 @@ export class DataMaintenanceComponent implements OnInit {
       for(let i=2;i<=10;i++){ if(row[`logoField${i}`]!==undefined) article.articlePLU[`logoField${i}`] = row[`logoField${i}`]; }
       for(let i=4;i<=7;i++){ if(row[`codeField${i}`]!==undefined) article.articlePLU[`codeField${i}`] = row[`codeField${i}`]; }
       for(let i=4;i<=7;i++){ if(row[`codeString${i}`]!==undefined) article.articlePLU[`codeString${i}`] = row[`codeString${i}`]; }
-      for(let i=4;i<=20;i++){ const n=row[`textField${i}Number`]; const t=row[`textField${i}Text`]; if(n!==undefined||t!==undefined){ article.articlePLU[`textField${i}`]={ number: n??-1, text: t||null }; } }
-      if(row['dateTextField3Number']!==undefined || row['dateTextField3Text']!==undefined){ article.articlePLU['dateTextField3'] = { number: row['dateTextField3Number'] ?? -1, text: row['dateTextField3Text'] || null }; }
+      for(let i=4;i<=20;i++){
+        const n = row[`textField${i}Number`];
+        const t = row[`textField${i}Text`];
+        if(n!==undefined || t!==undefined){
+          article.articlePLU[`textField${i}`] = {
+            number: (t != null && String(t).trim() !== '') ? -1 : (n ?? -1),
+            text: t || null
+          };
+        }
+      }
+      if(row['dateTextField3Number']!==undefined || row['dateTextField3Text']!==undefined){
+        const t = row['dateTextField3Text'];
+        const n = row['dateTextField3Number'];
+        article.articlePLU['dateTextField3'] = {
+          number: (t != null && String(t).trim() !== '') ? -1 : (n ?? -1),
+          text: t || null
+        };
+      }
       // Decide create vs update
       const authToken = this.auth.getToken();
       const jsonHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json'});
@@ -1972,9 +2006,10 @@ export class DataMaintenanceComponent implements OnInit {
   }
 
   goToDeviceParametersSubPage(){
-    this.currentSubPage.set('device-parameters');
-    this.currentView.set('list');
-    this.activeDebugTab = 'devicesList';
+    // Temporarily disabled: backend not ready; ignore navigation
+    // this.currentSubPage.set('device-parameters');
+    // this.currentView.set('list');
+    // this.activeDebugTab = 'devicesList';
   }
 
   // Exceptions modal dialog state
@@ -2292,8 +2327,8 @@ export class DataMaintenanceComponent implements OnInit {
     const rows=this.cuImportRows().filter(r=>!r.error);
     this.cuImportRows.set(rows);
     this.cuImportState.set({open:true, step:'running'});
-    runConcurrentQueue(rows, (row)=> this.cuProcessImportRow(row), {
-      concurrency: this.cuImportConcurrency,
+    runConcurrentQueue(rows, (row)=> this.cuProcessImportRow(row).then(()=> this.sleep(200)), {
+      concurrency: 1,
       getCancelled: () => this.cuImportCancelled,
       onItemDone: () => this.cuUpdateImportProgress(),
       onDone: () => { /* handled in cuUpdateImportProgress */ }

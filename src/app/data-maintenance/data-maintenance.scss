@@ -111,6 +111,24 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   border-bottom: 2px solid #e0e0e0;
 
   
+  .title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  // Match Order Management back button sizing
+  .back-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
 
   .header-left {
   flex: 1 1 auto;
@@ -132,6 +150,34 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   font-weight: bold !important;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
   box-sizing: border-box;
+}
+
+/* Make the Data Maintenance header appear on grey background like Order Management */
+.dm-card > .header {
+  /* pull header out to card edges and give it a soft grey background */
+  margin-top: -1.5rem;           /* match .dm-card top padding */
+  margin-left: -1.75rem;         /* match .dm-card horizontal padding */
+  margin-right: -1.75rem;
+  margin-bottom: 2rem;           /* match Order header spacing */
+  padding: 1rem 1.75rem;         /* restore inner spacing; includes padding-bottom */
+  background: linear-gradient(180deg, #f5f7fa 0%, #e9eff5 100%);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border-bottom: 2px solid #e0e6ed; /* match Order header divider */
+}
+
+/* Explicit class in template to guarantee application */
+.header-band {
+  background: linear-gradient(180deg, #f5f7fa 0%, #e9eff5 100%);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border-bottom: 2px solid #e0e6ed;
+}
+
+/* Dark theme variant */
+body.dark-theme .dm-card > .header {
+  background: linear-gradient(180deg, #1e1e21 0%, #2a2d33 100%);
+  border-bottom-color: #2f3338;
 }
 .overlay-text-bold {
   font-weight: bold !important;

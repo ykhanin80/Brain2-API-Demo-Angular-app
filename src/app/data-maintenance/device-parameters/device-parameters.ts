@@ -115,6 +115,46 @@ export class DeviceParametersComponent {
     );
   }
 
+  // ===== Formatting helpers for Auto Labeler Parameters list =====
+  private shortId(id:string): string { return id ? id.slice(0,8) : ''; }
+  private getParamNumber(p:any): number | string {
+    const n = (p?.number ?? p?.parameterNumber ?? p?.autoLabelerParameterNumber ?? p?.key);
+    return typeof n === 'number' ? n : (n != null ? String(n) : '—');
+  }
+  private getSystemTypeString(v:any): 'Device'|'DeviceGroup'|'Undefined' {
+    const s = (typeof v==='object' && v && 'value' in v ? String(v.value) : String(v||'')).toLowerCase();
+    if (s==='device') return 'Device';
+    if (s==='devicegroup') return 'DeviceGroup';
+    return 'Undefined';
+  }
+  private resolveSystemNameBy(type:'Device'|'DeviceGroup'|'Undefined', id:string): string {
+    if (type==='Undefined' || !id) return '— All Devices —';
+    if (type==='Device') {
+      const d = this.devices.find(x => this.getDeviceId(x) === id);
+      return d ? this.getDeviceName(d) : `Device ${this.shortId(id)}`;
+    }
+    // DeviceGroup
+    const g = this.deviceGroups.find(x => this.getGroupId(x) === id);
+    return g ? this.getGroupName(g) : `Group ${this.shortId(id)}`;
+  }
+  formatAutoParamOption(p:any): string {
+    const number = this.getParamNumber(p);
+    const sysType = this.getSystemTypeString(p?.systemType);
+    const sysId = String(p?.systemId ?? '');
+    const systemName = this.resolveSystemNameBy(sysType, sysId);
+    const labelPos = (typeof p?.labelPosition==='object' && p?.labelPosition && 'value' in p.labelPosition) ? p.labelPosition.value : (p?.labelPosition ?? '');
+    const opMode = (typeof p?.operatingMode==='object' && p?.operatingMode && 'value' in p.operatingMode) ? p.operatingMode.value : (p?.operatingMode ?? '');
+    const speed = (p?.labelingSpeed ?? '');
+    const parts = [
+      `#${number}`,
+      `${sysType==='DeviceGroup' ? 'Group' : (sysType==='Device' ? 'Device' : '')}${sysType!=='Undefined' ? ': ' : ''}${systemName}`.trim(),
+      labelPos ? `Pos: ${labelPos}` : '',
+      opMode ? `Mode: ${opMode}` : '',
+      (speed || speed===0) ? `Speed: ${speed}` : ''
+    ].filter(Boolean);
+    return parts.join(' • ');
+  }
+
   // ===== AMPAR Import (CSV) =====
   importState: { open: boolean; step: 'select'|'mapping'|'preview' } = { open: false, step: 'select' };
   importHeaders: string[] = [];
@@ -375,7 +415,7 @@ export class DeviceParametersComponent {
     this.importProgress = { processed:0, success:0, failed:0, percent:0, done:false };
     const url = `${this.baseUrl()}/extensions/api/DeviceParameters/WriteAutoLabelerParameterAsync`;
     const rows = this.importRows;
-    await runConcurrentQueue(rows, async (row:any) => {
+  await runConcurrentQueue(rows, async (row:any) => {
       // Finalize group/system glue
       if (this.normalizeEnumValue(row.systemType)==='DeviceGroup' && !row.systemId && row.deviceGroupId) row.systemId = String(row.deviceGroupId);
       const err = this.validateRow(row);
@@ -406,8 +446,10 @@ export class DeviceParametersComponent {
         });
         row.status='failed'; row.error = e?.error?.title || e?.message || 'request failed';
       }
+      // small delay between requests
+      await new Promise(res=>setTimeout(res,200));
     }, {
-      concurrency: 4,
+      concurrency: 1,
       onItemDone: (_item:any, index:number) => {
         this.importProgress.processed++;
         const ok = rows[index]?.status==='success';

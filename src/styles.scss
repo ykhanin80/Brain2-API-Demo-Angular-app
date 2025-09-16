@@ -183,3 +183,31 @@ body.dark-theme .btn-icon { background:#2a3036; border-color:#3a434d; color:#d0d
 body.dark-theme .btn-icon:hover:not(:disabled){ background:#343c45; }
 body.dark-theme .btn-edit:hover:not(:disabled){ background:#18324a; border-color:#1e5d91; }
 body.dark-theme .btn-delete:hover:not(:disabled){ background:#4a1f24; border-color:#7a2e36; }
+
+/* Global basic button styles to align headers across pages */
+.btn {
+	padding: 0.75rem 1.5rem;
+	border: none;
+	border-radius: 8px;
+	font-weight: 600;
+	font-size: 1rem;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	text-decoration: none;
+	display: inline-block;
+	text-align: center;
+}
+
+.btn-outline {
+	background: transparent;
+	color: #3498db;
+	border: 2px solid #3498db;
+}
+.btn-outline:hover:not(:disabled) {
+	background: #3498db;
+	color: #fff;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn:disabled { opacity: .6; cursor: not-allowed; }

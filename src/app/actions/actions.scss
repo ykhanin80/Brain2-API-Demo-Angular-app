@@ -9,7 +9,7 @@
     color: #2c3e50;
     font-size: 2rem;
     font-weight: 700;
-    margin: 0 0 2rem 0;
+    margin: 0;
   }
 }
 
@@ -32,6 +32,17 @@
   margin-bottom: 2rem;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
+
+.actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e6ed;
+}
+
+.actions-header .back-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
 
 .job-form h3, .job-list h3, .response-section h3 {
   margin-top: 0;

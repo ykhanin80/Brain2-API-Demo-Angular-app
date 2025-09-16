@@ -4,24 +4,30 @@
     <!-- Header -->
     
     <!-- Header -->
-    <div class="header">
+  <div class="header header-band">
+      <div class="title-row">
+        <div class="header-left">
+          <h1>Data Maintenance</h1>
+          <p class="subtitle">Manage Articles & Static Texts</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
+        </div>
+      </div>
       <div class="header-left">
-        <h1>Data Maintenance</h1>
-        <p class="subtitle">Manage Articles & Static Texts</p>
+        
         <div class="sub-tabs">
           <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
           <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
+          <!-- Temporarily hidden: backend not ready
           <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Device Parameters</button>
+          -->
         </div>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='articles'">
-        <button class="btn btn-secondary" (click)="goToDashboard()">
-          <i class="icon-arrow-left"></i>
-          Back to Dashboard
-        </button>
         <button class="btn btn-secondary" (click)="openImportDialog()">
           <i class="icon-upload"></i>
           Import CSV
@@ -46,7 +52,6 @@
         </button>
         <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
         <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
-        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='customers'">
         <button class="btn btn-secondary" (click)="cuOpenImportDialog()">
@@ -61,10 +66,8 @@
           <i class="icon-plus"></i>
           Add Customer
         </button>
-        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='devices'">
-        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
       <div class="header-right" *ngIf="currentSubPage()==='exceptions'">
         <button class="btn btn-primary" (click)="openExceptionsModal()">
@@ -79,7 +82,6 @@
           <i class="icon-download"></i>
           Download CSV Template
         </button>
-        <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
       </div>
   </div>
 
