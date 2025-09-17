@@ -564,20 +564,21 @@
             <div class="overlay-item"
               [style.left]="getOverlayPosition(item.number).x + 'px'"
               [style.top]="getOverlayPosition(item.number).y + 'px'"
+              [style.width]="getOverlayWidth(item.number) + 'px'"
               [ngClass]="{
                 'align-right': getOverlayPosition(item.number).align === 'right',
                 'align-center': getOverlayPosition(item.number).align === 'center'
               }"
               [attr.data-item]="item.number">
+              <span class="overlay-badge">{{ 'Text ' + item.number }}</span>
               <input maxlength="8"
                 [(ngModel)]="item.textValue"
                 [ngModelOptions]="{standalone: true}" 
                 [placeholder]="'Text ' + item.number"
+                [title]="'Text ' + item.number"
                 [ngClass]="item.fontClass + ' overlay-text-input'"
-                [style.width.px]="getOverlayPosition(item.number).width || 60"
-                [style.minWidth.px]="getOverlayPosition(item.number).width || 60"
-                [style.maxWidth.px]="getOverlayPosition(item.number).width || 60"
-                style="color: #000 !important; background: #fff !important; opacity: 1 !important; display: inline-block; margin-bottom: 8px;" />
+                [style.width]="getOverlayWidth(item.number) + 'px'"
+                style="color: #000 !important; background: #fff !important; opacity: 1 !important; margin-bottom: 8px;" />
               <span class="resize-handle" (mousedown)="startResize($event, item.number)" (touchstart)="startResize($event, item.number)"></span>
               
             </div>
@@ -793,8 +794,9 @@
                   type="text"
                   id="newNumber"
                   maxlength="20"
-                  [value]="newArticle().number"
-                  (input)="updateNewArticleField('number', $event)"
+                  [value]="rawNewArticleFields['number'] ?? newArticle().number"
+                  (input)="onCreateFieldInput('number', $event)"
+                  (blur)="onCreateFieldBlur('number')"
                   placeholder="Enter article number"
                   required
                 />
@@ -805,8 +807,9 @@
                   type="text"
                   id="newName"
                   maxlength="64"
-                  [value]="newArticle().name"
-                  (input)="updateNewArticleField('name', $event)"
+                  [value]="rawNewArticleFields['name'] ?? newArticle().name"
+                  (input)="onCreateFieldInput('name', $event)"
+                  (blur)="onCreateFieldBlur('name')"
                   placeholder="Enter article name"
                   required
                 />
@@ -817,8 +820,9 @@
                   type="text"
                   id="newDescription"
                   maxlength="64"
-                  [value]="newArticle().description"
-                  (input)="updateNewArticleField('description', $event)"
+                  [value]="rawNewArticleFields['description'] ?? newArticle().description"
+                  (input)="onCreateFieldInput('description', $event)"
+                  (blur)="onCreateFieldBlur('description')"
                   placeholder="Enter description"
                 />
               </div>
@@ -1109,8 +1113,9 @@
                       type="text"
                       id="newTextField1Text"
                       maxlength="64"
-                      [value]="newArticle().articlePLU?.textField1?.text || ''"
-                      (input)="updateNewArticleTextField('textField1', 'text', $event)"
+                      [value]="rawTextFieldTextsCreate['textField1'] ?? (newArticle().articlePLU?.textField1?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField1', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField1')"
                     />
                   </div>
                 </div>
@@ -1123,8 +1128,9 @@
                       inputmode="numeric"
                       pattern="\\d{0,10}"
                       maxlength="10"
-                      [value]="newArticle().articlePLU?.textField2?.number || -1"
-                      (input)="updateNewArticleTextField('textField2', 'number', $event)"
+                      [value]="rawTextFieldNumbersCreate['textField2'] || (newArticle().articlePLU?.textField2?.number === -1 ? '' : newArticle().articlePLU?.textField2?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField2', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField2')"
                     />
                   </div>
                   <div class="text-col">
@@ -1133,8 +1139,9 @@
                       type="text"
                       id="newTextField2Text"
                       maxlength="64"
-                      [value]="newArticle().articlePLU?.textField2?.text || ''"
-                      (input)="updateNewArticleTextField('textField2', 'text', $event)"
+                      [value]="rawTextFieldTextsCreate['textField2'] ?? (newArticle().articlePLU?.textField2?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField2', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField2')"
                     />
                   </div>
                 </div>
@@ -1258,7 +1265,7 @@
                 </div>
                 <div class="form-group wide-name">
                   <label for="editName">Name *</label>
-                  <input type="text" id="editName" maxlength="64" [value]="selectedArticle()?.name" (input)="updateSelectedArticleField('name', $event)" placeholder="Enter article name (max 64 chars)" required />
+                  <input type="text" id="editName" maxlength="64" [value]="rawEditFields['name'] ?? selectedArticle()?.name" (input)="onEditFieldInput('name', $event)" (blur)="onEditFieldBlur('name')" placeholder="Enter article name (max 64 chars)" required />
                 </div>
                 <div class="form-group">
                   <label for="editWeightUnit">Weight Unit</label>
@@ -1275,7 +1282,7 @@
                 </div>
                 <div class="form-group flex-grow">
                   <label for="editDescription">Description</label>
-                  <input type="text" id="editDescription" maxlength="64" [value]="selectedArticle()?.description" (input)="updateSelectedArticleField('description', $event)" placeholder="Enter description" />
+                  <input type="text" id="editDescription" maxlength="64" [value]="rawEditFields['description'] ?? selectedArticle()?.description" (input)="onEditFieldInput('description', $event)" (blur)="onEditFieldBlur('description')" placeholder="Enter description" />
                 </div>
               </div>
               <div class="checkbox-group">
@@ -1335,16 +1342,16 @@
               <div class="form-group"><label for="editStaticText">Static Text #</label><input type="number" id="editStaticText" [value]="selectedArticle()?.articlePLU?.staticText || 0" (input)="updateSelectedArticlePLUField('staticText', $event)" min="0" class="number-field" /></div>
               <div class="dynamic-fields-container dense-mode compact-text-fields">
                 <h5 class="field-group-title">Text Fields</h5>
-                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle())" class="tf-inline-row">
+                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle()); trackBy: trackByTextField" class="tf-inline-row">
                   <label class="tf-label" [for]="'edit' + textField.key + 'Num'">TF {{ textField.index }}</label>
                   <input type="text" inputmode="numeric" pattern="\\d{0,10}" maxlength="10" [id]="'edit' + textField.key + 'Num'" [value]="textField.field.number === -1 ? '' : (rawTextFieldNumbersEdit[textField.key] || textField.field.number)" (input)="onEditTextFieldNumberInput(textField.key, $event)" (blur)="commitEditTextFieldNumber(textField.key)" class="tf-num" />
-                  <input type="text" [id]="'edit' + textField.key + 'Text'" [value]="textField.field.text || ''" (input)="updateSelectedArticleTextFieldDynamic(textField.key, 'text', $event)" class="tf-text" placeholder="Text Field {{ textField.index }} Text" />
+                  <input type="text" [id]="'edit' + textField.key + 'Text'" [value]="rawTextFieldTextsEdit[textField.key] ?? (textField.field.text || '')" (input)="onEditTextFieldTextInput(textField.key, $event)" (blur)="onEditTextFieldTextBlur(textField.key)" class="tf-text" placeholder="Text Field {{ textField.index }} Text" />
                 </div>
               </div>
               <div class="dynamic-fields-container dense-mode compact-simple-texts">
                 <h5 class="field-group-title">Simple Texts</h5>
                 <div class="simple-texts-grid">
-                  <div *ngFor="let simpleText of getSimpleTextsWithValues(selectedArticle())" class="simple-text-item"><label [for]="'edit' + simpleText.key">ST {{ simpleText.index }}</label><input type="text" maxlength="30" [id]="'edit' + simpleText.key" [value]="simpleText.value" (input)="updateSelectedArticlePLUFieldDynamic(simpleText.key, $event)" class="st-input" /></div>
+                  <div *ngFor="let simpleText of getSimpleTextsWithValues(selectedArticle()); trackBy: trackBySimpleText" class="simple-text-item"><label [for]="'edit' + simpleText.key">ST {{ simpleText.index }}</label><input type="text" maxlength="30" [id]="'edit' + simpleText.key" [value]="rawSimpleTextsEdit[simpleText.key] ?? simpleText.value" (input)="onEditSimpleTextInput(simpleText.key, $event)" (blur)="onEditSimpleTextBlur(simpleText.key)" class="st-input" /></div>
                 </div>
               </div>
             </div>
@@ -1396,12 +1403,12 @@
               <div class="form-row three-cols">
                 <div class="form-group">
                   <label for="copyNumber">Article Number *</label>
-                  <input type="text" id="copyNumber" [value]="selectedArticle()?.number" (input)="updateSelectedArticleField('number', $event)" placeholder="Enter new PLU number" maxlength="20" required class="plu-required" />
+                  <input type="text" id="copyNumber" [value]="rawEditFields['number'] ?? selectedArticle()?.number" (input)="onEditFieldInput('number', $event)" (blur)="onEditFieldBlur('number')" placeholder="Enter new PLU number" maxlength="20" required class="plu-required" />
                   <small class="field-hint">Required: Enter a unique PLU number for the new article</small>
                 </div>
                 <div class="form-group wide-name">
                   <label for="copyName">Name *</label>
-                  <input type="text" id="copyName" maxlength="64" [value]="selectedArticle()?.name" (input)="updateSelectedArticleField('name', $event)" placeholder="Enter article name (max 64 chars)" required />
+                  <input type="text" id="copyName" maxlength="64" [value]="rawEditFields['name'] ?? selectedArticle()?.name" (input)="onEditFieldInput('name', $event)" (blur)="onEditFieldBlur('name')" placeholder="Enter article name (max 64 chars)" required />
                 </div>
                 <div class="form-group">
                   <label for="copyWeightUnit">Weight Unit</label>
@@ -1415,7 +1422,7 @@
               <div class="form-row">
                 <div class="form-group">
                   <label for="copyDescription">Description</label>
-                  <textarea id="copyDescription" maxlength="100" [value]="selectedArticle()?.description" (input)="updateSelectedArticleField('description', $event)" placeholder="Enter article description (max 100 chars)"></textarea>
+                  <textarea id="copyDescription" maxlength="100" [value]="rawEditFields['description'] ?? selectedArticle()?.description" (input)="onEditFieldInput('description', $event)" (blur)="onEditFieldBlur('description')" placeholder="Enter article description (max 100 chars)"></textarea>
                 </div>
               </div>
 

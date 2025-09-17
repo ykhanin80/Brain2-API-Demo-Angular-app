@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { APP_VERSION } from '../version';
+import { APP_VERSION } from '../../version';
 
 @Component({
   selector: 'app-dashboard',

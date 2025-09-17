@@ -428,6 +428,71 @@ export class DataMaintenanceComponent implements OnInit {
   // Sub-page: articles, static-texts, customers, devices, exceptions, device-parameters (default articles)
   currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices' | 'exceptions' | 'device-parameters'>('articles');
 
+  // Raw text buffer for edit/copy inputs to avoid caret/value reset on each signal update
+  rawEditFields: { [key: string]: string | undefined } = {};
+  // Raw buffers for dynamic text inputs on Edit view
+  rawSimpleTextsEdit: { [key: string]: string | undefined } = {};
+  rawTextFieldTextsEdit: { [key: string]: string | undefined } = {};
+  // Raw text buffer for create view general inputs
+  rawNewArticleFields: { [key: string]: string | undefined } = {};
+  // Raw buffers for dynamic text inputs on Create view (Text Field text properties)
+  rawTextFieldTextsCreate: { [key: string]: string | undefined } = {};
+
+  onEditFieldInput(fieldKey: 'name' | 'description' | 'number', event: Event) {
+    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
+    this.rawEditFields[fieldKey] = value;
+    this.updateSelectedArticleField(fieldKey as any, event);
+  }
+
+  onEditFieldBlur(fieldKey: 'name' | 'description' | 'number') {
+    // Clear buffer so model drives value
+    delete this.rawEditFields[fieldKey];
+  }
+
+  // Buffered typing for Text Fields (text property) in Edit view
+  onEditTextFieldTextInput(fieldKey: string, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.rawTextFieldTextsEdit[fieldKey] = value;
+    this.updateSelectedArticleTextFieldDynamic(fieldKey, 'text', event);
+  }
+  onEditTextFieldTextBlur(fieldKey: string) {
+    delete this.rawTextFieldTextsEdit[fieldKey];
+  }
+
+  // Buffered typing for Simple Texts in Edit view
+  onEditSimpleTextInput(fieldKey: string, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.rawSimpleTextsEdit[fieldKey] = value;
+    this.updateSelectedArticlePLUFieldDynamic(fieldKey, event);
+  }
+  onEditSimpleTextBlur(fieldKey: string) {
+    delete this.rawSimpleTextsEdit[fieldKey];
+  }
+
+  // Create view: buffered typing for general fields
+  onCreateFieldInput(fieldKey: 'number' | 'name' | 'description', event: Event) {
+    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
+    this.rawNewArticleFields[fieldKey] = value;
+    this.updateNewArticleField(fieldKey as any, event);
+  }
+  onCreateFieldBlur(fieldKey: 'number' | 'name' | 'description') {
+    delete this.rawNewArticleFields[fieldKey];
+  }
+
+  // Create view: buffered typing for Text Field text properties
+  onCreateTextFieldTextInput(fieldKey: string, event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.rawTextFieldTextsCreate[fieldKey] = value;
+    this.updateNewArticleTextField(fieldKey as any, 'text', event);
+  }
+  onCreateTextFieldTextBlur(fieldKey: string) {
+    delete this.rawTextFieldTextsCreate[fieldKey];
+  }
+
+  // trackBy helpers to prevent DOM recreation on every keystroke
+  trackByTextField = (index: number, item: { key: string; index: number }) => item.key;
+  trackBySimpleText = (index: number, item: { key: string; index: number }) => item.key;
+
   // Static Text form state
   staticTextData = signal<StaticTextData>({
   number: 1001,
@@ -447,7 +512,13 @@ export class DataMaintenanceComponent implements OnInit {
   getCurrentNutritionMap(){ return this.nutritionOverlayMaps[this.labelLayout()]; }
   getOverlayPosition(itemNumber: number){
     const map = this.getCurrentNutritionMap();
-    return map.positions[itemNumber];
+    const pos = map.positions[itemNumber];
+    return pos;
+  }
+  // Compute effective overlay width with a sensible default when width isn't provided
+  getOverlayWidth(itemNumber: number){
+    const pos = this.getOverlayPosition(itemNumber);
+    return pos?.width ?? 80;
   }
   
   // API response feedback
@@ -1949,12 +2020,16 @@ export class DataMaintenanceComponent implements OnInit {
 
   // Navigation methods
   goToCreatePage() {
+    // Ensure no overlays are blocking interactions
+    this.closeAllOverlays();
     this.resetNewArticleForm();
     this.apiResponse.set({ type: null, message: '' });
     this.currentView.set('create');
   // Reset raw buffer
   this.unitPriceInput.set('0');
   this.rawTextFieldNumbersCreate = {};
+  this.rawNewArticleFields = {};
+  this.rawTextFieldTextsCreate = {};
   }
 
   goToListPage() {
@@ -2570,13 +2645,43 @@ export class DataMaintenanceComponent implements OnInit {
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch {}
   }
 
+  /**
+   * Ensure no modal/overlay is left open that could block interaction
+   * (delete confirm, import panels, exceptions/customer modals, body class).
+   */
+  private closeAllOverlays() {
+    // Best-effort: don't throw if running in SSR or DOM not available
+    try { document.body.classList.remove('has-import-open'); } catch {}
+
+    // Close confirm overlay
+    try { this.showDeleteConfirm.set(false); } catch {}
+
+    // Close inline modals/panels
+    try { this.exceptionsModalOpen.set(false); } catch {}
+    try { this.customerModalOpen.set(false); } catch {}
+
+    // Reset import states (articles, static texts, exceptions, customers)
+    try { this.importState.set({ open: false, step: 'select' }); } catch {}
+    try { this.stImportState.set({ open: false, step: 'select' }); } catch {}
+    try { this.exImportState.set({ open: false, step: 'select' }); } catch {}
+    try { this.cuImportState.set({ open: false, step: 'select' }); } catch {}
+  }
+
   goToEditPage(article: LabelerArticle) {
+    // Proactively close any overlays that might intercept input
+    this.closeAllOverlays();
+    // Reset raw input buffers to avoid stale values
+    this.rawEditFields = {};
+    this.rawTextFieldNumbersEdit = {};
+    this.rawTextFieldTextsEdit = {};
     this.selectedArticle.set({ ...article });
     this.apiResponse.set({ type: null, message: '' });
     this.currentView.set('edit');
   }
 
   async goToCopyPage(article: LabelerArticle) {
+    // Close any overlays first to avoid pointer-event blockers
+    this.closeAllOverlays();
     // First fetch the complete article data using the GET endpoint
     this.isLoading.set(true);
     this.error.set(null);
@@ -2597,6 +2702,10 @@ export class DataMaintenanceComponent implements OnInit {
           name: fullArticle.name + ' (Copy)', // Suggest it's a copy
         };
         
+        // Reset raw input buffers for copy view as well
+        this.rawEditFields = {};
+        this.rawTextFieldNumbersEdit = {};
+        this.rawTextFieldTextsEdit = {};
         this.selectedArticle.set(copyArticle);
         this.apiResponse.set({ type: null, message: '' });
         this.currentView.set('copy');
