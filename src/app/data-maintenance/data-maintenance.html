@@ -1,89 +1,84 @@
 <div class="data-maintenance order-like-container">
+  <!-- Page Header (like Order Management) -->
+  <div class="dm-page-header">
+    <h2>🛠️ Data Maintenance</h2>
+    <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
+  </div>
+
   <!-- List View -->
   <div *ngIf="currentView() === 'list'" class="dm-card">
-    <!-- Header -->
-    
-    <!-- Header -->
-  <div class="header header-band">
-      <div class="title-row">
-        <div class="header-left">
-          <h1>Data Maintenance</h1>
-          <p class="subtitle">Manage Articles & Static Texts</p>
-        </div>
-        <div class="header-actions">
-          <button class="btn btn-outline back-btn" (click)="goToDashboard()">🏠 Back to Dashboard</button>
-        </div>
+    <!-- Card Top Toolbar: sub-tabs left, per-tab actions right -->
+    <div class="dm-toolbar">
+      <div class="sub-tabs">
+        <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
+        <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
+        <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
+        <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
+        <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
+        <!-- Temporarily hidden: backend not ready
+        <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Device Parameters</button>
+        -->
       </div>
-      <div class="header-left">
-        
-        <div class="sub-tabs">
-          <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
-          <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
-          <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
-          <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
-          <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
-          <!-- Temporarily hidden: backend not ready
-          <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Device Parameters</button>
-          -->
-        </div>
+      <div class="toolbar-actions">
+        <ng-container *ngIf="currentSubPage()==='articles'">
+          <button class="btn btn-secondary" (click)="openImportDialog()">
+            <i class="icon-upload"></i>
+            Import CSV
+          </button>
+          <button class="btn btn-secondary" (click)="downloadImportTemplate()">
+            <i class="icon-download"></i>
+            Download CSV Template
+          </button>
+          <button class="btn btn-primary" (click)="goToCreatePage()">
+            <i class="icon-plus"></i>
+            Create Article
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="currentSubPage()==='static-texts'">
+          <button class="btn btn-secondary" (click)="stOpenImportDialog()">
+            <i class="icon-upload"></i>
+            Import Static Texts
+          </button>
+          <button class="btn btn-secondary" (click)="downloadStaticTextImportTemplate()">
+            <i class="icon-download"></i>
+            Download CSV Template
+          </button>
+          <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
+          <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
+        </ng-container>
+
+        <ng-container *ngIf="currentSubPage()==='customers'">
+          <button class="btn btn-secondary" (click)="cuOpenImportDialog()">
+            <i class="icon-upload"></i>
+            Import Customers from CSV
+          </button>
+          <button class="btn btn-secondary" (click)="cuDownloadImportTemplate()">
+            <i class="icon-download"></i>
+            Download CSV Template
+          </button>
+          <button class="btn btn-primary" [disabled]="isLoading()" (click)="openAddCustomerModal()">
+            <i class="icon-plus"></i>
+            Add Customer
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="currentSubPage()==='exceptions'">
+          <button class="btn btn-primary" (click)="openExceptionsModal()">
+            <i class="icon-plus"></i>
+            Add Exception
+          </button>
+          <button class="btn btn-secondary" (click)="exOpenImportDialog()">
+            <i class="icon-upload"></i>
+            Import CSV
+          </button>
+          <button class="btn btn-secondary" (click)="exDownloadImportTemplate()">
+            <i class="icon-download"></i>
+            Download CSV Template
+          </button>
+        </ng-container>
       </div>
-      <div class="header-right" *ngIf="currentSubPage()==='articles'">
-        <button class="btn btn-secondary" (click)="openImportDialog()">
-          <i class="icon-upload"></i>
-          Import CSV
-        </button>
-        <button class="btn btn-secondary" (click)="downloadImportTemplate()">
-          <i class="icon-download"></i>
-          Download CSV Template
-        </button>
-        <button class="btn btn-primary" (click)="goToCreatePage()">
-          <i class="icon-plus"></i>
-          Create Article
-        </button>
-      </div>
-      <div class="header-right" *ngIf="currentSubPage()==='static-texts'">
-        <button class="btn btn-secondary" (click)="stOpenImportDialog()">
-          <i class="icon-upload"></i>
-          Import Static Texts
-        </button>
-        <button class="btn btn-secondary" (click)="downloadStaticTextImportTemplate()">
-          <i class="icon-download"></i>
-          Download CSV Template
-        </button>
-        <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
-        <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
-      </div>
-      <div class="header-right" *ngIf="currentSubPage()==='customers'">
-        <button class="btn btn-secondary" (click)="cuOpenImportDialog()">
-          <i class="icon-upload"></i>
-          Import Customers from CSV
-        </button>
-        <button class="btn btn-secondary" (click)="cuDownloadImportTemplate()">
-          <i class="icon-download"></i>
-          Download CSV Template
-        </button>
-        <button class="btn btn-primary" [disabled]="isLoading()" (click)="openAddCustomerModal()">
-          <i class="icon-plus"></i>
-          Add Customer
-        </button>
-      </div>
-      <div class="header-right" *ngIf="currentSubPage()==='devices'">
-      </div>
-      <div class="header-right" *ngIf="currentSubPage()==='exceptions'">
-        <button class="btn btn-primary" (click)="openExceptionsModal()">
-          <i class="icon-plus"></i>
-          Add Exception
-        </button>
-        <button class="btn btn-secondary" (click)="exOpenImportDialog()">
-          <i class="icon-upload"></i>
-          Import CSV
-        </button>
-        <button class="btn btn-secondary" (click)="exDownloadImportTemplate()">
-          <i class="icon-download"></i>
-          Download CSV Template
-        </button>
-      </div>
-  </div>
+    </div>
 
   <!-- Articles Section -->
   <ng-container *ngIf="currentSubPage()==='articles'">

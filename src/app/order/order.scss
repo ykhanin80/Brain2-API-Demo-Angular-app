@@ -64,6 +64,24 @@
   h3 { color: #27ae60; }
 }
 
+/* Dark mode: ensure the whole page looks truly dark */
+:host-context(body.dark-theme) {
+  .quick-actions,
+  .order-section {
+    background:#1f1f1f;
+    border-color:#2c2c2c;
+    box-shadow:0 6px 18px rgba(0,0,0,.55);
+  }
+
+  .quick-actions h3,
+  .order-section h3 {
+    color:#e0e4e8;
+    border-bottom-color:#2f3842;
+  }
+
+  .input-group label { color:#cfd6dd; }
+}
+
 .error-message {
   border-left: 4px solid #e74c3c;
   

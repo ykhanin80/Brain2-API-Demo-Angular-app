@@ -13,6 +13,12 @@
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Dark mode: match Order Management dark background */
+:host-context(body.dark-theme) .data-maintenance {
+  background: linear-gradient(135deg,#1e1e21 0%,#2a2d33 60%,#22252a 100%);
+  min-height: 100vh;
+}
+
 // Import mapping styles
 .mapping-table-wrapper {
   max-height: 420px;
@@ -102,44 +108,20 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .import-inline .import-done-actions { display:flex; gap:6px; margin-top:6px; }
 
 // Header Section
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid #e0e0e0;
+.dm-page-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin: 0 0 1rem 0;
+  padding: 0 0 1rem 0;
+  border-bottom: 2px solid #e0e6ed;
 
-  
-  .title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
+  h2 { margin:0; font-size:2rem; color:#2c3e50; }
+  .back-btn { padding: .5rem 1rem; font-size:.9rem; }
+}
 
-  .header-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  // Match Order Management back button sizing
-  .back-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-  }
-
-  .header-left {
-  flex: 1 1 auto;
-  min-width: 0;
-    h1 {
-      margin: 0 0 5px 0;
-      color: #1976d2;
-      font-size: 2rem;
-    }
-    gap: 12px;
-  }
+:host-context(body.dark-theme) .dm-page-header { border-bottom-color:#2f3338; }
+:host-context(body.dark-theme) .dm-page-header h2 { color:#ffffff; }
 
 // Overlay text field styles for nutrition label editor
 .overlay-text-input {
@@ -152,32 +134,13 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   box-sizing: border-box;
 }
 
-/* Make the Data Maintenance header appear on grey background like Order Management */
-.dm-card > .header {
-  /* pull header out to card edges and give it a soft grey background */
-  margin-top: -1.5rem;           /* match .dm-card top padding */
-  margin-left: -1.75rem;         /* match .dm-card horizontal padding */
-  margin-right: -1.75rem;
-  margin-bottom: 2rem;           /* match Order header spacing */
-  padding: 1rem 1.75rem;         /* restore inner spacing; includes padding-bottom */
-  background: linear-gradient(180deg, #f5f7fa 0%, #e9eff5 100%);
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  border-bottom: 2px solid #e0e6ed; /* match Order header divider */
-}
-
-/* Explicit class in template to guarantee application */
-.header-band {
-  background: linear-gradient(180deg, #f5f7fa 0%, #e9eff5 100%);
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  border-bottom: 2px solid #e0e6ed;
-}
-
-/* Dark theme variant */
-body.dark-theme .dm-card > .header {
-  background: linear-gradient(180deg, #1e1e21 0%, #2a2d33 100%);
-  border-bottom-color: #2f3338;
+/* New card top toolbar inside the rounded rectangle */
+.dm-toolbar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 1rem;
 }
 .overlay-text-bold {
   font-weight: bold !important;
@@ -189,10 +152,11 @@ body.dark-theme .dm-card > .header {
   font-size: 18px !important;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
 }
-  .sub-tabs { margin-top:12px; display:flex; gap:8px; }
-  .sub-tab { padding:8px 18px; border:1px solid #b5c3d1; background:#fff; border-radius:18px; font-size:14px; cursor:pointer; white-space: nowrap; display:inline-flex; align-items:center; }
-  .sub-tab.active { background:#1976d2; color:#fff; border-color:#1976d2; }
-}
+
+.sub-tabs { display:flex; gap:8px; }
+.sub-tab { padding:8px 18px; border:1px solid #b5c3d1; background:#fff; border-radius:18px; font-size:14px; cursor:pointer; white-space: nowrap; display:inline-flex; align-items:center; }
+.sub-tab.active { background:#1976d2; color:#fff; border-color:#1976d2; }
+.toolbar-actions { display:flex; gap:8px; margin-left:auto; }
 
 // Static Texts
 .static-texts { margin-top:18px; }

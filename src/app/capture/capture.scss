@@ -10,6 +10,7 @@
   background: linear-gradient(135deg,#1e1e21 0%,#2a2d33 60%,#22252a 100%);
 }
 :host-context(body.dark-theme) .capture-header h2 { color:#e4e8ec; }
+:host-context(body.dark-theme) .capture-header { border-bottom-color:#2f3842; }
 :host-context(body.dark-theme) .success-message { background:#212225; box-shadow:0 6px 18px rgba(0,0,0,.6); border-color:#2f3338; }
 :host-context(body.dark-theme) .success-message h3 { color:#4ecb71; }
 
@@ -75,6 +76,17 @@
     border-bottom: 2px solid #e0e6ed;
     padding-bottom: 0.5rem;
   }
+}
+
+/* Dark mode: make Capture sections truly dark */
+:host-context(body.dark-theme) .capture-section {
+  background:#1f1f1f;
+  border:1px solid #2c2c2c;
+  box-shadow:0 6px 18px rgba(0,0,0,.55);
+}
+:host-context(body.dark-theme) .capture-section h3 {
+  color:#e0e4e8;
+  border-bottom-color:#2f3842;
 }
 
 .filters-grid {
@@ -214,6 +226,20 @@
       }
     }
   }
+}
+
+/* Dark mode: inputs and labels inside Capture */
+:host-context(body.dark-theme) .input-group label { color:#cfd6dd; }
+:host-context(body.dark-theme) .input-group .input-help { color:#94a1ad; }
+:host-context(body.dark-theme) .input-group .form-input {
+  background-color:#1f252c;
+  border-color:#3a434d;
+  color:#e2e8f0;
+}
+:host-context(body.dark-theme) .input-group .form-input:focus {
+  border-color:#17a2b8;
+  background-color:#232a32;
+  box-shadow:0 0 0 3px rgba(23,162,184,0.12);
 }
 
 .action-group {

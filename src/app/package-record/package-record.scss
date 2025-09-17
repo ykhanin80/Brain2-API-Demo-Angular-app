@@ -67,6 +67,9 @@
   }
 }
 
+/* Dark mode header text */
+:host-context(body.dark-theme) .page-header h2 { color:#ffffff; }
+
 :host-context(body.dark-theme) .package-record-wrapper {
   background: linear-gradient(135deg,#1e1e21 0%,#2a2d33 60%,#22252a 100%);
 }
@@ -269,6 +272,40 @@
     }
   }
 }
+
+/* Dark mode: cards and headings for Package Record */
+:host-context(body.dark-theme) .controls-section,
+:host-context(body.dark-theme) .chart-section,
+:host-context(body.dark-theme) .stats-section,
+:host-context(body.dark-theme) .table-section {
+  background:#1f1f1f;
+  border-color:#2c2c2c;
+  box-shadow:0 6px 18px rgba(0,0,0,.55);
+}
+:host-context(body.dark-theme) .controls-section h3,
+:host-context(body.dark-theme) .chart-section h3,
+:host-context(body.dark-theme) .stats-section h3,
+:host-context(body.dark-theme) .table-section h3 { color:#e0e4e8; }
+
+/* Dark mode: inputs/labels for Package Record */
+:host-context(body.dark-theme) .controls-section .filters-grid .input-group label { color:#cfd6dd; }
+:host-context(body.dark-theme) .controls-section .filters-grid .input-group .form-input,
+:host-context(body.dark-theme) .controls-section .filters-grid .input-group select {
+  background:#1f252c;
+  border-color:#3a434d;
+  color:#e2e8f0;
+}
+:host-context(body.dark-theme) .controls-section .filters-grid .input-group .form-input:focus,
+:host-context(body.dark-theme) .controls-section .filters-grid .input-group select:focus {
+  border-color:#007bff;
+  box-shadow:0 0 0 3px rgba(0,123,255,0.18);
+}
+
+/* Dark mode: table */
+:host-context(body.dark-theme) .table-section .table-container { border-color:#2f3842; }
+:host-context(body.dark-theme) .table-section .records-table th { background:#1f252b; color:#ffffff; border-bottom-color:#2f3842; }
+:host-context(body.dark-theme) .table-section .records-table td { color:#d0d7de; border-bottom-color:#2a323a; }
+:host-context(body.dark-theme) .table-section .records-table tr:hover { background:#262e36; }
 
 .error-section {
   margin-bottom: 2rem;
@@ -669,4 +706,32 @@
       }
     }
   }
+}
+
+/* Dark mode: Debug section */
+:host-context(body.dark-theme) .debug-section {
+  background:#1f252c;
+  border-left-color:#303841;
+  box-shadow:0 4px 16px rgba(0,0,0,.55);
+}
+:host-context(body.dark-theme) .debug-section h3 { color:#cdd5dd; }
+:host-context(body.dark-theme) .debug-section .debug-tabs { border-bottom-color:#303841; }
+:host-context(body.dark-theme) .debug-section .debug-tab {
+  color:#9aa4b1;
+  background:#2a3036;
+  border:1px solid #3a434d;
+}
+:host-context(body.dark-theme) .debug-section .debug-tab:hover { background:#343b42; color:#c8d0d7; }
+:host-context(body.dark-theme) .debug-section .debug-tab.active {
+  color:#ffffff;
+  background:#1976d2;
+  border-color:#1976d2;
+}
+:host-context(body.dark-theme) .debug-section .debug-header { border-bottom-color:#3a434d; }
+:host-context(body.dark-theme) .debug-section .debug-header h4 { color:#ffffff; }
+:host-context(body.dark-theme) .debug-section .debug-header small { color:#9aa4b1; }
+:host-context(body.dark-theme) .debug-section .debug-json {
+  background:#10161b;
+  color:#b9c3cc;
+  border-color:#22303b;
 }

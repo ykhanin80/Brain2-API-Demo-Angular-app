@@ -210,4 +210,17 @@ body.dark-theme .btn-delete:hover:not(:disabled){ background:#4a1f24; border-col
 	box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
 }
 
+/* Dark mode: keep outline buttons consistent and legible */
+body.dark-theme .btn-outline {
+  background: transparent;
+  color: #5da0ff;
+  border-color: #5da0ff;
+  box-shadow: 0 0 0 1px rgba(93,160,255,0.15) inset;
+}
+body.dark-theme .btn-outline:hover:not(:disabled) {
+  background: #5da0ff;
+  color: #0b0f16;
+  box-shadow: 0 4px 15px rgba(93,160,255,0.25);
+}
+
 .btn:disabled { opacity: .6; cursor: not-allowed; }
