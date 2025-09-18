@@ -324,3 +324,57 @@
 }
 
 // no embedded label preview styles needed here; dedicated page owns its styles
+
+/* Fixed bottom footer info row */
+.dashboard-footer-info {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border-top: 1px solid #e0e4e8;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+  z-index: 100;
+  font-size: 12px;
+  color: #34495e;
+}
+
+.dashboard-footer-info .footer-row {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-footer-info .footer-left {
+  flex: 1 1 auto;
+  min-width: 0; /* allow flex truncation */
+}
+
+.dashboard-footer-info .footer-right {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* Dark theme variant */
+:host-context(body.dark-theme) .dashboard-footer-info {
+  background: rgba(30, 32, 36, 0.95);
+  border-top: 1px solid #2f3338;
+  color: #d0d6da;
+}
+
+@media (max-width: 640px) {
+  .dashboard-footer-info .footer-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .dashboard-footer-info .footer-right {
+    align-self: stretch;
+    text-align: left;
+  }
+}
