@@ -232,17 +232,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 }
 
 /* Exceptions: these should be regular, not bold, even if right-aligned */
-.nutrition-overlay-canvas .overlay-item[data-item="20"].align-right input,
-.nutrition-overlay-canvas .overlay-item[data-item="22"].align-right input,
-.nutrition-overlay-canvas .overlay-item[data-item="40"].align-right input,
-.nutrition-overlay-canvas .overlay-item[data-item="42"].align-right input {
-  font-weight: 400 !important;
-}
-
-/* Make Text 10 regular (not bold) */
-.nutrition-overlay-canvas .overlay-item[data-item="10"].align-right input {
-  font-weight: 400 !important;
-}
+/* removed overrides that forced some items to be regular */
 
 :host-context(body.dark-theme) .layout-select-row select { background:#262c33; border:1px solid #3a434d; color:#e2e8f0; }
 :host-context(body.dark-theme) .nutrition-overlay-wrapper { background:#1f252c; border-color:#2c343d; }
