@@ -61,12 +61,18 @@ import { CommonModule } from '@angular/common';
         <button *ngIf="currentSubPage==='articles'" type="button" class="debug-tab"
                 [class.active]="activeTab === 'listArticles'"
                 (click)="activeTabChange.emit('listArticles')">Get All Articles</button>
+  <button *ngIf="currentSubPage==='articles'" type="button" class="debug-tab"
+    [class.active]="activeTab === 'createArticle'"
+    (click)="activeTabChange.emit('createArticle')">Create Article (POST)</button>
         <button *ngIf="currentSubPage==='articles'" type="button" class="debug-tab"
                 [class.active]="activeTab === 'updateArticle'"
                 (click)="activeTabChange.emit('updateArticle')">Edit Article (PATCH)</button>
         <button *ngIf="currentSubPage==='articles'" type="button" class="debug-tab"
                 [class.active]="activeTab === 'deleteArticle'"
                 (click)="activeTabChange.emit('deleteArticle')">Delete Article</button>
+  <button *ngIf="currentSubPage==='articles'" type="button" class="debug-tab"
+    [class.active]="activeTab === 'import'"
+    (click)="activeTabChange.emit('import')">CSV Import</button>
 
         <button *ngIf="currentSubPage==='static-texts'" type="button" class="debug-tab"
                 [class.active]="activeTab === 'stList'"
@@ -139,9 +145,16 @@ import { CommonModule } from '@angular/common';
              [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
           <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">Edit Article (PATCH)</h4>
             <small [style.color]="isDarkMode ? '#9aa4b1' : null">PATCH request details</small></div>
-          <pre *ngIf="!jsonCollapsed" class="debug-json"
+       <div *ngIf="!jsonCollapsed">
+        <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">PATCH Request</h4></div>
+        <pre class="debug-json"
                [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
-               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.updateArticle | json}}</pre>
+          [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.updateArticle | json}}</pre>
+        <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">Response</h4></div>
+        <pre class="debug-json"
+          [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+          [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.updateArticleResponse | json}}</pre>
+       </div>
         </div>
         <div *ngIf="activeTab === 'deleteArticle' && currentSubPage==='articles'" class="debug-panel"
              [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
@@ -167,6 +180,31 @@ import { CommonModule } from '@angular/common';
           <pre *ngIf="!jsonCollapsed" class="debug-json"
                [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
                [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.stCreateOrUpdate | json}}</pre>
+        </div>
+
+        <div *ngIf="activeTab === 'createArticle' && currentSubPage==='articles'" class="debug-panel"
+             [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">Create Article (POST)</h4>
+            <small [style.color]="isDarkMode ? '#9aa4b1' : null">POST request details</small></div>
+          <div *ngIf="!jsonCollapsed">
+            <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">POST Request</h4></div>
+            <pre class="debug-json"
+               [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.createArticle | json}}</pre>
+            <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">Response</h4></div>
+            <pre class="debug-json"
+               [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.createArticleResponse | json}}</pre>
+          </div>
+        </div>
+
+        <div *ngIf="activeTab === 'import' && currentSubPage==='articles'" class="debug-panel"
+             [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">CSV Import (Articles)</h4>
+            <small [style.color]="isDarkMode ? '#9aa4b1' : null">Parse → Map → Run</small></div>
+          <pre *ngIf="!jsonCollapsed" class="debug-json"
+               [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.csvImport | json}}</pre>
         </div>
 
         <div *ngIf="activeTab === 'devicesList' && currentSubPage==='devices'" class="debug-panel"

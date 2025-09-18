@@ -711,7 +711,9 @@ export class DataMaintenanceComponent implements OnInit {
     listArticles: null as any,
     getArticle: null as any,
     createArticle: null as any,
+    createArticleResponse: null as any,
     updateArticle: null as any,
+    updateArticleResponse: null as any,
   deleteArticle: null as any,
   // Customers (existing)
   createCustomer: null as any,
@@ -723,6 +725,8 @@ export class DataMaintenanceComponent implements OnInit {
   productionLinesList: null as any,
   // Exceptions
   exPut: null as any,
+  // CSV Import (articles)
+  csvImport: null as any,
   amparImport: null as any
   };
 
@@ -1206,11 +1210,13 @@ export class DataMaintenanceComponent implements OnInit {
     if(!file) return;
     try {
       const { rawRows, headers } = await parseCsvFile(file, 5000);
-      this.importRawRows.set(rawRows);
+  this.importRawRows.set(rawRows);
+  this.debugApiResponses.csvImport = { phase: 'parsed', rawRowCount: rawRows.length, headers, timestamp: new Date().toISOString() };
       this.importHeaders.set(headers);
       // attempt auto map
       this.autoMapImportHeaders();
-      this.rebuildMappedRows();
+  this.rebuildMappedRows();
+  this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, phase: 'mapped', mapping: this.importMapping(), timestamp: new Date().toISOString() };
       // Always show mapping step so user can see what auto-mapped
       this.importState.set({open:true, step:'mapping'});
     } catch {
@@ -1248,7 +1254,7 @@ export class DataMaintenanceComponent implements OnInit {
         m = compact.match(/^logo(\d{1,2})$/) as any; if (m) { const n=parseInt(m[1],10); if(n>=1&&n<=10) return `logoField${n}`; }
         m = compact.match(/^codenumber(\d)$/) as any; if (m) { return `codeField${m[1]}`; }
         m = compact.match(/^codesubstring(\d)$/) as any; if (m) { return `codeString${m[1]}`; }
-        m = compact.match(/^generaltextfieldno(\d)$/) as any; if (m) { return `textField${m[1]}`; }
+        m = compact.match(/^generaltextfieldno(\d)$/) as any; if (m) { return `textField${m[1]}Number`; }
         return undefined;
       }
     });
@@ -1364,11 +1370,12 @@ export class DataMaintenanceComponent implements OnInit {
     const rows = this.importRows().filter(r=>!r.error);
     this.importRows.set(rows);
     this.importState.set({open:true, step:'running'});
-    runConcurrentQueue(rows, (row)=> this.processImportRow(row).then(()=> this.sleep(200)), {
+  this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, phase: 'running', total: rows.length, timestamp: new Date().toISOString() };
+  runConcurrentQueue(rows, (row)=> this.processImportRow(row).then(()=> this.sleep(200)), {
       concurrency: this.importConcurrency,
       getCancelled: () => this.importCancelled,
       onItemDone: () => this.updateImportProgress(),
-      onDone: () => { /* updateImportProgress will decide finish */ }
+      onDone: () => { this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, phase: 'done', timestamp: new Date().toISOString() }; /* updateImportProgress will decide finish */ }
     });
   }
   cancelImport(){ this.importCancelled = true; }
@@ -1406,25 +1413,17 @@ export class DataMaintenanceComponent implements OnInit {
           codeString1: row.codeString1 || '',
           codeString2: row.codeString2 || '',
           codeString3: row.codeString3 || '',
-          // When inline text is provided, force number to -1 to avoid creating/updating General Text records.
-          dateTextField1: {
-            number: (row.dateTextField1Text != null && String(row.dateTextField1Text).trim() !== '') ? -1 : (row.dateTextField1 ?? row.dateTextField1Number ?? -1),
-            text: row.dateTextField1Text || null
-          },
-          dateTextField2: {
-            number: (row.dateTextField2Text != null && String(row.dateTextField2Text).trim() !== '') ? -1 : (row.dateTextField2 ?? row.dateTextField2Number ?? -1),
-            text: row.dateTextField2Text || null
-          },
-          dateTextField3: {
-            number: (row.dateTextField3Text != null && String(row.dateTextField3Text).trim() !== '') ? -1 : (row.dateTextField3 ?? row.dateTextField3Number ?? -1),
-            text: row.dateTextField3Text || null
-          },
+          // Date Text Fields will be finalized below with precedence logic (number wins over inline text)
+          dateTextField1: { ...emptyPLU.dateTextField1 },
+          dateTextField2: { ...emptyPLU.dateTextField2 },
+          dateTextField3: { ...emptyPLU.dateTextField3 },
           fixedWeightValue: row.fixedWeightValue || 0,
           generalNumber1: row.generalNumber1 || 0,
           generalNumber2: row.generalNumber2 || 0,
-          textField1: { ...emptyPLU.textField1, number: (row.textField1Text != null && String(row.textField1Text).trim() !== '') ? -1 : (row.textField1 ?? row.textField1Number ?? -1), text: row.textField1Text || null },
-          textField2: { ...emptyPLU.textField2, number: (row.textField2Text != null && String(row.textField2Text).trim() !== '') ? -1 : (row.textField2 ?? row.textField2Number ?? -1), text: row.textField2Text || null },
-          textField3: { ...emptyPLU.textField3, number: (row.textField3Text != null && String(row.textField3Text).trim() !== '') ? -1 : (row.textField3 ?? row.textField3Number ?? -1), text: row.textField3Text || null },
+          // Text Fields 1-3 will be finalized below with precedence logic (number wins over inline text)
+          textField1: { ...emptyPLU.textField1 },
+          textField2: { ...emptyPLU.textField2 },
+          textField3: { ...emptyPLU.textField3 },
           logoField1: row.logoField1 || 0,
           maxWeightValue: row.maxWeightValue || 0,
           minWeightValue: row.minWeightValue || 0,
@@ -1432,30 +1431,51 @@ export class DataMaintenanceComponent implements OnInit {
           weightClass: row.weightClass || 0
         }
       };
+  // Apply precedence per field:
+  // - If number is provided: set { number: N, text: null } and include in payload.
+  // - Else if text is provided: set { number: -1, text } and include in payload.
+  // - Else: do not include this field at all (let backend decide/assign).
+      const setDateTextField = (i: 1|2|3) => {
+        const numKeyA = `dateTextField${i}` as const;
+        const numKeyB = `dateTextField${i}Number` as const;
+        const textKey = `dateTextField${i}Text` as const;
+        const n: any = (row as any)[numKeyB] ?? (row as any)[numKeyA];
+        const t: any = (row as any)[textKey];
+        if (n !== undefined && n !== null && Number.isFinite(Number(n))) {
+          (article.articlePLU as any)[`dateTextField${i}`] = { number: Number(n), text: null };
+        } else if (t != null && String(t).trim() !== '') {
+          (article.articlePLU as any)[`dateTextField${i}`] = { number: -1, text: String(t) };
+        } else {
+          delete (article.articlePLU as any)[`dateTextField${i}`];
+        }
+      };
+      setDateTextField(1); setDateTextField(2); setDateTextField(3);
+
+      const setTextField = (i: number) => {
+        const numKeyLegacy = `textField${i}` as const; // legacy numeric mapping
+        const numKey = `textField${i}Number` as const;
+        const textKey = `textField${i}Text` as const;
+        const nRaw: any = (row as any)[numKey] ?? (row as any)[numKeyLegacy];
+        const tRaw: any = (row as any)[textKey];
+        if (nRaw !== undefined && nRaw !== null && Number.isFinite(Number(nRaw))) {
+          // Include both number and optional text. If text is empty, send null.
+          (article.articlePLU as any)[`textField${i}`] = { number: Number(nRaw), text: (tRaw != null && String(tRaw).trim() !== '') ? String(tRaw) : null };
+        } else if (tRaw != null && String(tRaw).trim() !== '') {
+          // No number provided, but text present -> include with number -1
+          (article.articlePLU as any)[`textField${i}`] = { number: -1, text: String(tRaw) };
+        } else {
+          // Neither number nor text -> omit
+          delete (article.articlePLU as any)[`textField${i}`];
+        }
+      };
+      for (let i = 1; i <= 20; i++) setTextField(i);
       // dynamic series
       for(let i=4;i<=30;i++){ if(row[`simpleText${i}`]!==undefined) article.articlePLU[`simpleText${i}`] = row[`simpleText${i}`]; }
       for(let i=3;i<=20;i++){ if(row[`generalNumber${i}`]!==undefined) article.articlePLU[`generalNumber${i}`] = row[`generalNumber${i}`]; }
       for(let i=2;i<=10;i++){ if(row[`logoField${i}`]!==undefined) article.articlePLU[`logoField${i}`] = row[`logoField${i}`]; }
       for(let i=4;i<=7;i++){ if(row[`codeField${i}`]!==undefined) article.articlePLU[`codeField${i}`] = row[`codeField${i}`]; }
       for(let i=4;i<=7;i++){ if(row[`codeString${i}`]!==undefined) article.articlePLU[`codeString${i}`] = row[`codeString${i}`]; }
-      for(let i=4;i<=20;i++){
-        const n = row[`textField${i}Number`];
-        const t = row[`textField${i}Text`];
-        if(n!==undefined || t!==undefined){
-          article.articlePLU[`textField${i}`] = {
-            number: (t != null && String(t).trim() !== '') ? -1 : (n ?? -1),
-            text: t || null
-          };
-        }
-      }
-      if(row['dateTextField3Number']!==undefined || row['dateTextField3Text']!==undefined){
-        const t = row['dateTextField3Text'];
-        const n = row['dateTextField3Number'];
-        article.articlePLU['dateTextField3'] = {
-          number: (t != null && String(t).trim() !== '') ? -1 : (n ?? -1),
-          text: t || null
-        };
-      }
+      // dateTextField3 handled by precedence logic above
       // Decide create vs update
       const authToken = this.auth.getToken();
       const jsonHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json'});
@@ -1467,19 +1487,24 @@ export class DataMaintenanceComponent implements OnInit {
         exists = false; // 404 -> create
       }
       if(!exists){
-  await this.http.post(`${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`, article, {headers: jsonHeaders}).toPromise();
+        this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, lastRequest: { method:'POST', url:`${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`, body: article }, timestamp: new Date().toISOString() };
+        const resp = await this.http.post(`${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`, article, {headers: jsonHeaders}).toPromise();
+        this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, lastResponse: resp, timestamp: new Date().toISOString() };
         row.status = 'created';
       } else {
         // Prepare patch operations (ensure basePriceDivision set like updateArticle)
         if(article.articlePLU){ article.articlePLU.basePriceDivision = 'perUnit'; }
         const patchOps = this.createPatchOperations(article as LabelerArticle);
         const patchHeaders = new HttpHeaders({ 'Authorization': `Bearer ${authToken}`, 'Content-Type':'application/json-patch+json'});
-  await this.http.patch(`${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, patchOps, {headers: patchHeaders}).toPromise();
+        this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, lastRequest: { method:'PATCH', url:`${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, body: patchOps }, timestamp: new Date().toISOString() };
+        const resp = await this.http.patch(`${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`, patchOps, {headers: patchHeaders}).toPromise();
+        this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, lastResponse: resp, timestamp: new Date().toISOString() };
         row.status = 'updated';
       }
     }catch(e:any){
       row.status = 'failed';
       row.error = e?.error?.title || e?.message || 'error';
+      this.debugApiResponses.csvImport = { ...this.debugApiResponses.csvImport, lastError: row.error, timestamp: new Date().toISOString() };
     }
   }
   private updateImportProgress(){
@@ -1664,6 +1689,13 @@ export class DataMaintenanceComponent implements OnInit {
       });
 
   const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`;
+      // capture payload
+      this.debugApiResponses.createArticle = {
+        timestamp: new Date().toISOString(),
+        requestUrl,
+        requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
+        requestBody: article
+      };
       const response = await this.http.post<LabelerArticle>(
         requestUrl,
         article,
@@ -1671,11 +1703,9 @@ export class DataMaintenanceComponent implements OnInit {
       ).toPromise();
 
       // Store debug information
-      this.debugApiResponses.createArticle = {
+      this.debugApiResponses.createArticleResponse = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
-        requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
-        requestBody: article,
         rawResponse: response
       };
 
@@ -1704,7 +1734,7 @@ export class DataMaintenanceComponent implements OnInit {
       
       // Store error debug information
   const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/labeler`;
-      this.debugApiResponses.createArticle = {
+      this.debugApiResponses.createArticleResponse = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
         requestBody: article,
@@ -1734,19 +1764,24 @@ export class DataMaintenanceComponent implements OnInit {
       const patchOperations = this.createPatchOperations(article);
   const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
 
-      await this.http.patch(
-        requestUrl,
-        patchOperations, // Send the array directly, not wrapped in an object
-        { headers }
-      ).toPromise();
-
-      // Store debug information
       this.debugApiResponses.updateArticle = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
         requestHeaders: { ...headers.keys().reduce((acc, key) => ({ ...acc, [key]: headers.get(key) }), {}) },
         requestBody: patchOperations,
         article: article
+      };
+      const updateResp = await this.http.patch(
+        requestUrl,
+        patchOperations, // Send the array directly, not wrapped in an object
+        { headers }
+      ).toPromise();
+
+      // Store debug information
+      this.debugApiResponses.updateArticleResponse = {
+        timestamp: new Date().toISOString(),
+        requestUrl: requestUrl,
+        response: updateResp
       };
 
       await this.loadArticles(); // Refresh the list
@@ -1758,7 +1793,7 @@ export class DataMaintenanceComponent implements OnInit {
       // Store error debug information
       const patchOperations = this.createPatchOperations(article);
   const requestUrl = `${this.apiConfig.getBaseUrl()}/api/v1/articles/${encodeURIComponent(article.number)}/labeler`;
-      this.debugApiResponses.updateArticle = {
+      this.debugApiResponses.updateArticleResponse = {
         timestamp: new Date().toISOString(),
         requestUrl: requestUrl,
         requestBody: patchOperations,
@@ -2811,23 +2846,23 @@ export class DataMaintenanceComponent implements OnInit {
       // Always ensure basePriceDivision is set to perUnit
       operations.push({ op: 'replace', path: '/articlePLU/basePriceDivision', value: 'perUnit' });
       
-      // Text fields
+      // Text fields: only include if present (based on precedence during construction)
       for (let i = 1; i <= 20; i++) {
-        const textFieldKey = `textField${i}` as keyof ArticlePLU;
-        const textField = article.articlePLU[textFieldKey] as TextField;
-        if (textField) {
-          operations.push({ op: 'replace', path: `/articlePLU/${textFieldKey}/number`, value: textField.number });
-          operations.push({ op: 'replace', path: `/articlePLU/${textFieldKey}/text`, value: textField.text });
+        const key = `textField${i}` as keyof ArticlePLU;
+        const tf = article.articlePLU[key] as TextField | undefined;
+        if (tf !== undefined) {
+          operations.push({ op: 'replace', path: `/articlePLU/${key}/number`, value: tf.number });
+          operations.push({ op: 'replace', path: `/articlePLU/${key}/text`, value: tf.text });
         }
       }
 
-      // Date text fields
+      // Date text fields: only include if present (based on precedence)
       for (let i = 1; i <= 3; i++) {
-        const dateFieldKey = `dateTextField${i}` as keyof ArticlePLU;
-        const dateField = article.articlePLU[dateFieldKey] as TextField;
-        if (dateField) {
-          operations.push({ op: 'replace', path: `/articlePLU/${dateFieldKey}/number`, value: dateField.number });
-          operations.push({ op: 'replace', path: `/articlePLU/${dateFieldKey}/text`, value: dateField.text });
+        const key = `dateTextField${i}` as keyof ArticlePLU;
+        const df = article.articlePLU[key] as TextField | undefined;
+        if (df !== undefined) {
+          operations.push({ op: 'replace', path: `/articlePLU/${key}/number`, value: df.number });
+          operations.push({ op: 'replace', path: `/articlePLU/${key}/text`, value: df.text });
         }
       }
 
