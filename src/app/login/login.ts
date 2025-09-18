@@ -8,6 +8,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth, LoginRequest } from '../auth';
 import { ApiConfig } from '../api-config';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -21,10 +22,13 @@ export class Login {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly apiConfig = inject(ApiConfig);
+  private readonly http = inject(HttpClient);
   
   loginForm: FormGroup;
   isLoading = false;
   errorMessage = '';
+  isTestingConnection = false;
+  testStatus = '';
   
   constructor() {
     this.loginForm = this.fb.group({
@@ -50,6 +54,61 @@ export class Login {
         this.loginForm.get('useHttps')?.setValue(true, { emitEvent: false });
       }
     });
+  }
+
+  /** Test connectivity to the configured API with diagnostics for TLS/CORS/network */
+  async testConnection(): Promise<void> {
+    if (this.isTestingConnection) return;
+    this.isTestingConnection = true;
+    this.testStatus = '';
+    try {
+      // Build base URL directly from form to reflect unsaved edits
+      const host: string = (this.loginForm.value.host?.trim() || 'localhost');
+      const port: number = Number(this.loginForm.value.port) || 9997;
+      const useHttps: boolean = !!this.loginForm.value.useHttps;
+      const protocol = useHttps ? 'https' : 'http';
+      const baseUrl = `${protocol}://${host}:${port}`;
+
+      // Prefer a safe GET endpoint. Try swagger JSON first, then a ping path.
+      const candidates = [
+        `${baseUrl}/swagger.json`,
+        `${baseUrl}/swagger/v1/swagger.json`,
+        `${baseUrl}/swagger`,
+        `${baseUrl}/health`,
+      ];
+
+      let lastError: any = null;
+      for (const url of candidates) {
+        try {
+          await this.http.get(url, { responseType: 'text' }).toPromise();
+          this.testStatus = `✅ Connected: ${url}`;
+          this.isTestingConnection = false;
+          return;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      // If none succeeded, check typical failure patterns
+      const hint = this.connectionHint(lastError);
+      this.testStatus = `❌ Cannot connect to ${baseUrl}. ${hint}`;
+    } catch (e) {
+      this.testStatus = '❌ Test failed unexpectedly.';
+    } finally {
+      this.isTestingConnection = false;
+    }
+  }
+
+  private connectionHint(err: any): string {
+    // Fetch/XHR blocked often shows status 0.
+    if (!err) return '';
+    const status = err?.status;
+    if (status === 0) {
+      return 'Possible TLS trust or CORS issue. Open the API URL in this browser to trust certificate, or enable CORS on the server.';
+    }
+    if (status === 404) return 'Endpoint not found (try a different base path or check swagger availability).';
+    if (status === 401 || status === 403) return 'Server reachable but requires authentication or disallowed. Login may still work.';
+    return `HTTP ${status ?? 'unknown'} ${err?.statusText ?? ''}`.trim();
   }
   
   onSubmit(): void {

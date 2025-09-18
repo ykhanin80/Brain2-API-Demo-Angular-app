@@ -11,6 +11,26 @@
 .actions { display:flex; justify-content:flex-end; }
 .error-hint { color:#d32f2f; font-weight:500; }
 
+// Global status banner for Test Connection
+.global-status {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100vw;
+	box-sizing: border-box;
+	padding: 10px 16px;
+	text-align: left;
+	font-size: 14px;
+	border-top: 1px solid rgba(0,0,0,.1);
+	background: #fff8e1; /* default subtle background */
+	color: #5d4037;
+	z-index: 1000;
+}
+.global-status.success { background:#e6f4ea; color:#1b5e20; border-top-color:#a5d6a7; }
+.global-status.error { background:#ffebee; color:#b71c1c; border-top-color:#ef9a9a; }
+.global-status::before { content: '\00a0'; }
+
 // Server settings (host/port/https) styling
 .server-settings {
 	margin-top: .5rem;

@@ -1177,20 +1177,20 @@ export class DataMaintenanceComponent implements OnInit {
       'Code substring 1','Code substring 2','Code substring 3','Date Text Field 1','Date Text Field 2','Fixed weight',
       'General number 01','General number 02','Text Field 1','Text Field 2','Text Field 3','Text Field 4','Text Field 5',
       'Text Field 6','Text Field 7','Text Field 8','Text Field 9','Text Field 10','Label parameter set no.',
-      'Logo 1','Logo 2','Maximum weight','Minimum weight','Pieces per package','Weight class no.'
+      'Logo 1','Logo 2','Minimum weight','Maximum weight','Pieces per package','Weight class no.'
     ];
     const today = new Date().toISOString().substring(0,10);
     const sample1 = [
       '2001','Sample Article 1','Weight','TRUE','TRUE','Short description','lb','10',
       'simple text 1','simple text2','st3','1122','0.08','19.99','17.99','USD','1','1','2','3',
       '12345678901','codesubstr2','','Packed On:','Sell By:','1.7500','1','2',
-      'Example TF1','Example TF2','Example TF3','','','','','','','','','1','1','2','2.5000','1.7500','8','1'
+      'Example TF1','Example TF2','Example TF3','','','','','','','','','1','2','1.75','2.5','8','1'
     ];
     const sample2 = [
       '2002','Sample Article 2','Weight','TRUE','TRUE','Another description','lb','7',
       'fresh','quality','','1001','0.05','8.49','','USD','1','1','2','3',
       '2343412001','','','Packed On:','Sell By:','1.0000','','','',
-      '','','','','','','','','','','','1','','','1.5000','0.7500','4','1'
+      '','','','','','','','','','','1','','0.5','1.75','4','1'
     ];
     const csv = [header.join(','), sample1.join(','), sample2.join(',')].join('\n');
     const blob = new Blob([csv], {type:'text/csv'});

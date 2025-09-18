@@ -30,7 +30,13 @@
               <label for="https">Use HTTPS</label>
             </div>
             <div class="hint">Tip: Port 9997 defaults to HTTP, 9998 defaults to HTTPS. You can override using the checkbox.</div>
-          </fieldset>
+            <div class="test-connection">
+              <button type="button" mat-stroked-button color="primary" (click)="testConnection()" [disabled]="isTestingConnection">
+                <span *ngIf="!isTestingConnection">Test Connection</span>
+                <span *ngIf="isTestingConnection">Testing...</span>
+              </button>
+            </div>
+             </fieldset>
         <div class="actions">
           <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
             <span *ngIf="!isLoading">Login</span>
@@ -41,4 +47,10 @@
       </form>
     </mat-card-content>
   </mat-card>
+  <!-- Global full-width status banner for Test Connection -->
+  <div class="global-status"
+    *ngIf="testStatus"
+    [ngClass]="{ 'success': testStatus.startsWith('✅'), 'error': !testStatus.startsWith('✅') }">
+    {{ testStatus }}
+  </div>
 </div>
