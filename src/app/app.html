@@ -35,7 +35,7 @@
       </button>
       <span *ngIf="(isAuthenticated$ | async); else pleaseLogin">Welcome, {{ (currentUser$ | async)?.name }}</span>
       <ng-template #pleaseLogin>
-        <span>Please log in</span>
+        <button mat-button color="primary" [routerLink]="['/login']">Log in</button>
       </ng-template>
       <button *ngIf="(isAuthenticated$ | async)" (click)="logout()" class="logout-btn">Logout</button>
     </div>

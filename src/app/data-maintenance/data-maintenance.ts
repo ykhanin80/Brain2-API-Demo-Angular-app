@@ -1,10 +1,11 @@
 
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgForOf, NgClass, NgStyle } from '@angular/common';
 import { DevicesComponent } from './devices/devices';
 import { ExceptionsComponent } from './exceptions/exceptions';
 import { StaticTextsListComponent } from './static-texts/static-texts-list';
 import { DeviceParametersComponent } from './device-parameters/device-parameters';
+import { LabelParametersComponent } from './label-parameters/label-parameters';
 import { ArticlesTableComponent } from './articles/articles-table';
 import { DebugPanelComponent } from './debug/debug-panel';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -284,7 +285,7 @@ export interface ArticleSearchParams {
 @Component({
   selector: 'data-maintenance',
   standalone: true,
-  imports: [CommonModule, FormsModule, DevicesComponent, ExceptionsComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent, DeviceParametersComponent],
+  imports: [CommonModule, NgIf, NgForOf, NgClass, NgStyle, FormsModule, DevicesComponent, ExceptionsComponent, StaticTextsListComponent, ArticlesTableComponent, DebugPanelComponent, DeviceParametersComponent, LabelParametersComponent],
   templateUrl: './data-maintenance.html',
   styleUrls: ['./data-maintenance.scss']
 })
@@ -425,8 +426,8 @@ export class DataMaintenanceComponent implements OnInit {
 
   // View states for full page navigation
   currentView = signal<'list' | 'create' | 'edit' | 'copy'>('list');
-  // Sub-page: articles, static-texts, customers, devices, exceptions, device-parameters (default articles)
-  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices' | 'exceptions' | 'device-parameters'>('articles');
+  // Sub-page: articles, static-texts, customers, devices, exceptions, label-parameters, device-parameters (default articles)
+  currentSubPage = signal<'articles' | 'static-texts' | 'customers' | 'devices' | 'exceptions' | 'label-parameters' | 'device-parameters'>('articles');
 
   // Raw text buffer for edit/copy inputs to avoid caret/value reset on each signal update
   rawEditFields: { [key: string]: string | undefined } = {};
@@ -727,7 +728,8 @@ export class DataMaintenanceComponent implements OnInit {
   exPut: null as any,
   // CSV Import (articles)
   csvImport: null as any,
-  amparImport: null as any
+  amparImport: null as any,
+  lparImport: null as any
   };
 
   private readonly allowedLabelingModes = ['weight','fixedPrice','fixedWeight','fixedValue'];
@@ -2116,10 +2118,15 @@ export class DataMaintenanceComponent implements OnInit {
   }
 
   goToDeviceParametersSubPage(){
-    // Temporarily disabled: backend not ready; ignore navigation
-    // this.currentSubPage.set('device-parameters');
-    // this.currentView.set('list');
-    // this.activeDebugTab = 'devicesList';
+    this.currentSubPage.set('device-parameters');
+    this.currentView.set('list');
+    // default debug tab for this area is AMPAR Import
+    this.activeDebugTab = 'amparImport';
+  }
+
+  goToLabelParametersSubPage(){
+    this.currentSubPage.set('label-parameters');
+    this.currentView.set('list');
   }
 
   // Exceptions modal dialog state

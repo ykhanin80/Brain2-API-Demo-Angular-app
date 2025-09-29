@@ -26,22 +26,51 @@
       <div class="err" *ngIf="deviceGroupsError">{{ deviceGroupsError }}</div>
     </div>
     <div style="min-width:360px;">
-    <label class="form-label">All Auto Labeler Parameters</label>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <select [disabled]="autoParamsLoading" style="min-width:300px;"
-                [(ngModel)]="selectedAutoParamId" [ngModelOptions]="{standalone: true}">
-      <option value="" disabled selected>{{ autoParamsLoading ? 'Loading…' : 'Select parameter…' }}</option>
-      <option *ngFor="let p of autoParams" [value]="getParamId(p)">{{ formatAutoParamOption(p) }}</option>
-        </select>
-        <button class="btn btn-secondary" (click)="loadAutoParams()" [disabled]="autoParamsLoading">Reload</button>
-      </div>
-      <div class="err" *ngIf="autoParamsError">{{ autoParamsError }}</div>
-    </div>
+    
   </div>
   <div style="margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
     <button class="btn btn-primary" (click)="openImportDialog()">Import AMPAR from CSV</button>
     <button class="btn btn-secondary" (click)="downloadAllAmparsCsv()" title="Export all AMPARs to CSV">Download all AMPARs to CSV</button>
+    <button class="btn btn-secondary" (click)="loadAutoParams()" [disabled]="autoParamsLoading" title="Reload AMPAR list">Reload</button>
   </div>
+
+  <!-- Current AMPARs list, similar to Labeler Parameters table -->
+  <div style="margin-top:12px;" *ngIf="!autoParamsLoading && !autoParamsError">
+    <div class="hint">Loaded {{ autoParams.length }} auto labeler parameters</div>
+    <div style="max-height:40vh; overflow:auto; border:1px solid #eee; margin-top:6px;">
+      <table class="table" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Number</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">System Type</th>
+                        <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Device or Group Name</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Description</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Operating Mode</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Conveying Mode</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Reference Point</th>
+            
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Labeling Speed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of autoParams; let i = index">
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ p.number }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ (p.systemType?.value || p.systemType) }}</td>
+            
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ getDeviceOrGroupNameForParam(p) }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ p.description }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ displayOperatingMode(p.operatingMode) }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ displayLabelerConveyingMode(p.labelerConveyingMode) }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ displayReferencePoint(p.referencePointLabelDistance || p.referencePoint || p.referencePointLabelDistance) }}</td>
+            
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ p.labelingSpeed }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="err" *ngIf="autoParamsError" style="margin-top:8px; color:#b00020;">{{ autoParamsError }}</div>
+  <div class="hint" *ngIf="autoParamsLoading" style="margin-top:8px;">Loading auto labeler parameters…</div>
 
   <!-- Simple Import Modal -->
   <div class="modal" *ngIf="importState.open" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:flex-start; justify-content:center; padding-top:5vh;">

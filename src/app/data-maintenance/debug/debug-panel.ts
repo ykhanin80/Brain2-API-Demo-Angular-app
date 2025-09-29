@@ -92,6 +92,10 @@ import { CommonModule } from '@angular/common';
     [class.active]="activeTab === 'amparImport'"
     (click)="activeTabChange.emit('amparImport')">AMPAR Import</button>
 
+  <button *ngIf="currentSubPage==='label-parameters'" type="button" class="debug-tab"
+    [class.active]="activeTab === 'lparImport'"
+    (click)="activeTabChange.emit('lparImport')">LPAR Import</button>
+
   <button *ngIf="currentSubPage==='exceptions'" type="button" class="debug-tab"
     [class.active]="activeTab === 'exPut'"
     (click)="activeTabChange.emit('exPut')">PUT Exception</button>
@@ -233,6 +237,15 @@ import { CommonModule } from '@angular/common';
                [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.amparImport | json}}</pre>
         </div>
 
+        <div *ngIf="activeTab === 'lparImport' && currentSubPage==='label-parameters'" class="debug-panel"
+             [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
+          <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">LPAR Import</h4>
+            <small [style.color]="isDarkMode ? '#9aa4b1' : null">POST /extensions/api/DeviceParameters/WriteLabelParameterAsync</small></div>
+          <pre *ngIf="!jsonCollapsed" class="debug-json"
+               [style.background]="isDarkMode ? '#10161b' : null" [style.color]="isDarkMode ? '#b9c3cc' : null"
+               [style.border-color]="isDarkMode ? '#22303b' : null">{{data?.lparImport | json}}</pre>
+        </div>
+
         <div *ngIf="activeTab === 'exPut' && currentSubPage==='exceptions'" class="debug-panel"
              [style.background]="isDarkMode ? '#262d34' : null" [style.border-color]="isDarkMode ? '#373f48' : null">
           <div class="debug-header"><h4 [style.color]="isDarkMode ? '#ffffff' : null">PUT Exception</h4>
@@ -255,5 +268,5 @@ export class DebugPanelComponent {
   @Output() activeTabChange = new EventEmitter<string>();
 
   @Input() data: any;
-  @Input() currentSubPage: 'articles'|'static-texts'|'customers'|'devices'|'orders'|'exceptions'|'device-parameters' = 'articles';
+  @Input() currentSubPage: string = 'articles';
 }

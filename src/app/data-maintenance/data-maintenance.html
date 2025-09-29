@@ -15,9 +15,9 @@
         <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
         <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
         <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
-        <!-- Temporarily hidden: backend not ready
-        <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Device Parameters</button>
-        -->
+        <!-- Parameters tabs -->
+        <button class="sub-tab" [class.active]="currentSubPage()==='label-parameters'" (click)="goToLabelParametersSubPage()">Labeler Parameters</button>
+        <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Auto Labeler Parameters</button>
       </div>
       <div class="toolbar-actions">
         <ng-container *ngIf="currentSubPage()==='articles'">
@@ -475,6 +475,11 @@
   <!-- Device Parameters Section -->
     <ng-container *ngIf="currentSubPage()==='device-parameters'">
       <dm-device-parameters (debug)="debugApiResponses.amparImport = $event; activeDebugTab = 'amparImport'"></dm-device-parameters>
+    </ng-container>
+
+  <!-- Labeler Parameters Section -->
+    <ng-container *ngIf="currentSubPage()==='label-parameters'">
+      <dm-label-parameters (debug)="debugApiResponses.lparImport = $event; activeDebugTab = 'lparImport'"></dm-label-parameters>
     </ng-container>
 
   <!-- Static Texts Section -->

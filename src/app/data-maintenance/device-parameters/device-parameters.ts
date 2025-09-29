@@ -96,6 +96,8 @@ export class DeviceParametersComponent {
       next: (res) => {
         const items = Array.isArray(res) ? res : (res?.items || res?.data || []);
         this.autoParams = Array.isArray(items) ? items : [];
+        // Ensure devices/groups are loaded, then sort by friendly device/group name
+        this.ensureDevicesAndGroupsLoaded().then(() => this.sortAutoParamsByName());
         this.autoParamsLoading = false;
       },
       error: (err) => {
@@ -153,6 +155,44 @@ export class DeviceParametersComponent {
       (speed || speed===0) ? `Speed: ${speed}` : ''
     ].filter(Boolean);
     return parts.join(' • ');
+  }
+
+  // ===== Enum display helpers for table =====
+  private valOf(v:any): string | number {
+    if (v && typeof v === 'object' && 'value' in v) return (v as any).value;
+    return v as any;
+  }
+  displayLabelerConveyingMode(v:any): string {
+    const x = this.valOf(v);
+    const byValue: Record<string, string> = {
+      Passage: 'lc1 cont / lc2 cont',
+      StartStop: 'Labeling conveyor 1 stop / lc2 continuous',
+      StopStop: 'lc1 stop / lc2 stop'
+    };
+  const byIndex: Record<number, string> = { 0: byValue['Passage'], 1: byValue['StartStop'], 2: byValue['StopStop'] };
+    if (typeof x === 'number') return byIndex[x] ?? String(x);
+    return byValue[String(x)] ?? String(x ?? '');
+  }
+  displayLabelPosition(v:any): string {
+    const x = this.valOf(v);
+    const byValue: Record<string, string> = { Top1: 'Position 1', Side1: 'Position 2', Top2: 'Position 3', Side2: 'Position 4' };
+  const byIndex: Record<number, string> = { 0: byValue['Top1'], 1: byValue['Side1'], 2: byValue['Top2'], 3: byValue['Side2'] };
+    if (typeof x === 'number') return byIndex[x] ?? String(x);
+    return byValue[String(x)] ?? String(x ?? '');
+  }
+  displayOperatingMode(v:any): string {
+    const x = this.valOf(v);
+    const byValue: Record<string, string> = { NoPrint: 'Transport', GSDefault: 'Weighing continuous', GVDefault: 'Start/stop' };
+  const byIndex: Record<number, string> = { 0: byValue['NoPrint'], 1: byValue['GSDefault'], 2: byValue['GVDefault'] };
+    if (typeof x === 'number') return byIndex[x] ?? String(x);
+    return byValue[String(x)] ?? String(x ?? '');
+  }
+  displayReferencePoint(v:any): string {
+    const x = this.valOf(v);
+    const byValue: Record<string, string> = { TrailingEdge: 'Back side', LeadingEdge: 'Front edge', PackageMiddle: 'Package edge middle' };
+  const byIndex: Record<number, string> = { 0: byValue['TrailingEdge'], 1: byValue['LeadingEdge'], 2: byValue['PackageMiddle'] };
+    if (typeof x === 'number') return byIndex[x] ?? String(x);
+    return byValue[String(x)] ?? String(x ?? '');
   }
 
   // ===== AMPAR Import (CSV) =====
@@ -560,7 +600,7 @@ export class DeviceParametersComponent {
   private flattenEnum(v:any): string { return (v && typeof v==='object' && 'value' in v) ? String(v.value) : String(v ?? ''); }
   private safeNum(v:any): number { const n = Number(v); return Number.isFinite(n) ? n : 0; }
   private escCsv(val:any): string { const s = String(val ?? ''); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
-  private getDeviceOrGroupNameForParam(p:any): string {
+  getDeviceOrGroupNameForParam(p:any): string {
     const sysType = this.flattenEnum(p?.systemType);
     const sysId = String(p?.systemId ?? '').trim();
     if (sysType === 'Device') {
@@ -609,5 +649,14 @@ export class DeviceParametersComponent {
     }
     const headerLine = header.join(',') + '\n';
     downloadCsv(`AMPARs-${new Date().toISOString().substring(0,10)}.csv`, headerLine, rows);
+  }
+
+  private sortAutoParamsByName(): void {
+    if (!Array.isArray(this.autoParams)) return;
+    this.autoParams = [...this.autoParams].sort((a:any, b:any) => {
+      const an = (this.getDeviceOrGroupNameForParam(a) || '').toLowerCase();
+      const bn = (this.getDeviceOrGroupNameForParam(b) || '').toLowerCase();
+      return an.localeCompare(bn, undefined, { sensitivity: 'base' });
+    });
   }
 }

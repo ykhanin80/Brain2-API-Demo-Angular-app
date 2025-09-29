@@ -3,14 +3,14 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Subscription, interval } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth } from './auth';
 import { ApiConfig } from './api-config';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, CommonModule, MatButtonModule],
+  imports: [RouterOutlet, RouterLink, CommonModule, MatButtonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

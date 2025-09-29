@@ -1,0 +1,121 @@
+<div class="dm-card">
+  <h2>Data Maintenance | Labeler Parameters</h2>
+  <div style="margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <button class="btn btn-primary" (click)="openImportDialog()">Import LPAR from CSV</button>
+    <button class="btn btn-secondary" (click)="downloadImportTemplate()" title="Download template for LPAR import">Download LPAR Import Template</button>
+    <button class="btn btn-secondary" (click)="downloadAllLparsCsv()" [disabled]="labelParamsLoading">Download all as CSV</button>
+    <button class="btn" (click)="loadLabelParams()" [disabled]="labelParamsLoading">Refresh</button>
+  </div>
+
+  <!-- Current Label PARs list -->
+  <div style="margin-top:12px;" *ngIf="!labelParamsLoading && !labelParamsError">
+    <div class="hint">Loaded {{ (labelParams && labelParams.length) || 0 }} label parameters</div>
+    <div style="max-height:40vh; overflow:auto; border:1px solid #eee; margin-top:6px;">
+      <table class="table" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Number</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">System Type</th>
+            <!--<th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">System ID</th>  -->
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Device or Group Name</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Description</th>
+            <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Label Number</th>
+           
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of labelParams; let i = index">
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ p.number }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ (p.systemType?.value || p.systemType) }}</td>
+            <!-- <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ p.systemId }}</td> -->
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ getDeviceOrGroupNameForParam(p) }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ p.description }}</td>
+            <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ (p.labelType?.value || p.labelType - 8191) }}</td>
+            
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="err" *ngIf="labelParamsError" style="margin-top:8px; color:#b00020;">{{ labelParamsError }}</div>
+  <div class="hint" *ngIf="labelParamsLoading" style="margin-top:8px;">Loading label parameters…</div>
+
+  <!-- Simple Import Modal -->
+  <div class="modal" *ngIf="importState.open" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:flex-start; justify-content:center; padding-top:5vh;">
+    <div style="background:#fff; color:#000; width:min(100%, 900px); max-height:85vh; overflow:auto; border-radius:6px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <h3 style="margin:0;">Import LPAR from CSV</h3>
+        <button class="btn" (click)="closeImportDialog()">Close</button>
+      </div>
+
+      <!-- Step: file select -->
+      <div *ngIf="importState.step==='select'" style="margin-top:12px;">
+        <input type="file" accept=".csv,text/csv" (change)="onImportFileSelected($event)">
+        <div class="hint">Choose CSV (max 5000 rows preview). We'll auto-map headers when possible.</div>
+        <div class="err" *ngIf="importError" style="margin-top:8px; color:#b00020;">{{ importError }}</div>
+      </div>
+
+      <!-- Step: mapping -->
+      <div *ngIf="importState.step==='mapping'" style="margin-top:12px;">
+        <div style="margin-bottom:8px; display:flex; gap:8px; align-items:center;">
+          <span>Map CSV headers to fields</span>
+          <button class="btn btn-small" (click)="autoMapImportHeaders()">Auto-map</button>
+          <button class="btn btn-primary" [disabled]="!requiredImportFieldsMapped()" (click)="goToPreviewFromMapping()">Preview rows</button>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:center;">
+          <div style="font-weight:600;">CSV Header</div>
+          <div style="font-weight:600;">Target Field</div>
+          <ng-container *ngFor="let h of importHeaders; trackBy: trackHeader">
+            <div>{{ h }}</div>
+            <div>
+              <select [ngModel]="importMapping[h]" (ngModelChange)="updateImportMapping(h,$event)" [ngModelOptions]="{standalone:true}" style="min-width:260px;">
+                <option [ngValue]="''">— ignore —</option>
+                <option *ngFor="let f of fieldDefs" [ngValue]="f.key">{{ f.label }} ({{ f.key }})</option>
+              </select>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Step: preview -->
+      <div *ngIf="importState.step==='preview' || importState.step==='running' || importState.step==='done'" style="margin-top:12px;">
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
+          <button class="btn btn-secondary" (click)="backToMapping()" [disabled]="importState.step==='running'">Back</button>
+          <button class="btn btn-primary" (click)="startImport()" [disabled]="importing || !importRows.length || importState.step==='done'">Import</button>
+          <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="!hasImportFailures()">Errors CSV</button>
+          <span *ngIf="importing || importProgress.processed>0">Processed {{ importProgress.processed }}/{{ importRows.length }} • Success {{ importProgress.success }} • Failed {{ importProgress.failed }} ({{ importProgress.percent }}%)</span>
+        </div>
+        <div style="max-height:50vh; overflow:auto; border:1px solid #eee;">
+          <table class="table" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Line</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Number</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">System Type</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">System ID</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Label Size</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Label Type</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Label Width</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Released</th>
+                <th style="text-align:left; padding:6px; border-bottom:1px solid #ddd;">Error</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of importRows; trackBy: trackRow">  
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.line }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.number }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.systemType }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.systemId || '(null)' }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.labelSize }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.labelType }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.labelWidth }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0;">{{ r.released }}</td>
+                <td style="padding:6px; border-bottom:1px solid #f0f0f0; color:#b00020;">{{ r.error }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
