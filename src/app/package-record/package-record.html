@@ -69,29 +69,66 @@
         </div>
         
         <div class="input-group">
-          <label for="deviceNameSelect">Device Name:</label>
+          <label for="deviceNameSelect">Device Names (Multiple):</label>
           <div class="select-wrapper">
             <div class="device-input-container">
-              <select 
-                id="deviceNameSelect"
-                [(ngModel)]="deviceName" 
-                class="form-input"
-                (change)="onFilterChange()"
-              >
-                <option value="">All Devices</option>
-                <option *ngFor="let device of getDevices()" [value]="device.name">
-                  {{ device.name }}
-                </option>
-              </select>
-              <button 
-                type="button"
-                class="btn btn-sm btn-outline refresh-btn" 
-                (click)="refreshDevices()"
-                [disabled]="isLoadingDevices"
-                title="Refresh device list"
-              >
-                {{ isLoadingDevices ? '⏳' : '🔄' }}
-              </button>
+              <div class="multi-select-container">
+                <div class="multi-select-header" (click)="toggleDeviceListCollapse()">
+                  <span class="selected-count">
+                    {{ selectedDeviceNames.length }} device(s) selected
+                    <span class="collapse-indicator">{{ isDeviceListCollapsed ? '▼' : '▲' }}</span>
+                  </span>
+                  <div class="multi-select-actions" (click)="$event.stopPropagation()">
+                    <button 
+                      type="button"
+                      class="btn btn-sm btn-outline" 
+                      (click)="selectAllDevices()"
+                      [disabled]="isLoadingDevices"
+                      title="Select all devices"
+                    >
+                      Select All
+                    </button>
+                    <button 
+                      type="button"
+                      class="btn btn-sm btn-outline" 
+                      (click)="deselectAllDevices()"
+                      [disabled]="isLoadingDevices"
+                      title="Deselect all devices"
+                    >
+                      Clear
+                    </button>
+                    <button 
+                      type="button"
+                      class="btn btn-sm btn-outline refresh-btn" 
+                      (click)="refreshDevices()"
+                      [disabled]="isLoadingDevices"
+                      title="Refresh device list"
+                    >
+                      {{ isLoadingDevices ? '⏳' : '🔄' }}
+                    </button>
+                  </div>
+                </div>
+                <div class="multi-select-options" [class.collapsed]="isDeviceListCollapsed" *ngIf="getDevices().length > 0">
+                  <label 
+                    class="checkbox-label" 
+                    *ngFor="let device of getDevices()"
+                  >
+                    <input 
+                      type="checkbox" 
+                      [checked]="isDeviceSelected(getDeviceName(device))"
+                      (change)="toggleDeviceSelection(getDeviceName(device))"
+                    >
+                    <span class="checkmark"></span>
+                    {{ getDeviceName(device) }}
+                  </label>
+                </div>
+                <div class="multi-select-empty" [class.collapsed]="isDeviceListCollapsed" *ngIf="getDevices().length === 0 && !isLoadingDevices">
+                  No devices available
+                </div>
+                <div class="multi-select-loading" [class.collapsed]="isDeviceListCollapsed" *ngIf="isLoadingDevices">
+                  Loading devices...
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -247,12 +284,13 @@
 
   <!-- Recent Records Table -->
   <section class="table-section" *ngIf="packageRecords.length > 0">
-    <h3>Recent Records</h3>
+    <h3>Recent Records (from all selected devices)</h3>
     <div class="table-container">
       <table class="records-table">
         <thead>
           <tr>
             <th>Time</th>
+            <th>Device</th>
             <th>Package Type</th>
             <th>Weight</th>
             <th>Location</th>
@@ -262,6 +300,11 @@
         <tbody>
           <tr *ngFor="let record of getRecentRecords()">
             <td>{{formatTime(record.timestamp)}}</td>
+            <td>
+              <span class="device-badge">
+                {{getRecordDeviceName(record)}}
+              </span>
+            </td>
             <td>
               <span class="package-type-badge" [class]="'type-' + (record.packageType || 'unknown')?.toLowerCase()">
                 {{record.packageType || 'Unknown'}}
@@ -276,10 +319,15 @@
     </div>
   </section>
 
-  <!-- API Response Debug Window -->
+  <!-- API Response Debug Window (Collapsible) -->
   <section class="debug-section">
-    <h3>🔧 API Response Debug</h3>
-    <div class="debug-container">
+    <div class="debug-section-header" (click)="toggleDebugSection()">
+      <h3>🔧 API Response Debug</h3>
+      <button type="button" class="collapse-toggle">
+        {{ isDebugSectionCollapsed ? '▼ Show' : '▲ Hide' }}
+      </button>
+    </div>
+    <div class="debug-container" [class.collapsed]="isDebugSectionCollapsed">
       <div class="debug-tabs">
         <button 
           type="button" 

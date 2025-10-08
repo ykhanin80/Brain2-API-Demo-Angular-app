@@ -46,6 +46,7 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
   
   // Data
   packageRecords: PackageRecord[] = [];
+  packageRecordsByDevice: Map<string, PackageRecord[]> = new Map();
   packageTypes: string[] = [];
   devices: any[] = [];
   
@@ -61,7 +62,8 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
   articleName = '';
   batchNumber = '';
   orderNumber = '';
-  deviceName = '';
+  deviceName = ''; // Keep for backward compatibility
+  selectedDeviceNames: string[] = [];
   take = 100;
   startDate = '';
   endDate = '';
@@ -102,6 +104,8 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
   errorMessage = '';
   lastUpdateTime = '';
   activeDebugTab = 'records';
+  isDebugSectionCollapsed = true;
+  isDeviceListCollapsed = false;
 
   async ngOnInit() {
     await this.loadDevices();
@@ -169,9 +173,10 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     const callId = Math.random().toString(36).substr(2, 9);
     console.log('🔄 loadPackageRecords [' + callId + '] START at:', new Date().toLocaleTimeString(), 'interval set to:', this.selectedRefreshInterval + 'ms');
     
-    if (!this.deviceName) {
+    if (this.selectedDeviceNames.length === 0) {
       this.packageRecords = [];
-      this.errorMessage = 'Please select a device to view package records.';
+      this.packageRecordsByDevice.clear();
+      this.errorMessage = 'Please select at least one device to view package records.';
       this.isLoading = false;
       this.updateChart();
       console.log('❌ [' + callId + '] No device selected, aborting loadPackageRecords');
@@ -182,20 +187,42 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
       this.isLoading = true;
       this.errorMessage = '';
       
-      console.log('📡 [' + callId + '] Starting API request for device:', this.deviceName, 'with time range:', this.selectedTimeRange);
+      console.log('📡 [' + callId + '] Starting API requests for', this.selectedDeviceNames.length, 'devices:', this.selectedDeviceNames, 'with time range:', this.selectedTimeRange);
       
       const authHeaders = this.getAuthHeaders();
-      const params = this.buildQueryParams();
-  const url = `${this.apiConfig.getBaseUrl()}/api/v1/package-records${params}`;
       
-      console.log('🌐 [' + callId + '] Making HTTP GET request to:', url, 'at:', new Date().toLocaleTimeString());
-      const apiStartTime = performance.now();
+      // Make parallel API calls for each selected device
+      const apiCalls = this.selectedDeviceNames.map(async (deviceName) => {
+        const params = this.buildQueryParams(deviceName);
+        const url = `${this.apiConfig.getBaseUrl()}/api/v1/package-records${params}`;
+        
+        console.log('🌐 [' + callId + '] Making HTTP GET request for device:', deviceName, 'to:', url);
+        const apiStartTime = performance.now();
+        
+        try {
+          const response = await this.http.get<PackageRecord[]>(url, { headers: authHeaders }).toPromise();
+          const apiEndTime = performance.now();
+          console.log('📦 [' + callId + '] API response received for device:', deviceName, 'in:', Math.round(apiEndTime - apiStartTime), 'ms');
+          
+          return { deviceName, records: response || [] };
+        } catch (error) {
+          console.error('💥 [' + callId + '] Error loading records for device:', deviceName, error);
+          return { deviceName, records: [], error };
+        }
+      });
       
-      const response = await this.http.get<PackageRecord[]>(url, { headers: authHeaders }).toPromise();
-      const apiEndTime = performance.now();
-      console.log('📦 [' + callId + '] API response received in:', Math.round(apiEndTime - apiStartTime), 'ms at:', new Date().toLocaleTimeString());
+      const results = await Promise.all(apiCalls);
       
-      const newRecords = response || [];
+      // Store records per device and combine all records
+      this.packageRecordsByDevice.clear();
+      const allRecords: PackageRecord[] = [];
+      
+      results.forEach(result => {
+        this.packageRecordsByDevice.set(result.deviceName, result.records);
+        allRecords.push(...result.records);
+      });
+      
+      const newRecords = allRecords;
       
       const dataChanged = JSON.stringify(newRecords) !== JSON.stringify(this.packageRecords);
       console.log('📦 [' + callId + '] API Response:', {
@@ -215,9 +242,13 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
       console.log('📈 [' + callId + '] Data updated, calling updateChart() at:', new Date().toLocaleTimeString());
       
       this.debugApiResponses.packageRecords = {
-        url: url,
         timestamp: new Date().toISOString(),
-        rawResponse: response,
+        devices: this.selectedDeviceNames,
+        results: results.map(r => ({
+          deviceName: r.deviceName,
+          recordCount: r.records.length,
+          hasError: !!r.error
+        })),
         processedRecords: this.packageRecords,
         recordCount: this.packageRecords.length,
         sampleRecord: this.packageRecords.length > 0 ? this.packageRecords[0] : null,
@@ -258,14 +289,14 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     this.updateChart();
   }
 
-  private buildQueryParams(): string {
+  private buildQueryParams(deviceName?: string): string {
     const params = new URLSearchParams();
     
     if (this.articleNumber) params.append('articleNumber', this.articleNumber);
     if (this.articleName) params.append('articleName', this.articleName);
     if (this.batchNumber) params.append('batchNumber', this.batchNumber);
     if (this.orderNumber) params.append('orderNumber', this.orderNumber);
-    if (this.deviceName) params.append('deviceName', this.deviceName);
+    if (deviceName) params.append('deviceName', deviceName);
     
     if (this.selectedPackageType !== 'All') {
       params.append('packageType', this.selectedPackageType);
@@ -341,14 +372,7 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     this.chart = new Chart(ctx, {
       type: 'line',
       data: {
-        datasets: [{
-          label: this.deviceName || 'Device',
-          data: [],
-          borderColor: '#4CAF50',
-          backgroundColor: 'rgba(76, 175, 80, 0.1)',
-          tension: 0.1,
-          fill: true
-        }]
+        datasets: []
       },
       options: {
         responsive: true,
@@ -409,35 +433,42 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const filteredRecords = this.selectedPackageType === 'All' 
-      ? this.packageRecords 
-      : this.packageRecords.filter(record => record.packageType === this.selectedPackageType);
-
-    console.log('📈 [' + updateId + '] Updating chart with', filteredRecords.length, 'filtered records (from', this.packageRecords.length, 'total)');
-
     const activeType = this.getActiveWeightType();
-    const chartData = filteredRecords.map(record => ({
-      x: new Date(record.timestamp).getTime(),
-      y: this.getWeightValue(record, activeType)
-    }));
+    const colors = this.getDeviceColors();
+    
+    // Create datasets for each device
+    const datasets: any[] = [];
+    let datasetIndex = 0;
+    
+    this.packageRecordsByDevice.forEach((records, deviceName) => {
+      const filteredRecords = this.selectedPackageType === 'All' 
+        ? records 
+        : records.filter(record => record.packageType === this.selectedPackageType);
 
-    chartData.sort((a, b) => (a.x as number) - (b.x as number));
+      const chartData = filteredRecords.map(record => ({
+        x: new Date(record.timestamp).getTime(),
+        y: this.getWeightValue(record, activeType)
+      }));
 
-    console.log('📋 [' + updateId + '] Chart data points:', {
-      totalPoints: chartData.length,
-      firstPoint: chartData.length > 0 ? { 
-        time: new Date(chartData[0].x).toLocaleTimeString(), 
-        value: chartData[0].y 
-      } : null,
-      lastPoint: chartData.length > 0 ? { 
-        time: new Date(chartData[chartData.length - 1].x).toLocaleTimeString(), 
-        value: chartData[chartData.length - 1].y 
-      } : null,
-      dataHash: chartData.map(p => p.y).join(',').substring(0, 50)
+      chartData.sort((a, b) => (a.x as number) - (b.x as number));
+
+      const color = colors[datasetIndex % colors.length];
+      
+      datasets.push({
+        label: deviceName,
+        data: chartData,
+        borderColor: color,
+        backgroundColor: color + '20', // Add transparency
+        tension: 0.1,
+        fill: false
+      });
+      
+      datasetIndex++;
     });
 
-    this.chart.data.datasets[0].data = chartData;
-    this.chart.data.datasets[0].label = this.deviceName || 'Device';
+    console.log('📈 [' + updateId + '] Updating chart with', datasets.length, 'datasets for devices:', Array.from(this.packageRecordsByDevice.keys()));
+
+    this.chart.data.datasets = datasets;
     
     const weightTypeLabel = activeType === 'actual' ? 'Actual Net Weight' : 'Printed Net Weight';
     if (this.chart.options.plugins?.title) {
@@ -453,6 +484,21 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     console.log('🔄 [' + updateId + '] Calling chart.update() at:', new Date().toLocaleTimeString());
     this.chart.update('none');
     console.log('✅ [' + updateId + '] Chart update completed at:', new Date().toLocaleTimeString());
+  }
+
+  private getDeviceColors(): string[] {
+    return [
+      '#4CAF50', // Green
+      '#2196F3', // Blue
+      '#FF9800', // Orange
+      '#9C27B0', // Purple
+      '#F44336', // Red
+      '#00BCD4', // Cyan
+      '#FFEB3B', // Yellow
+      '#795548', // Brown
+      '#607D8B', // Blue Grey
+      '#E91E63'  // Pink
+    ];
   }
 
   onFilterChange() {
@@ -611,6 +657,44 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
     return this.devices || [];
   }
 
+  isDeviceSelected(deviceName: string): boolean {
+    return this.selectedDeviceNames.includes(deviceName);
+  }
+
+  toggleDeviceSelection(deviceName: string) {
+    const index = this.selectedDeviceNames.indexOf(deviceName);
+    if (index > -1) {
+      this.selectedDeviceNames.splice(index, 1);
+    } else {
+      this.selectedDeviceNames.push(deviceName);
+    }
+    this.onFilterChange();
+  }
+
+  selectAllDevices() {
+    this.selectedDeviceNames = this.devices.map(d => this.getDeviceName(d));
+    this.onFilterChange();
+  }
+
+  deselectAllDevices() {
+    this.selectedDeviceNames = [];
+    this.onFilterChange();
+  }
+
+  getDeviceName(device: any): string {
+    return device?.name || device?.deviceName || device?.id || 'Unknown Device';
+  }
+
+  getRecordDeviceName(record: PackageRecord): string {
+    // Find which device this record belongs to
+    for (const [deviceName, records] of this.packageRecordsByDevice.entries()) {
+      if (records.includes(record)) {
+        return deviceName;
+      }
+    }
+    return 'Unknown';
+  }
+
   getRecentRecords() {
     return this.packageRecords.slice(0, 10);
   }
@@ -650,6 +734,14 @@ export class PackageRecordComponent implements OnInit, OnDestroy {
 
   backToDashboard() {
     window.history.back();
+  }
+
+  toggleDebugSection() {
+    this.isDebugSectionCollapsed = !this.isDebugSectionCollapsed;
+  }
+
+  toggleDeviceListCollapse() {
+    this.isDeviceListCollapsed = !this.isDeviceListCollapsed;
   }
 
   private getErrorMessage(error: any): string {
