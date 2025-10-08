@@ -440,11 +440,14 @@
   @if (lastKind === 'errorRate' && errorRateGroups && errorRateGroups.length > 0) {
     <div class="records-section">
       <h3>⚠️ Single Packages Error Rate</h3>
-      @for (g of errorRateGroups; track g.articleNumber) {
+      @for (g of errorRateGroups; track g.articleNumber + '|' + g.deviceName) {
         <div class="group-section">
           <div class="group-header">
             <div>
               <strong>PLU:</strong> {{ g.articleNumber }} — {{ g.articleName || '—' }}
+              @if (g.deviceName) {
+                <span class="device-badge" style="margin-left: 0.5rem;">{{ g.deviceName }}</span>
+              }
             </div>
             <div class="group-meta">
               <span><strong>Start:</strong> {{ formatDate(g.start) }}</span>
@@ -472,7 +475,6 @@
                 <tr class="group-summary">
                   <td class="text-right"><strong>Total:</strong></td>
                   <td><strong>{{ g.total }}</strong></td>
-                  <td></td>
                   <td></td>
                 </tr>
               </tbody>

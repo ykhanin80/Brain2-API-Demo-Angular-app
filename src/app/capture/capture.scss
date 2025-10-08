@@ -501,6 +501,33 @@
 
 .group-summary {
   background: #f8f9fa;
+  font-weight: 600;
+  
+  td {
+    font-weight: 600;
+  }
+}
+
+// Error rate table specific styling with fixed column widths
+.group-section {
+  .records-table {
+    table-layout: fixed;
+    
+    th:nth-child(1), td:nth-child(1) {
+      width: 50%;
+      text-align: left;
+    }
+    
+    th:nth-child(2), td:nth-child(2) {
+      width: 30%;
+      text-align: center;
+    }
+    
+    th:nth-child(3), td:nth-child(3) {
+      width: 20%;
+      text-align: center;
+    }
+  }
 }
 
 .table-container {
@@ -644,6 +671,47 @@
   background: #1e3a5f;
   color: #64b5f6;
   border-color: #2c5282;
+}
+
+:host-context(body.dark-theme) .group-section {
+  background: #1a1d21;
+  border-color: #2f3842;
+}
+
+:host-context(body.dark-theme) .group-header {
+  background: #23272e;
+  border-color: #2f3842;
+  
+  .group-meta {
+    color: #94a1ad;
+  }
+}
+
+:host-context(body.dark-theme) .group-summary {
+  background: #23272e;
+}
+
+:host-context(body.dark-theme) .records-table {
+  th {
+    background: #23272e;
+    color: #e4e8ec;
+    border-bottom-color: #2f3842;
+  }
+  
+  td {
+    border-bottom-color: #2f3842;
+    color: #cfd6dd;
+  }
+  
+  tbody tr {
+    &:hover {
+      background-color: #23272e;
+    }
+    
+    &:nth-child(even) {
+      background-color: #1e2126;
+    }
+  }
 }
 
 /* Utility */

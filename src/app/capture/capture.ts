@@ -88,6 +88,7 @@ export class Capture implements OnInit, OnDestroy {
     finish: string;
     articleNumber: string;
     articleName: string;
+    deviceName: string;
     total: number;
     rows: Array<{ errorFlag: number; errorText: string; count: number; percent: number }>
   }> = [];
@@ -387,7 +388,13 @@ export class Capture implements OnInit, OnDestroy {
   }
   
   // Single Packages Error Rate - fetch package records and compute aggregation
-  getSinglePackagesErrorRate(): void {
+  async getSinglePackagesErrorRate(): Promise<void> {
+    // Check if multi-device mode
+    if (this.selectedDeviceNames.length > 0) {
+      await this.getSinglePackagesErrorRateMultiDevice();
+      return;
+    }
+
     // Build same endpoint as getPackageRecords, but mark kind as 'errorRate'
     this.skip = 0; // analysis from first page by default
     let endpoint = '/api/v1/package-records';
@@ -403,6 +410,57 @@ export class Capture implements OnInit, OnDestroy {
     if (this.endDate.trim()) queryParams.push(`endDate=${encodeURIComponent(this.endDate.trim())}`);
     endpoint += `?${queryParams.join('&')}`;
     this.makeApiCall('GET', endpoint, undefined, 'errorRate');
+  }
+
+  // Multi-device version of error rate fetch
+  private async getSinglePackagesErrorRateMultiDevice(): Promise<void> {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.clearError();
+    
+    try {
+      const promises = this.selectedDeviceNames.map(deviceName => {
+        let endpoint = '/api/v1/package-records';
+        const queryParams: string[] = [];
+        queryParams.push('take=100000'); // For error rate analysis we want as many records as possible
+        queryParams.push(`deviceName=${encodeURIComponent(deviceName)}`);
+        
+        if (this.articleNumber.trim()) queryParams.push(`articleNumber=${encodeURIComponent(this.articleNumber.trim())}`);
+        if (this.articleName.trim()) queryParams.push(`articleName=${encodeURIComponent(this.articleName.trim())}`);
+        if (this.batchNumber.trim()) queryParams.push(`batchNumber=${encodeURIComponent(this.batchNumber.trim())}`);
+        if (this.orderNumber.trim()) queryParams.push(`orderNumber=${encodeURIComponent(this.orderNumber.trim())}`);
+        if (this.selectedPackageType && this.selectedPackageType !== 'All') {
+          queryParams.push(`packageType=${encodeURIComponent(this.selectedPackageType)}`);
+        }
+        if (this.startDate.trim()) queryParams.push(`startDate=${encodeURIComponent(this.startDate.trim())}`);
+        if (this.endDate.trim()) queryParams.push(`endDate=${encodeURIComponent(this.endDate.trim())}`);
+        
+        endpoint += `?${queryParams.join('&')}`;
+        return this.http.get<any>(this.apiConfig.getBaseUrl() + endpoint).toPromise();
+      });
+
+      const results = await Promise.all(promises);
+      const allRecords: any[] = [];
+      
+      results.forEach((response, index) => {
+        const records = Array.isArray(response) ? response : [];
+        allRecords.push(...records);
+      });
+
+      // Compute error rate from all records
+      this.errorRateRows = this.computeErrorRateRows(allRecords);
+      this.errorRateGroups = this.computeErrorRateGroups(allRecords);
+      this.lastKind = 'errorRate';
+      this.isSuccess = true;
+      this.responseStatus = `${allRecords.length} records from ${results.length} device(s)`;
+      this.responseData = allRecords;
+
+    } catch (error) {
+      this.errorMessage = 'Failed to load error rate records';
+      console.error(error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   // Utility Methods
@@ -879,10 +937,11 @@ export class Capture implements OnInit, OnDestroy {
     return rows;
   }
 
-  private computeErrorRateGroups(records: any[]): Array<{start:string;finish:string;articleNumber:string;articleName:string;total:number;rows:Array<{errorFlag:number;errorText:string;count:number;percent:number}>}> {
+  private computeErrorRateGroups(records: any[]): Array<{start:string;finish:string;articleNumber:string;articleName:string;deviceName:string;total:number;rows:Array<{errorFlag:number;errorText:string;count:number;percent:number}>}> {
     type Group = {
       articleNumber: string;
       articleName: string;
+      deviceName: string;
       minTs: number;
       maxTs: number;
       total: number;
@@ -892,15 +951,18 @@ export class Capture implements OnInit, OnDestroy {
     for (const r of records || []) {
       const artNum: string = r.articleNumber ?? '';
       const artName: string = r.articleName ?? '';
+      const deviceName: string = r.device?.name || r.device?.id || '';
       const tsStr: string = r.timestamp ?? '';
       const ts = tsStr ? new Date(tsStr).getTime() : NaN;
       let flag = this.extractErrorFlag(r);
       if (flag === null) flag = 0;
-      const key = artNum;
+      // Group by both article and device
+      const key = `${artNum}|${deviceName}`;
       if (!groups.has(key)) {
         groups.set(key, {
           articleNumber: artNum,
           articleName: artName,
+          deviceName: deviceName,
           minTs: isFinite(ts) ? ts : Number.POSITIVE_INFINITY,
           maxTs: isFinite(ts) ? ts : Number.NEGATIVE_INFINITY,
           total: 0,
@@ -916,7 +978,7 @@ export class Capture implements OnInit, OnDestroy {
       g.byFlag.set(flag, (g.byFlag.get(flag) || 0) + 1);
     }
 
-    const result: Array<{start:string;finish:string;articleNumber:string;articleName:string;total:number;rows:Array<{errorFlag:number;errorText:string;count:number;percent:number}>}> = [];
+    const result: Array<{start:string;finish:string;articleNumber:string;articleName:string;deviceName:string;total:number;rows:Array<{errorFlag:number;errorText:string;count:number;percent:number}>}> = [];
     for (const g of groups.values()) {
       // ensure good packages row exists
       const nonZeroSum = Array.from(g.byFlag.entries()).reduce((acc, [f, c]) => f !== 0 ? acc + c : acc, 0);
@@ -939,12 +1001,14 @@ export class Capture implements OnInit, OnDestroy {
         finish,
         articleNumber: g.articleNumber,
         articleName: g.articleName,
+        deviceName: g.deviceName,
         total: g.total,
         rows
       });
     }
-    // Sort groups by start asc then article number
+    // Sort groups by device, then start, then article number
     result.sort((a, b) => {
+      if (a.deviceName !== b.deviceName) return a.deviceName < b.deviceName ? -1 : 1;
       if (a.start !== b.start) return a.start < b.start ? -1 : 1;
       return a.articleNumber < b.articleNumber ? -1 : (a.articleNumber > b.articleNumber ? 1 : 0);
     });
