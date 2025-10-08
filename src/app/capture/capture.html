@@ -58,42 +58,71 @@
       </div>
       
       <div class="input-group">
-        <label for="deviceNameSelect">Device Name:</label>
+        <label for="deviceNameSelect">Device Names (Multiple):</label>
         <div class="select-wrapper">
           <div class="device-input-container">
-            @if (isLoadingDevices) {
-              <select id="deviceNameSelect" class="form-input" disabled>
-                <option>Loading devices...</option>
-              </select>
-            } @else {
-              <select 
-                id="deviceNameSelect"
-                [(ngModel)]="deviceName" 
-                class="form-input"
-              >
-                <option value="">All Devices</option>
-                @for (device of devices; track device.id) {
-                  <option [value]="device.name || device.id">
-                    {{ device.name || device.id }}
-                    @if (device.name && device.id && device.name !== device.id) {
-                      ({{ device.id }})
-                    }
-                  </option>
+            <div class="multi-select-container">
+              <div class="multi-select-header" (click)="toggleDeviceListCollapse()">
+                <span class="selected-count">
+                  {{ selectedDeviceNames.length }} device(s) selected
+                  <span class="collapse-indicator">{{ isDeviceListCollapsed ? '▼' : '▲' }}</span>
+                </span>
+                <div class="multi-select-actions" (click)="$event.stopPropagation()">
+                  <button 
+                    type="button"
+                    class="btn btn-sm btn-outline" 
+                    (click)="selectAllDevices()"
+                    [disabled]="isLoadingDevices"
+                    title="Select all devices"
+                  >
+                    Select All
+                  </button>
+                  <button 
+                    type="button"
+                    class="btn btn-sm btn-outline" 
+                    (click)="deselectAllDevices()"
+                    [disabled]="isLoadingDevices"
+                    title="Deselect all devices"
+                  >
+                    Clear
+                  </button>
+                  <button 
+                    type="button"
+                    class="btn btn-sm btn-outline refresh-btn" 
+                    (click)="refreshDevices()"
+                    [disabled]="isLoadingDevices"
+                    title="Refresh device list"
+                  >
+                    {{ isLoadingDevices ? '⏳' : '🔄' }}
+                  </button>
+                </div>
+              </div>
+              <div class="multi-select-options" [class.collapsed]="isDeviceListCollapsed">
+                @if (devices.length > 0) {
+                  @for (device of devices; track device.id) {
+                    <label class="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        [checked]="isDeviceSelected(getDeviceName(device))"
+                        (change)="toggleDeviceSelection(getDeviceName(device))"
+                      >
+                      <span class="checkmark"></span>
+                      {{ getDeviceName(device) }}
+                    </label>
+                  }
                 }
                 @if (devices.length === 0 && !isLoadingDevices) {
-                  <option disabled>No devices available</option>
+                  <div class="multi-select-empty" [class.collapsed]="isDeviceListCollapsed">
+                    No devices available
+                  </div>
                 }
-              </select>
-            }
-            <button 
-              type="button"
-              class="btn btn-sm btn-outline refresh-btn" 
-              (click)="refreshDevices()"
-              [disabled]="isLoadingDevices"
-              title="Refresh device list"
-            >
-              {{ isLoadingDevices ? '⏳' : '🔄' }}
-            </button>
+                @if (isLoadingDevices) {
+                  <div class="multi-select-loading" [class.collapsed]="isDeviceListCollapsed">
+                    Loading devices...
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -116,6 +145,44 @@
           [(ngModel)]="endDate" 
           class="form-input"
         >
+      </div>
+
+      <div class="input-group">
+        <label for="packageTypeSelect">Package Type:</label>
+        <select 
+          id="packageTypeSelect"
+          [(ngModel)]="selectedPackageType" 
+          class="form-input"
+        >
+          <option value="All">All Types</option>
+          @for (type of packageTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Weight Display:</label>
+        <div class="weight-options">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="showActualWeight" 
+              (change)="onWeightPreferenceChange()"
+            >
+            <span class="checkmark"></span>
+            Actual Net Weight
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="showPrintedWeight" 
+              (change)="onWeightPreferenceChange()"
+            >
+            <span class="checkmark"></span>
+            Printed Net Weight
+          </label>
+        </div>
       </div>
       
       
@@ -143,6 +210,19 @@
       </button>
     </div>
   </div>
+
+  <!-- Weight Chart Section -->
+  @if (selectedDeviceNames.length > 0 && packageRecords.length > 0 && lastKind === 'package') {
+    <div class="capture-section chart-section">
+      <h3>📊 Package Weight Chart</h3>
+      <div class="chart-container">
+        <canvas id="packageWeightChart"></canvas>
+      </div>
+      <div class="chart-info">
+        <span>Showing {{ packageRecords.length }} records from {{ selectedDeviceNames.length }} device(s)</span>
+      </div>
+    </div>
+  }
 
   <!-- Cumulated Package Records Table (shown only when requested) -->
   @if (lastKind === 'cumulated' && cumulatedRecords && cumulatedRecords.length > 0) {
@@ -323,7 +403,13 @@
                 </td>
                 <td>{{ record.batchNumber }}</td>
                 <td>{{ record.orderNumber }}</td>
-                <td>{{ record.device?.name || record.device?.id }}</td>
+                <td>
+                  @if (selectedDeviceNames.length > 1) {
+                    <span class="device-badge">{{ getRecordDeviceName(record) }}</span>
+                  } @else {
+                    {{ record.device?.name || record.device?.id }}
+                  }
+                </td>
                 <td class="weight-cell">{{ formatWeight(record.grossWeight) }}</td>
                 <td class="weight-cell">{{ formatWeight(record.actualNetWeight) }}</td>
                 <td>

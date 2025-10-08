@@ -1,9 +1,13 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, JsonPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiConfig } from '../api-config';
+import { Chart, registerables } from 'chart.js';
+import 'chartjs-adapter-date-fns';
+
+Chart.register(...registerables);
 
 @Component({
   selector: 'app-capture',
@@ -11,17 +15,21 @@ import { ApiConfig } from '../api-config';
   templateUrl: './capture.html',
   styleUrl: './capture.scss'
 })
-export class Capture implements OnInit {
+export class Capture implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);
+  
+  // Chart instance
+  private chart: Chart | null = null;
   
   // Form properties for filtering package records
   articleNumber = '';
   articleName = '';
   batchNumber = '';
   orderNumber = '';
-  deviceName = '';
+  deviceName = ''; // Keep for backward compatibility
+  selectedDeviceNames: string[] = [];
   startDate = '';
   endDate = '';
   take = 10; // Default page size
@@ -32,6 +40,7 @@ export class Capture implements OnInit {
   cumulatedRecords: any[] = [];
   oeeRecords: any[] = [];
   packageRecords: any[] = [];
+  packageRecordsByDevice: Map<string, any[]> = new Map();
   responseData: any = null;
   lastEndpoint = '';
   lastMethod = '';
@@ -45,12 +54,23 @@ export class Capture implements OnInit {
   devices: any[] = [];
   isLoadingDevices = false;
   
+  // Package Types data
+  packageTypes: string[] = [];
+  selectedPackageType = 'All';
+  
+  // Weight display preferences
+  showActualWeight = true;
+  showPrintedWeight = false;
+  
   // Sorting functionality
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   
   // JSON display functionality
   isJsonExpanded = false;
+  
+  // UI state for collapsible sections
+  isDeviceListCollapsed = false;
   
   // Single Packages Error Rate view
   errorRateRows: Array<{
@@ -84,6 +104,9 @@ export class Capture implements OnInit {
     
     // Load available devices for dropdown
     this.loadDevices();
+    
+    // Load package types
+    this.loadPackageTypes();
   }
   
   private setDefaultEndDate(): void {
@@ -108,7 +131,7 @@ export class Capture implements OnInit {
       return;
     }
     
-  const url = `${this.apiConfig.getBaseUrl()}/api/v1/devices`;
+    const url = `${this.apiConfig.getBaseUrl()}/api/v1/devices`;
     const headers = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -135,6 +158,33 @@ export class Capture implements OnInit {
       }
     });
   }
+
+  private loadPackageTypes(): void {
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token) {
+      console.warn('No auth token found, using fallback package types');
+      this.packageTypes = ['singlePackage', 'total1', 'total2', 'total3', 'total', 'partialBatchTotal', 'undefined'];
+      return;
+    }
+    
+    const url = `${this.apiConfig.getBaseUrl()}/api/v1/package-types`;
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+    
+    this.http.get<string[]>(url, { headers }).subscribe({
+      next: (response: any) => {
+        this.packageTypes = response || [];
+        console.log('Package types loaded:', this.packageTypes);
+      },
+      error: (error) => {
+        console.warn('Failed to load package types, using fallback:', error);
+        this.packageTypes = ['singlePackage', 'total1', 'total2', 'total3', 'total', 'partialBatchTotal', 'undefined'];
+      }
+    });
+  }
   
   private checkAuthenticationStatus(): boolean {
     const token = localStorage.getItem('auth_token');
@@ -154,12 +204,20 @@ export class Capture implements OnInit {
     this.router.navigate(['/login']);
   }
 
-  // Package Records API Method
-  getPackageRecords(preserveSkip: boolean = false): void {
+  // Package Records API Method with multi-device support
+  async getPackageRecords(preserveSkip: boolean = false): Promise<void> {
     // On a fresh request from the button, start from the first page
     if (!preserveSkip) {
       this.skip = 0;
     }
+
+    // If multi-device selection is used
+    if (this.selectedDeviceNames.length > 0) {
+      await this.getPackageRecordsMultiDevice();
+      return;
+    }
+
+    // Fall back to single device (backward compatibility)
     let endpoint = '/api/v1/package-records';
     
     // Build query parameters
@@ -192,6 +250,9 @@ export class Capture implements OnInit {
     if (this.deviceName.trim()) {
       queryParams.push(`deviceName=${encodeURIComponent(this.deviceName.trim())}`);
     }
+    if (this.selectedPackageType && this.selectedPackageType !== 'All') {
+      queryParams.push(`packageType=${encodeURIComponent(this.selectedPackageType)}`);
+    }
     if (this.startDate.trim()) {
       queryParams.push(`startDate=${encodeURIComponent(this.startDate.trim())}`);
     }
@@ -205,7 +266,87 @@ export class Capture implements OnInit {
     }
     
     console.log('Making API call to:', endpoint);
-  this.makeApiCall('GET', endpoint, undefined, 'package');
+    this.makeApiCall('GET', endpoint, undefined, 'package');
+  }
+
+  private async getPackageRecordsMultiDevice(): Promise<void> {
+    this.isLoading = true;
+    this.clearError();
+    this.packageRecordsByDevice.clear();
+    
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      this.errorMessage = 'Authentication required';
+      this.isLoading = false;
+      return;
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    // Build common query parameters
+    const buildParams = (deviceName: string): string => {
+      const queryParams: string[] = [];
+      queryParams.push(`take=${this.take > 0 ? this.take : 100}`);
+      if (this.skip > 0) queryParams.push(`skip=${this.skip}`);
+      if (this.articleNumber.trim()) queryParams.push(`articleNumber=${encodeURIComponent(this.articleNumber.trim())}`);
+      if (this.articleName.trim()) queryParams.push(`articleName=${encodeURIComponent(this.articleName.trim())}`);
+      if (this.batchNumber.trim()) queryParams.push(`batchNumber=${encodeURIComponent(this.batchNumber.trim())}`);
+      if (this.orderNumber.trim()) queryParams.push(`orderNumber=${encodeURIComponent(this.orderNumber.trim())}`);
+      queryParams.push(`deviceName=${encodeURIComponent(deviceName)}`);
+      if (this.selectedPackageType && this.selectedPackageType !== 'All') {
+        queryParams.push(`packageType=${encodeURIComponent(this.selectedPackageType)}`);
+      }
+      if (this.startDate.trim()) queryParams.push(`startDate=${encodeURIComponent(this.startDate.trim())}`);
+      if (this.endDate.trim()) queryParams.push(`endDate=${encodeURIComponent(this.endDate.trim())}`);
+      return queryParams.join('&');
+    };
+
+    // Make parallel API calls
+    const apiCalls = this.selectedDeviceNames.map(async (deviceName) => {
+      const params = buildParams(deviceName);
+      const url = `${this.apiConfig.getBaseUrl()}/api/v1/package-records?${params}`;
+      
+      try {
+        const response = await this.http.get<any[]>(url, { headers }).toPromise();
+        return { deviceName, records: response || [] };
+      } catch (error) {
+        console.error('Error loading records for device:', deviceName, error);
+        return { deviceName, records: [], error };
+      }
+    });
+
+    try {
+      const results = await Promise.all(apiCalls);
+      
+      // Store records per device and combine all
+      const allRecords: any[] = [];
+      results.forEach(result => {
+        this.packageRecordsByDevice.set(result.deviceName, result.records);
+        allRecords.push(...result.records);
+      });
+
+      this.packageRecords = allRecords;
+      this.lastKind = 'package';
+      this.isSuccess = true;
+      this.responseStatus = `${allRecords.length} records from ${results.length} device(s)`;
+
+      // Initialize and update chart
+      setTimeout(() => {
+        if (!this.chart) {
+          this.initializeChart();
+        }
+        this.updateChart();
+      }, 100);
+
+    } catch (error) {
+      this.errorMessage = 'Failed to load package records';
+      console.error(error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   // Cumulated Package Records API Method
@@ -808,5 +949,198 @@ export class Capture implements OnInit {
       return a.articleNumber < b.articleNumber ? -1 : (a.articleNumber > b.articleNumber ? 1 : 0);
     });
     return result;
+  }
+
+  ngOnDestroy() {
+    if (this.chart) {
+      this.chart.destroy();
+    }
+  }
+
+  // Multi-device selection helper methods
+  isDeviceSelected(deviceName: string): boolean {
+    return this.selectedDeviceNames.includes(deviceName);
+  }
+
+  toggleDeviceSelection(deviceName: string) {
+    const index = this.selectedDeviceNames.indexOf(deviceName);
+    if (index > -1) {
+      this.selectedDeviceNames.splice(index, 1);
+    } else {
+      this.selectedDeviceNames.push(deviceName);
+    }
+  }
+
+  selectAllDevices() {
+    this.selectedDeviceNames = this.devices.map(d => this.getDeviceName(d));
+  }
+
+  deselectAllDevices() {
+    this.selectedDeviceNames = [];
+  }
+
+  getDeviceName(device: any): string {
+    return device?.name || device?.deviceName || device?.id || 'Unknown Device';
+  }
+
+  toggleDeviceListCollapse() {
+    this.isDeviceListCollapsed = !this.isDeviceListCollapsed;
+  }
+
+  // Chart methods
+  private initializeChart() {
+    const canvas = document.getElementById('packageWeightChart') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    this.chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: []
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 0
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          title: {
+            display: true,
+            text: 'Package Weight Over Time'
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'minute',
+              displayFormats: {
+                minute: 'HH:mm'
+              }
+            },
+            title: {
+              display: true,
+              text: 'Time'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Weight'
+            }
+          }
+        }
+      }
+    });
+  }
+
+  private updateChart() {
+    if (!this.chart) return;
+
+    const colors = this.getDeviceColors();
+    const datasets: any[] = [];
+    let datasetIndex = 0;
+
+    this.packageRecordsByDevice.forEach((records, deviceName) => {
+      // Filter by package type if selected
+      const filteredRecords = this.selectedPackageType === 'All' 
+        ? records 
+        : records.filter(record => record.packageType === this.selectedPackageType);
+
+      const chartData = filteredRecords.map(record => ({
+        x: new Date(record.timestamp).getTime(),
+        y: this.getRecordWeight(record)
+      }));
+
+      chartData.sort((a, b) => (a.x as number) - (b.x as number));
+
+      const color = colors[datasetIndex % colors.length];
+
+      datasets.push({
+        label: deviceName,
+        data: chartData,
+        borderColor: color,
+        backgroundColor: color + '20',
+        tension: 0.1,
+        fill: false
+      });
+
+      datasetIndex++;
+    });
+
+    this.chart.data.datasets = datasets;
+    
+    // Update chart title with weight type
+    const weightTypeLabel = this.getActiveWeightType() === 'actual' ? 'Actual Net Weight' : 'Printed Net Weight';
+    if (this.chart.options.plugins?.title) {
+      const packageTypeText = this.selectedPackageType === 'All' ? 'All Types' : this.selectedPackageType;
+      this.chart.options.plugins.title.text = `${weightTypeLabel} - ${packageTypeText}`;
+    }
+    
+    this.chart.update('none');
+  }
+
+  private getDeviceColors(): string[] {
+    return [
+      '#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336',
+      '#00BCD4', '#FFEB3B', '#795548', '#607D8B', '#E91E63'
+    ];
+  }
+
+  onWeightPreferenceChange() {
+    // Ensure at least one option is selected
+    if (!this.showActualWeight && !this.showPrintedWeight) {
+      this.showActualWeight = true;
+    }
+    // Update chart if it exists
+    if (this.chart && this.packageRecords.length > 0) {
+      this.updateChart();
+    }
+  }
+
+  private getActiveWeightType(): 'actual' | 'printed' {
+    if (this.showActualWeight && !this.showPrintedWeight) return 'actual';
+    if (!this.showActualWeight && this.showPrintedWeight) return 'printed';
+    return 'actual'; // default to actual if both or neither are selected
+  }
+
+  private getRecordWeight(record: any): number {
+    const weightType = this.getActiveWeightType();
+    
+    if (weightType === 'actual' && record.actualNetWeight?.value !== undefined) {
+      return record.actualNetWeight.value;
+    }
+    if (weightType === 'printed' && record.printedNetWeight?.value !== undefined) {
+      return record.printedNetWeight.value;
+    }
+    // Fallback
+    if (record.actualNetWeight?.value !== undefined) {
+      return record.actualNetWeight.value;
+    }
+    if (record.printedNetWeight?.value !== undefined) {
+      return record.printedNetWeight.value;
+    }
+    return record.weight || 0;
+  }
+
+  getRecordDeviceName(record: any): string {
+    for (const [deviceName, records] of this.packageRecordsByDevice.entries()) {
+      if (records.includes(record)) {
+        return deviceName;
+      }
+    }
+    return record.deviceName || 'Unknown';
   }
 }

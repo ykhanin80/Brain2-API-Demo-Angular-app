@@ -226,6 +226,141 @@
       }
     }
   }
+
+  // Weight options styling
+  .weight-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 0.25rem;
+    
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #555;
+      
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #007bff;
+      }
+      
+      .checkmark {
+        display: none;
+      }
+      
+      &:hover {
+        color: #333;
+      }
+    }
+  }
+}
+
+/* Multi-select device dropdown styles */
+.multi-select-container {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  
+  .multi-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+    
+    &:hover {
+      background: #e9ecef;
+    }
+    
+    .selected-count {
+      font-weight: 600;
+      color: #495057;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      .collapse-indicator {
+        font-size: 0.75rem;
+        color: #6c757d;
+      }
+    }
+    
+    .multi-select-actions {
+      display: flex;
+      gap: 0.5rem;
+      
+      button {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.875rem;
+      }
+    }
+  }
+  
+  .multi-select-options {
+    max-height: 250px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.5rem;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
+    opacity: 1;
+    
+    &.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 0.5rem;
+      overflow: hidden;
+    }
+    
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #f1f3f5;
+      }
+      
+      input[type="checkbox"] {
+        margin-right: 0.75rem;
+        cursor: pointer;
+      }
+      
+      .checkmark {
+        display: none;
+      }
+    }
+  }
+  
+  .multi-select-empty,
+  .multi-select-loading {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding 0.3s ease-out;
+    opacity: 1;
+    
+    &.collapsed {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 1rem;
+      overflow: hidden;
+    }
+  }
 }
 
 /* Dark mode: inputs and labels inside Capture */
@@ -240,6 +375,59 @@
   border-color:#17a2b8;
   background-color:#232a32;
   box-shadow:0 0 0 3px rgba(23,162,184,0.12);
+}
+
+/* Dark mode: weight options */
+:host-context(body.dark-theme) .input-group .weight-options {
+  .checkbox-label {
+    color: #cfd6dd;
+    
+    &:hover {
+      color: #e2e8f0;
+    }
+    
+    input[type="checkbox"] {
+      accent-color: #17a2b8;
+    }
+  }
+}
+
+/* Dark mode multi-select styles */
+:host-context(body.dark-theme) .multi-select-container {
+  background: #2a2d33;
+  border-color: #3d4149;
+  
+  .multi-select-header {
+    background: #212225;
+    border-bottom-color: #3d4149;
+    
+    &:hover {
+      background: #2a2d33;
+    }
+    
+    .selected-count {
+      color: #e0e4e8;
+      
+      .collapse-indicator {
+        color: #a9b0b5;
+      }
+    }
+  }
+  
+  .multi-select-options {
+    .checkbox-label {
+      color: #e0e4e8;
+      
+      &:hover {
+        background-color: #2f3338;
+      }
+    }
+  }
+  
+  .multi-select-empty,
+  .multi-select-loading {
+    color: #a9b0b5;
+  }
 }
 
 .action-group {
@@ -410,6 +598,52 @@
     font-size: 0.8rem;
     font-weight: 500;
   }
+
+  .device-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #90caf9;
+  }
+}
+
+/* Chart Section */
+.chart-section {
+  .chart-container {
+    height: 400px;
+    padding: 1rem;
+    background: #fafafa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .chart-info {
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+}
+
+/* Dark mode chart section */
+:host-context(body.dark-theme) .chart-section {
+  .chart-container {
+    background: #1a1d21;
+  }
+
+  .chart-info {
+    color: #a9b0b5;
+  }
+}
+
+:host-context(body.dark-theme) .device-badge {
+  background: #1e3a5f;
+  color: #64b5f6;
+  border-color: #2c5282;
 }
 
 /* Utility */
