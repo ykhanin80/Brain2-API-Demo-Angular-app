@@ -336,6 +336,7 @@ export class AllOrders implements OnInit {
     switch (s) {
       case 'proposed':
         return 'status-proposed';
+      case 'active':
       case 'pending':
       case 'running':
       case 'inprogress':

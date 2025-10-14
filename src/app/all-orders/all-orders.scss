@@ -351,8 +351,8 @@
                 }
                 
                 &.status-pending {
-                  background-color: #fff3cd;
-                  color: #856404;
+                  background-color: #d4edda;
+                  color: #155724;
                 }
                 
                 &.status-finished {
@@ -376,8 +376,9 @@
                 }
                 
                 &.status-error {
-                  background-color: #f8d7da;
-                  color: #721c24;
+                  background-color: #fff3cd;
+                  color: #856404;
+                  border: 1px solid #ffc107;
                   animation: pulse 2s infinite;
                 }
                 
@@ -501,19 +502,21 @@
 }
 :host-context(body.dark-theme) .all-orders-container .orders-table-container {
   border-color: #2c343d;
-}
-:host-context(body.dark-theme) .all-orders-container .orders-table {
   background: #1f252c;
 }
+:host-context(body.dark-theme) .all-orders-container .orders-table {
+  background: #1f252c !important;
+}
 :host-context(body.dark-theme) .all-orders-container .orders-table thead .filter-row {
-  background-color: #232a31;
+  background-color: #232a31 !important;
 }
 :host-context(body.dark-theme) .all-orders-container .orders-table thead .header-row {
-  background-color: #232a31;
+  background-color: #232a31 !important;
 }
 :host-context(body.dark-theme) .all-orders-container .orders-table th {
-  color: #cfd8e3;
+  color: #e2e8f0;
   border-bottom-color: #2c343d;
+  background-color: #232a31 !important;
 }
 :host-context(body.dark-theme) .all-orders-container .orders-table .filter-input-compact,
 :host-context(body.dark-theme) .all-orders-container .orders-table .filter-select-compact {
@@ -528,21 +531,35 @@
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable tr {
   border-bottom-color: #2c343d;
+  background-color: #1f252c !important;
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable tr:hover {
-  background-color: #242b33;
+  background-color: #2a313a !important;
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable tr:nth-child(even) {
-  background-color: #1b2026;
+  background-color: #242a32 !important;
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable tr:nth-child(even):hover {
-  background-color: #242b33;
+  background-color: #2a313a !important;
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable td {
-  color: #e2e8f0;
+  color: #e2e8f0 !important;
+  border-bottom-color: #2c343d;
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable td.order-number {
-  color: #5da0ff;
+  color: #64b5f6 !important;
+}
+:host-context(body.dark-theme) .all-orders-container .table-body-scrollable td.display-text {
+  color: #e2e8f0 !important;
+}
+:host-context(body.dark-theme) .all-orders-container .table-body-scrollable td.creation-date {
+  color: #cfd8e3 !important;
+}
+:host-context(body.dark-theme) .all-orders-container .table-body-scrollable td.user {
+  color: #a0aec0 !important;
+}
+:host-context(body.dark-theme) .all-orders-container .table-body-scrollable td.quantity {
+  color: #e2e8f0 !important;
 }
 :host-context(body.dark-theme) .all-orders-container .table-body-scrollable td.transfer-value {
   background-color: #232a31;
@@ -560,6 +577,79 @@
 :host-context(body.dark-theme) .all-orders-container .btn.btn-warning {
   background-color: #d39e00;
   color: #1a2027;
+}
+:host-context(body.dark-theme) .all-orders-container .btn.btn-outline {
+  background-color: transparent;
+  border: 1px solid #4a5568;
+  color: #e2e8f0;
+  
+  &:hover:not(:disabled) {
+    background-color: #2d3748;
+    border-color: #64b5f6;
+  }
+}
+:host-context(body.dark-theme) .all-orders-container .btn.btn-sm {
+  color: #e2e8f0;
+}
+:host-context(body.dark-theme) .all-orders-container .action-buttons .btn {
+  border-color: #4a5568;
+}
+
+// Action result block
+:host-context(body.dark-theme) .all-orders-container .action-result {
+  background: #232a31 !important;
+  border: 1px solid #3a4450 !important;
+  
+  strong {
+    color: #e2e8f0;
+  }
+  
+  small {
+    color: #a0aec0;
+  }
+  
+  pre {
+    background: #1a2027;
+    color: #e2e8f0;
+    border: 1px solid #2c343d;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+  
+  &.error {
+    background: #2d1f1f !important;
+    border-color: #5a3a3a !important;
+    
+    pre {
+      background: #1f1414;
+      border-color: #4a2a2a;
+    }
+  }
+}
+
+// Loading, error, and no orders sections
+:host-context(body.dark-theme) .all-orders-container .loading-section {
+  p {
+    color: #a0aec0;
+  }
+}
+
+:host-context(body.dark-theme) .all-orders-container .error-section {
+  background-color: #3a2629 !important;
+  border-color: #5a3a3a !important;
+  
+  h3, p {
+    color: #ffb3b3;
+  }
+}
+
+:host-context(body.dark-theme) .all-orders-container .no-orders-section {
+  background-color: #1f2d33 !important;
+  border-color: #2d4450 !important;
+  
+  h3, p {
+    color: #81d4fa;
+  }
 }
 
 // Responsive design for smaller screens

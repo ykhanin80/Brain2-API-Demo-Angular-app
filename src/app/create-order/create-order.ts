@@ -86,7 +86,7 @@ export class CreateOrder implements OnInit {
   orderData: OrderRequest = {
     orderNumber: '',
     orderPosition: '1',
-    lineGroupName: 'KMD',
+    lineGroupName: 'Order Processing Lines',
     displayText: '',
     customerNumber: '0',
     articleNumber: '',
@@ -132,17 +132,17 @@ export class CreateOrder implements OnInit {
       {
         deviceType: 'primary',
         name: 'dateField2',
-        value: '290525'
+        value: '103125'
       },
       {
         deviceType: 'primary',
         name: 'lotCode',
-        value: 'L12345678'
+        value: 'L123456'
       },
       {
         deviceType: 'primary',
-        name: 'labelParNum',
-        value: '1'
+        name: 'countryOfOrigin',
+        value: 'USA'
       }
     ],
     commonText1: '',
@@ -153,7 +153,11 @@ export class CreateOrder implements OnInit {
   
   // User-friendly fields for transfer values
   userFriendlyBasePrice = 9.99;
-  userFriendlyDateString = '2025-05-29'; // ISO format for date input
+  userFriendlyDateString = '2025-10-31'; // ISO format for date input
+  
+  // Flags to track optional fields
+  includeBasePrice = true;
+  includeDateField2 = true;
   
   createdOrder: any = null;
   isLoading = false;
@@ -315,17 +319,48 @@ export class CreateOrder implements OnInit {
   
   // Update transfer values with formatted data
   updateTransferValues(): void {
-    // Update basePrice
-    const basePriceIndex = this.orderData.transferValues.findIndex(tv => tv.name === 'basePrice');
-    if (basePriceIndex !== -1) {
-      this.orderData.transferValues[basePriceIndex].value = this.formatBasePriceForAPI(this.userFriendlyBasePrice);
+    // Remove basePrice if not included
+    if (!this.includeBasePrice) {
+      const basePriceIndex = this.orderData.transferValues.findIndex(tv => tv.name === 'basePrice');
+      if (basePriceIndex !== -1) {
+        this.orderData.transferValues.splice(basePriceIndex, 1);
+      }
+    } else {
+      // Update basePrice if included
+      const basePriceIndex = this.orderData.transferValues.findIndex(tv => tv.name === 'basePrice');
+      if (basePriceIndex !== -1) {
+        this.orderData.transferValues[basePriceIndex].value = this.formatBasePriceForAPI(this.userFriendlyBasePrice);
+      } else {
+        // Add it if missing
+        this.orderData.transferValues.push({
+          deviceType: 'primary',
+          name: 'basePrice',
+          value: this.formatBasePriceForAPI(this.userFriendlyBasePrice)
+        });
+      }
     }
     
-    // Update dateField2
-    const dateFieldIndex = this.orderData.transferValues.findIndex(tv => tv.name === 'dateField2');
-    if (dateFieldIndex !== -1) {
-      const dateObject = new Date(this.userFriendlyDateString);
-      this.orderData.transferValues[dateFieldIndex].value = this.formatDateForAPI(dateObject);
+    // Remove dateField2 if not included
+    if (!this.includeDateField2) {
+      const dateFieldIndex = this.orderData.transferValues.findIndex(tv => tv.name === 'dateField2');
+      if (dateFieldIndex !== -1) {
+        this.orderData.transferValues.splice(dateFieldIndex, 1);
+      }
+    } else {
+      // Update dateField2 if included
+      const dateFieldIndex = this.orderData.transferValues.findIndex(tv => tv.name === 'dateField2');
+      if (dateFieldIndex !== -1) {
+        const dateObject = new Date(this.userFriendlyDateString);
+        this.orderData.transferValues[dateFieldIndex].value = this.formatDateForAPI(dateObject);
+      } else {
+        // Add it if missing
+        const dateObject = new Date(this.userFriendlyDateString);
+        this.orderData.transferValues.push({
+          deviceType: 'primary',
+          name: 'dateField2',
+          value: this.formatDateForAPI(dateObject)
+        });
+      }
     }
   }
   
@@ -341,6 +376,23 @@ export class CreateOrder implements OnInit {
     } else {
       return 'An unexpected error occurred while creating the order';
     }
+  }
+
+  // Add/Remove optional fields
+  addBasePrice(): void {
+    this.includeBasePrice = true;
+  }
+  
+  removeBasePrice(): void {
+    this.includeBasePrice = false;
+  }
+  
+  addDateField2(): void {
+    this.includeDateField2 = true;
+  }
+  
+  removeDateField2(): void {
+    this.includeDateField2 = false;
   }
 
   // Debug helpers

@@ -91,9 +91,8 @@
         <table class="orders-table">
           <thead>
             <tr class="header-row">
-              <th>Key</th>
+              <th>Order#</th>
               <th>Display Name</th>
-              <th>Active</th>
               <th>Status</th>
               <th>Change Date</th>
               <th>Creation Date</th>
@@ -105,7 +104,6 @@
               <tr (click)="selectOrder(order)" [style.background]="isSelected(order) ? '#e9f5ff' : null">
                 <td class="order-number">{{ order.key }}</td>
                 <td class="display-text" [title]="order.displayName">{{ order.displayName }}</td>
-                <td>{{ order.active ? 'Yes' : 'No' }}</td>
                 <td>
                   <ng-container *ngIf="orderStatusLoading[order.key]">
                     <span class="status-badge status-unknown" title="Loading status...">
@@ -115,11 +113,22 @@
                   </ng-container>
                   <ng-container *ngIf="!orderStatusLoading[order.key] && !orderStatusErrors[order.key]">
                     <span class="status-badge {{ statusClass(orderStatuses[order.key]) }}" [title]="orderStatuses[order.key]">
+                      @if (statusClass(orderStatuses[order.key]) === 'status-error') {
+                        ❌ 
+                      } @else if (statusClass(orderStatuses[order.key]) === 'status-finished') {
+                        ✅ 
+                      } @else if (statusClass(orderStatuses[order.key]) === 'status-pending') {
+                        ▶️ 
+                      } @else if (statusClass(orderStatuses[order.key]) === 'status-cancelled') {
+                        ❌ 
+                      } @else if (statusClass(orderStatuses[order.key]) === 'status-interrupted') {
+                        ⏸️ 
+                      }
                       {{ orderStatuses[order.key] || '-' }}
                     </span>
                   </ng-container>
                   <ng-container *ngIf="orderStatusErrors[order.key]">
-                    <span class="status-badge status-error" [title]="orderStatusErrors[order.key]">⚠️ error</span>
+                    <span class="status-badge status-error" [title]="orderStatusErrors[order.key]">❌ ERROR</span>
                   </ng-container>
                 </td>
                 <td class="creation-date">{{ order.changeDate | date:'short' }}</td>
@@ -185,4 +194,4 @@
   [data]="{ ordersList: debug.listOrders, orderStatus: debug.lastStatus, ordersAction: debug.lastAction }"
 ></dm-debug-panel>
 
-<!-- Label Layout Preview moved to Dashboard -->
+

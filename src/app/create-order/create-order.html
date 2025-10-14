@@ -212,34 +212,102 @@
     <div class="form-section">
       <h3>🔄 Transfer Values</h3>
       
-      <!-- User-Friendly Base Price Field -->
-      <div class="form-group">
-        <label for="userFriendlyBasePrice">Base Price (USD) *</label>
-        <input 
-          type="number" 
-          id="userFriendlyBasePrice" 
-          [(ngModel)]="userFriendlyBasePrice"
-          step="0.01"
-          min="0"
-          placeholder="e.g., 9.99"
+      <!-- User-Friendly Base Price Field (Optional) -->
+      @if (includeBasePrice) {
+        <div class="transfer-value-item">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input 
+                type="text" 
+                value="Base Price (USD)"
+                disabled
+                class="form-input"
+              >
+            </div>
+            <div class="form-group">
+              <label>Value</label>
+              <input 
+                type="number" 
+                id="userFriendlyBasePrice" 
+                [(ngModel)]="userFriendlyBasePrice"
+                step="0.01"
+                min="0"
+                placeholder="e.g., 9.99"
+                [disabled]="isLoading"
+                class="form-input"
+              >
+              <small class="form-hint">Will be formatted as: {{ formatBasePriceForAPI(userFriendlyBasePrice) }}</small>
+            </div>
+            <div class="form-group">
+              <button 
+                type="button" 
+                class="btn btn-danger btn-sm" 
+                (click)="removeBasePrice()"
+                [disabled]="isLoading"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <button 
+          type="button" 
+          class="btn btn-secondary btn-sm" 
+          (click)="addBasePrice()"
           [disabled]="isLoading"
-          class="form-input"
         >
-        <small class="form-hint">Will be formatted as: {{ formatBasePriceForAPI(userFriendlyBasePrice) }}</small>
-      </div>
+          + Add Base Price
+        </button>
+      }
 
-      <!-- User-Friendly Date Field -->
-      <div class="form-group">
-        <label for="userFriendlyDate">Date Field 2 *</label>
-        <input 
-          type="date" 
-          id="userFriendlyDate" 
-          [(ngModel)]="userFriendlyDateString"
+      <!-- User-Friendly Date Field (Optional) -->
+      @if (includeDateField2) {
+        <div class="transfer-value-item">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Name</label>
+              <input 
+                type="text" 
+                value="Date Field 2"
+                disabled
+                class="form-input"
+              >
+            </div>
+            <div class="form-group">
+              <label>Value</label>
+              <input 
+                type="date" 
+                id="userFriendlyDate" 
+                [(ngModel)]="userFriendlyDateString"
+                [disabled]="isLoading"
+                class="form-input"
+              >
+              <small class="form-hint">Will be formatted as: {{ getDatePreview() }}</small>
+            </div>
+            <div class="form-group">
+              <button 
+                type="button" 
+                class="btn btn-danger btn-sm" 
+                (click)="removeDateField2()"
+                [disabled]="isLoading"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <button 
+          type="button" 
+          class="btn btn-secondary btn-sm" 
+          (click)="addDateField2()"
           [disabled]="isLoading"
-          class="form-input"
         >
-        <small class="form-hint">Will be formatted as: {{ getDatePreview() }}</small>
-      </div>
+          + Add Date Field 2
+        </button>
+      }
       
       <!-- Other Transfer Values -->
       @for (transferValue of orderData.transferValues; track $index) {
