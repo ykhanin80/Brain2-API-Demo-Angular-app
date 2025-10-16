@@ -45,9 +45,15 @@ interface TransferValue {
   value: string;
 }
 
+interface ProductionLine {
+  id: string;
+  name: string;
+}
+
 interface OrderRequest {
   orderNumber: string;
   orderPosition: string;
+  lineName?: string;
   lineGroupName: string;
   displayText: string;
   customerNumber: string;
@@ -82,6 +88,15 @@ export class CreateOrder implements OnInit {
   articles: Article[] = [];
   isLoadingArticles = false;
   articlesError = '';
+  
+  // Production lines data
+  productionLines: ProductionLine[] = [];
+  isLoadingLines = false;
+  linesError = '';
+  
+  // Line selection mode: 'lineName' or 'lineGroupName'
+  lineSelectionMode: 'lineName' | 'lineGroupName' = 'lineName';
+  selectedLineName = '';
   
   orderData: OrderRequest = {
     orderNumber: '',
@@ -173,6 +188,30 @@ export class CreateOrder implements OnInit {
   
   ngOnInit(): void {
     this.loadArticles();
+    this.loadProductionLines();
+  }
+
+  loadProductionLines(): void {
+    this.isLoadingLines = true;
+    this.linesError = '';
+    const baseUrl = this.apiConfig.getBaseUrl();
+    const url = `${baseUrl}/api/v1/production-lines`;
+    
+    this.http.get<ProductionLine[]>(url).subscribe({
+      next: (lines) => {
+        this.productionLines = lines || [];
+        // Auto-select first line if available
+        if (this.productionLines.length > 0 && !this.selectedLineName) {
+          this.selectedLineName = this.productionLines[0].name;
+        }
+        this.isLoadingLines = false;
+      },
+      error: (err) => {
+        console.error('Failed to load production lines:', err);
+        this.linesError = err?.error?.message || err?.message || 'Failed to load production lines';
+        this.isLoadingLines = false;
+      }
+    });
   }
   
   loadArticles(): void {
@@ -231,6 +270,15 @@ export class CreateOrder implements OnInit {
     // Update transfer values with user-friendly formatting
     this.updateTransferValues();
     
+    // Set lineName or lineGroupName based on selection mode
+    if (this.lineSelectionMode === 'lineName') {
+      this.orderData.lineName = this.selectedLineName;
+      this.orderData.lineGroupName = '';
+    } else {
+      this.orderData.lineName = '';
+      // lineGroupName is already set in orderData
+    }
+    
     // Ensure default values are set
     this.orderData.orderPosition = '1';
     this.orderData.customerNumber = '0';
@@ -277,6 +325,18 @@ export class CreateOrder implements OnInit {
   
   goBack(): void {
     this.router.navigate(['/orders']);
+  }
+
+  goToAllOrdersAndStart(): void {
+    if (!this.createdOrder) return;
+    
+    // Navigate to All Orders page with query params to pre-select order and line
+    const queryParams: any = {
+      selectOrder: this.orderData.orderNumber,
+      selectLine: this.selectedLineName || ''
+    };
+    
+    this.router.navigate(['/all-orders'], { queryParams });
   }
   
   addTransferValue(): void {

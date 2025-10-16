@@ -73,8 +73,20 @@
           <strong>{{ selectedOrder?.key || '—' }}</strong>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-          <label for="lineNameInput" style="font-size:12px; color:#555;">Line Name</label>
-          <input id="lineNameInput" type="text" [(ngModel)]="lineName" placeholder="e.g., KMD" style="padding:4px 8px;" />
+          <label for="lineNameSelect" style="font-size:12px; color:#555;">Production Line</label>
+          @if (loadingLines) {
+            <span style="font-size:11px; color:#999;">Loading...</span>
+          } @else if (linesError) {
+            <span style="font-size:11px; color:#dc3545;" [title]="linesError">❌ Error</span>
+          } @else if (productionLines.length > 0) {
+            <select id="lineNameSelect" [(ngModel)]="lineName" style="padding:4px 8px; min-width:150px;">
+              @for (line of productionLines; track line.id) {
+                <option [value]="line.name">{{ line.name }}</option>
+              }
+            </select>
+          } @else {
+            <input id="lineNameInput" type="text" [(ngModel)]="lineName" placeholder="e.g., KMD" style="padding:4px 8px;" />
+          }
         </div>
         <div style="flex:1"></div>
   <button class="btn btn-sm btn-outline" (click)="runGetDetails()" [disabled]="!selectedOrder || actionLoading">📄 Get Order Details</button>
@@ -82,9 +94,9 @@
   <button class="btn btn-sm btn-outline" (click)="runGetTransferValues()" [disabled]="!selectedOrder || actionLoading">🔄 Get Transfer Values</button>
         <span style="width:8px"></span>
   <button class="btn btn-sm btn-success" (click)="runStartOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">▶️ Start Order</button>
-  <button class="btn btn-sm btn-warning" (click)="runInterruptOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">⏸️ Interrupt Order</button>
-  <button class="btn btn-sm btn-primary" (click)="runFinishOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">✅ Finish Order</button>
-  <button class="btn btn-sm btn-danger" (click)="runCancelOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">❌ Cancel Order</button>
+  <button class="btn btn-sm btn-warning" (click)="runInterruptOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">⏸️ Interrupt Order</button>
+  <button class="btn btn-sm btn-primary" (click)="runFinishOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">✅ Finish Order</button>
+  <button class="btn btn-sm btn-danger" (click)="runCancelOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">❌ Cancel Order</button>
       </div>
       
       <div class="orders-table-container">

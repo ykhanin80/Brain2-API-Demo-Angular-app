@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ApiConfig } from '../api-config';
 import { DebugPanelComponent } from '../data-maintenance/debug/debug-panel';
 
@@ -16,6 +16,11 @@ export interface ApiOrder {
   [extra: string]: any;
 }
 
+export interface ProductionLine {
+  id: string;
+  name: string;
+}
+
 @Component({
   selector: 'app-all-orders',
   imports: [CommonModule, FormsModule, DebugPanelComponent],
@@ -25,6 +30,7 @@ export interface ApiOrder {
 export class AllOrders implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly apiConfig = inject(ApiConfig);
   
   // Current page items and filtered view
@@ -41,6 +47,9 @@ export class AllOrders implements OnInit {
   errorMessage = '';
   selectedOrder: ApiOrder | null = null;
   lineName: string = '';
+  productionLines: ProductionLine[] = [];
+  loadingLines = false;
+  linesError = '';
   actionLoading = false;
   lastAction: { name: string; isError: boolean; status?: number; response?: any; error?: any; timestamp: Date } | null = null;
   // Per-row status
@@ -68,9 +77,45 @@ export class AllOrders implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadAllOrders(1);
+    // Check for query parameters to pre-select order and line
+    this.route.queryParams.subscribe(params => {
+      const selectOrderKey = params['selectOrder'];
+      const selectLine = params['selectLine'];
+      
+      if (selectLine) {
+        this.lineName = selectLine;
+      }
+      
+      // Load data first, then select the order
+      this.loadAllOrders(1, selectOrderKey);
+    });
+    
+    this.loadProductionLines();
   }
-  loadAllOrders(targetPage?: number): void {
+
+  loadProductionLines(): void {
+    this.loadingLines = true;
+    this.linesError = '';
+    const baseUrl = this.apiConfig.getBaseUrl();
+    const url = `${baseUrl}/api/v1/production-lines`;
+    
+    this.http.get<ProductionLine[]>(url).subscribe({
+      next: (lines) => {
+        this.productionLines = lines || [];
+        // Auto-select first line if available and no line selected
+        if (this.productionLines.length > 0 && !this.lineName) {
+          this.lineName = this.productionLines[0].name;
+        }
+        this.loadingLines = false;
+      },
+      error: (err) => {
+        console.error('Failed to load production lines:', err);
+        this.linesError = err?.error?.message || err?.message || 'Failed to load production lines';
+        this.loadingLines = false;
+      }
+    });
+  }
+  loadAllOrders(targetPage?: number, selectOrderKey?: string): void {
     if (targetPage) this.page = targetPage;
     this.isLoading = true;
     this.errorMessage = '';
@@ -89,6 +134,14 @@ export class AllOrders implements OnInit {
         this.initializeData();
         this.loadStatusesForList();
         this.isLoading = false;
+        
+        // Pre-select order if specified
+        if (selectOrderKey) {
+          const orderToSelect = this.orders.find(o => o.key === selectOrderKey);
+          if (orderToSelect) {
+            this.selectedOrder = orderToSelect;
+          }
+        }
 
         // Debug: capture response
         this.debug.listOrders = {
@@ -151,8 +204,13 @@ export class AllOrders implements OnInit {
   }
   
   initializeData(): void {
-    // No client filters for now; show the page slice as-is
-    this.filteredOrders = [...this.orders];
+    // Sort by creation date descending (newest first)
+    const sorted = [...this.orders].sort((a, b) => {
+      const dateA = new Date(a.creationDate).getTime();
+      const dateB = new Date(b.creationDate).getTime();
+      return dateB - dateA; // Descending order
+    });
+    this.filteredOrders = sorted;
   }
   
   goBack(): void {
@@ -193,6 +251,15 @@ export class AllOrders implements OnInit {
   // Selection helpers
   selectOrder(order: ApiOrder) { this.selectedOrder = order; }
   isSelected(order: ApiOrder): boolean { return this.selectedOrder?.key === order.key; }
+  
+  // Check if selected order is in Running/Active state
+  isOrderRunning(): boolean {
+    if (!this.selectedOrder) return false;
+    const status = this.orderStatuses[this.selectedOrder.key];
+    if (!status) return false;
+    const s = String(status).toLowerCase();
+    return s === 'active' || s === 'running' || s === 'inprogress' || s === 'in-progress' || s === 'pending';
+  }
 
   // Inline action execution
   private recordAction(name: string, isError: boolean, res?: any, err?: any, status?: number) {

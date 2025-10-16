@@ -12,6 +12,16 @@
       <div class="form-row">
         <div class="form-group">
           <label for="orderNumber">Order Number *</label>
+          <div style="display: flex; gap: 16px; margin-bottom: 8px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 6px;">
+              <input 
+                type="radio" 
+                disabled
+                style="visibility: hidden;"
+              >
+              <span style="font-style: italic; color: #6c757d; font-size: 0.8rem;">Required</span>
+            </label>
+          </div>
           <input 
             type="text" 
             id="orderNumber" 
@@ -23,20 +33,73 @@
         </div>
         
         <div class="form-group">
-          <label for="lineGroupName">Line Group Name</label>
-          <input 
-            type="text" 
-            id="lineGroupName" 
-            [(ngModel)]="orderData.lineGroupName"
-            [disabled]="isLoading"
-            class="form-input"
-          >
+          <label>Line Selection *</label>
+          <div style="display: flex; gap: 16px; margin-bottom: 8px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input 
+                type="radio" 
+                name="lineSelection" 
+                [value]="'lineName'"
+                [(ngModel)]="lineSelectionMode"
+                [disabled]="isLoading"
+              >
+              <span>Line Name</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input 
+                type="radio" 
+                name="lineSelection" 
+                [value]="'lineGroupName'"
+                [(ngModel)]="lineSelectionMode"
+                [disabled]="isLoading"
+              >
+              <span>Line Group Name</span>
+            </label>
+          </div>
+          
+          @if (lineSelectionMode === 'lineName') {
+            @if (isLoadingLines) {
+              <div class="loading-indicator">Loading production lines...</div>
+            } @else if (linesError) {
+              <div class="error-indicator">{{ linesError }}</div>
+              <button 
+                type="button" 
+                class="btn btn-secondary btn-sm" 
+                (click)="loadProductionLines()"
+                style="margin-top: 0.5rem;"
+              >
+                Retry
+              </button>
+            } @else if (productionLines.length > 0) {
+              <select 
+                id="lineName" 
+                [(ngModel)]="selectedLineName"
+                [disabled]="isLoading"
+                class="form-input"
+              >
+                @for (line of productionLines; track line.id) {
+                  <option [value]="line.name">{{ line.name }}</option>
+                }
+              </select>
+            } @else {
+              <div class="error-indicator">No production lines available</div>
+            }
+          } @else {
+            <input 
+              type="text" 
+              id="lineGroupName" 
+              [(ngModel)]="orderData.lineGroupName"
+              placeholder="e.g., Order Processing Lines"
+              [disabled]="isLoading"
+              class="form-input"
+            >
+          }
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
-          <label for="displayText">Display Text</label>
+          <label for="displayText">Display Text *</label>
             <input 
             type="text" 
             id="displayText" 
@@ -45,9 +108,7 @@
             [disabled]="isLoading"
             class="form-input"
           >
-          @if (!orderData.displayText.trim()) {
-            <small class="form-hint" style="color:#c0392b">Required</small>
-          }
+          <small class="form-hint required-hint" [style.color]="!orderData.displayText.trim() ? '#c0392b' : '#6c757d'">Required</small>
         </div>
         
         <div class="form-group">
@@ -436,8 +497,21 @@
   <!-- Success Message -->
   @if (createdOrder) {
     <div class="success-message">
-      <h3>✅ Order Created Successfully!</h3>
+      <div class="success-header">
+        <h3>✅ Order Created Successfully!</h3>
+        @if (lineSelectionMode === 'lineName' && selectedLineName) {
+          <button 
+            class="btn btn-success btn-start-order" 
+            (click)="goToAllOrdersAndStart()"
+          >
+            ▶️ Go to All Orders & Start
+          </button>
+        }
+      </div>
       <p>Your order has been created and submitted to the system.</p>
+      @if (lineSelectionMode === 'lineName' && selectedLineName) {
+        <p class="start-hint">💡 Click the button above to navigate to All Orders page with this order pre-selected and ready to start on line <strong>{{ selectedLineName }}</strong>.</p>
+      }
       <div class="order-response">
         <h4>Order Response:</h4>
         <pre>{{ createdOrder | json }}</pre>
