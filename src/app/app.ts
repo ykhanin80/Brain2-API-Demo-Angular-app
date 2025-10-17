@@ -19,7 +19,7 @@ export class App implements OnInit, OnDestroy {
   private readonly authService = inject(Auth);
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);
-  readonly darkMode = signal(false);
+  readonly darkMode = signal(true);
   readonly apiConnected = signal<boolean | null>(null);
   private connSub?: Subscription;
   // Token countdown

@@ -42,6 +42,15 @@ export class Order {
   sortColumn = '';
   sortDirection: 'asc' | 'desc' = 'asc';
   
+  // Orders Cleanup Dialog
+  showCleanupDialog = false;
+  cleanupDateFrom = '';
+  cleanupDateTo = '';
+  cleanupStatus = '';
+  isCleanupLoading = false;
+  cleanupError = '';
+  cleanupResult: { success: boolean; message: string } | null = null;
+  
   constructor() {
     // Listen to query params to auto-execute actions from All Orders page
     this.route.queryParams.subscribe(params => {
@@ -83,7 +92,142 @@ export class Order {
 
   navigateToHome(): void {
     this.router.navigate(['/dashboard']);
-  }  // Order Information Methods
+  }
+
+  // Orders Cleanup Dialog Methods
+  openOrdersCleanupDialog(): void {
+    this.showCleanupDialog = true;
+    this.cleanupError = '';
+    this.cleanupResult = null;
+    
+    // Set default date range (last 7 days to now)
+    const now = new Date();
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    
+    this.cleanupDateFrom = this.formatDateForInput(weekAgo);
+    this.cleanupDateTo = this.formatDateForInput(now);
+    this.cleanupStatus = '';
+  }
+
+  closeCleanupDialog(): void {
+    this.showCleanupDialog = false;
+    this.cleanupDateFrom = '';
+    this.cleanupDateTo = '';
+    this.cleanupStatus = '';
+    this.cleanupError = '';
+    this.cleanupResult = null;
+  }
+
+  executeOrdersCleanup(): void {
+    if (!this.cleanupDateFrom || !this.cleanupDateTo || !this.cleanupStatus) {
+      this.cleanupError = 'Please fill in all required fields';
+      return;
+    }
+
+    this.isCleanupLoading = true;
+    this.cleanupError = '';
+    this.cleanupResult = null;
+
+    // Format dates to ISO 8601 format with local timezone
+    // The datetime-local input gives us "YYYY-MM-DDTHH:MM" format
+    // We need to append seconds and keep it as local time (no timezone conversion)
+    const dateFromFormatted = this.cleanupDateFrom.includes(':') && this.cleanupDateFrom.split(':').length === 2
+      ? `${this.cleanupDateFrom}:00` // Add seconds if not present
+      : this.cleanupDateFrom;
+    
+    const dateToFormatted = this.cleanupDateTo.includes(':') && this.cleanupDateTo.split(':').length === 2
+      ? `${this.cleanupDateTo}:59` // Add seconds (end of minute) if not present
+      : this.cleanupDateTo;
+
+    const baseUrl = this.apiConfig.getBaseUrl();
+    const endpoint = `/extensions/api/Order-Processing/DeleteOrdersByDateAndStatus`;
+    const url = `${baseUrl}${endpoint}?creationDateFrom=${encodeURIComponent(dateFromFormatted)}&creationDateTo=${encodeURIComponent(dateToFormatted)}&status=${encodeURIComponent(this.cleanupStatus)}`;
+
+    console.log('Orders Cleanup Request:', {
+      dateFromInput: this.cleanupDateFrom,
+      dateToInput: this.cleanupDateTo,
+      dateFromFormatted,
+      dateToFormatted,
+      status: this.cleanupStatus,
+      url
+    });
+
+    const token = localStorage.getItem('auth_token');
+
+    if (!token) {
+      this.cleanupError = 'No authentication token found. Please login first.';
+      this.isCleanupLoading = false;
+      return;
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'accept': 'text/plain'
+    };
+
+    this.http.delete(url, { headers }).subscribe({
+      next: (response: any) => {
+        this.isCleanupLoading = false;
+        
+        if (response && typeof response === 'object') {
+          this.cleanupResult = {
+            success: response.success || false,
+            message: response.message || 'Operation completed'
+          };
+        } else if (typeof response === 'string') {
+          // Parse string response if needed
+          try {
+            const parsed = JSON.parse(response);
+            this.cleanupResult = {
+              success: parsed.success || false,
+              message: parsed.message || 'Operation completed'
+            };
+          } catch {
+            this.cleanupResult = {
+              success: true,
+              message: response
+            };
+          }
+        } else {
+          this.cleanupResult = {
+            success: true,
+            message: 'Orders cleanup completed successfully'
+          };
+        }
+
+        console.log('Orders cleanup result:', this.cleanupResult);
+      },
+      error: (error) => {
+        this.isCleanupLoading = false;
+        
+        let errorMsg = 'Failed to delete orders';
+        if (error.error && typeof error.error === 'string') {
+          errorMsg = error.error;
+        } else if (error.message) {
+          errorMsg = error.message;
+        } else if (error.status) {
+          errorMsg = `Error ${error.status}: ${error.statusText || 'Unknown error'}`;
+        }
+        
+        this.cleanupError = errorMsg;
+        console.error('Orders cleanup error:', error);
+      }
+    });
+  }
+
+  private formatDateForInput(date: Date): string {
+    // Format: YYYY-MM-DDTHH:MM
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  // Order Information Methods
   getOrderDetails(): void {
     if (!this.orderNumber.trim()) {
       this.showError('Please enter an order number');

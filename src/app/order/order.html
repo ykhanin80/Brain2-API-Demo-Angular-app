@@ -14,123 +14,111 @@
         ➕ Create New Order
       </button>
       <button class="btn btn-info quick-btn" (click)="navigateToAllOrders()">
-        📋 See All Orders
+        📋 All Orders
+      </button>
+      <button class="btn btn-warning quick-btn" (click)="openOrdersCleanupDialog()">
+        🗑️ Orders Cleanup
       </button>
     </div>
   </div>
 
-  <!-- Order Information Section -->
-  <div class="order-section">
-    <h3>🔍 Order Information</h3>
-    <div class="input-group">
-      <label for="orderNumberInput">Order Number:</label>
-      <input 
-        id="orderNumberInput"
-        type="text" 
-        [(ngModel)]="orderNumber" 
-        placeholder="Enter order number (e.g., A0521007)"
-        class="form-input"
-      >
-    </div>
-    <div class="input-group">
-      <label for="lineNameInput">Line Name (for line-specific operations):</label>
-      <input 
-        id="lineNameInput"
-        type="text" 
-        [(ngModel)]="lineName" 
-        placeholder="Enter line name (e.g., KMD, Production Line A)"
-        class="form-input"
-      >
-    </div>
-    
-    <div class="action-group">
-      <button class="btn btn-outline" (click)="getOrderDetails()" [disabled]="!orderNumber">
-        📄 Get Order Details
-      </button>
-      <button class="btn btn-outline" (click)="getOrderResults()" [disabled]="!orderNumber">
-        📊 Get Order Results
-      </button>
-      <button class="btn btn-outline" (click)="getOrderStatus()" [disabled]="!orderNumber">
-        📈 Get Order Status
-      </button>
-      <button class="btn btn-outline" (click)="getOrderTransferValues()" [disabled]="!orderNumber">
-        🔄 Get Transfer Values
-      </button>
-      <button class="btn btn-secondary" (click)="openModifyOrderDialog()" [disabled]="!orderNumber">
-        ✏️ Edit Order Details
-      </button>
-    </div>
-  </div>
-
-  <!-- Order Processing Section -->
-  <div class="order-section">
-    <h3>⚙️ Order Processing Operations</h3>
-    <div class="action-group">
-      <button class="btn btn-success" (click)="startOrder()" [disabled]="!orderNumber || !lineName">
-        ▶️ Start Order
-      </button>
-      <button class="btn btn-warning" (click)="interruptOrder()" [disabled]="!orderNumber || !lineName">
-        ⏸️ Interrupt Order
-      </button>
-      <button class="btn btn-primary" (click)="finishOrder()" [disabled]="!orderNumber || !lineName">
-        ✅ Finish Order
-      </button>
-      <button class="btn btn-danger" (click)="cancelOrder()" [disabled]="!orderNumber || !lineName">
-        ❌ Cancel Order
-      </button>
-    </div>
-    <div class="action-group">
-      <button class="btn btn-outline" (click)="getOrderStatusByLine()" [disabled]="!orderNumber || !lineName">
-        📈 Get Status (Line-Specific)
-      </button>
-    </div>
-
-    <!-- Processing Operation Response -->
-    @if (shouldShowProcessingResponse()) {
-      <div class="processing-response" [class.error]="processingResponse.isError">
-        <h4>
-          @if (processingResponse.isError) {
-            ❌ {{ processingResponse.operation }} Failed
-          } @else {
-            ✅ {{ processingResponse.operation }} Success
+  <!-- Orders Cleanup Dialog -->
+  @if (showCleanupDialog) {
+    <div class="cleanup-dialog-overlay" (click)="closeCleanupDialog()">
+      <div class="cleanup-dialog" (click)="$event.stopPropagation()">
+        <div class="cleanup-header">
+          <h3>🗑️ Orders Cleanup</h3>
+          <button class="btn-close" (click)="closeCleanupDialog()">✕</button>
+        </div>
+        
+        <div class="cleanup-body">
+          <p>Delete orders within a date range and by status.</p>
+          
+          <div class="cleanup-form">
+            <div class="form-group">
+              <label for="cleanupDateFrom">Creation Date From *</label>
+              <input 
+                type="datetime-local" 
+                id="cleanupDateFrom" 
+                [(ngModel)]="cleanupDateFrom"
+                [disabled]="isCleanupLoading"
+                class="form-input"
+              >
+              <small class="date-example">Start of range (seconds will be :00)</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="cleanupDateTo">Creation Date To *</label>
+              <input 
+                type="datetime-local" 
+                id="cleanupDateTo" 
+                [(ngModel)]="cleanupDateTo"
+                [disabled]="isCleanupLoading"
+                class="form-input"
+              >
+              <small class="date-example">End of range (seconds will be :59)</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="cleanupStatus">Status *</label>
+              <select 
+                id="cleanupStatus" 
+                [(ngModel)]="cleanupStatus"
+                [disabled]="isCleanupLoading"
+                class="form-input"
+              >
+                <option value="">Select status...</option>
+                <option value="proposed">Proposed</option>
+                <option value="running">Running</option>
+                <option value="interrupted">Interrupted</option>
+                <option value="canceled">Canceled</option>
+                <option value="finished">Finished</option>
+                <option value="finishedmanually">Finished Manually</option>
+              </select>
+            </div>
+          </div>
+          
+          @if (cleanupError) {
+            <div class="cleanup-error">
+              ❌ {{ cleanupError }}
+            </div>
           }
-        </h4>
-        <div class="response-meta">
-          <div class="meta-row">
-            <span class="meta-label">Operation:</span>
-            <span class="meta-value">{{ processingResponse.operation }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Order:</span>
-            <span class="meta-value">{{ orderNumber }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Line:</span>
-            <span class="meta-value">{{ lineName }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Timestamp:</span>
-            <span class="meta-value">{{ formatTimestamp(processingResponse.timestamp.toISOString()) }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Status:</span>
-            @if (processingResponse.isError) {
-              <span class="status-badge error">❌ Error {{ processingResponse.errorStatus }}</span>
+          
+          @if (cleanupResult) {
+            <div class="cleanup-result" [class.cleanup-success]="cleanupResult.success">
+              <div class="cleanup-result-header">
+                {{ cleanupResult.success ? '✅ Success' : '❌ Failed' }}
+              </div>
+              <div class="cleanup-result-message">
+                {{ cleanupResult.message }}
+              </div>
+            </div>
+          }
+        </div>
+        
+        <div class="cleanup-footer">
+          <button 
+            class="btn btn-secondary" 
+            (click)="closeCleanupDialog()"
+            [disabled]="isCleanupLoading"
+          >
+            Cancel
+          </button>
+          <button 
+            class="btn btn-danger" 
+            (click)="executeOrdersCleanup()"
+            [disabled]="isCleanupLoading || !cleanupDateFrom || !cleanupDateTo || !cleanupStatus"
+          >
+            @if (isCleanupLoading) {
+              Deleting...
             } @else {
-              <span class="status-badge success">✅ Success</span>
+              Delete Orders
             }
-          </div>
+          </button>
         </div>
-        <div class="response-data">
-          <h5>Response Data:</h5>
-          <pre class="response-json">{{ processingResponse.response | json }}</pre>
-        </div>
-        <button class="btn btn-sm btn-secondary" (click)="processingResponse = null">
-          🗑️ Clear Response
-        </button>
       </div>
-    }
-  </div>
+    </div>
+  }
 
   <!-- Order Results Table -->
   @if (orderResults && orderResults.length > 0) {

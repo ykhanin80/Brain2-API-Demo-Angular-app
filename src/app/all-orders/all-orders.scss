@@ -223,18 +223,28 @@
               font-size: 0.9rem;
               
               &:nth-child(1) { // Order #
-                width: 80px;
-                max-width: 80px;
+                width: 100px;
+                max-width: 100px;
               }
               
-              &:nth-child(2) { // Article #
-                width: 60px;
-                max-width: 60px;
+              &:nth-child(2) { // Display Name
+                width: 200px;
+                max-width: 200px;
               }
               
-              &:nth-child(3) { // Customer #
-                width: 70px;
-                max-width: 70px;
+              &:nth-child(3) { // Status
+                width: 150px;
+                max-width: 150px;
+              }
+              
+              &:nth-child(4) { // Change Date
+                width: 110px;
+                max-width: 110px;
+              }
+              
+              &:nth-child(5) { // Creation Date
+                width: 110px;
+                max-width: 110px;
               }
               
               &.sortable-header {
@@ -280,8 +290,8 @@
               &.order-number {
                 font-weight: 600;
                 color: #007bff;
-                max-width: 80px;
-                width: 80px;
+                max-width: 100px;
+                width: 100px;
               }
               
               &.article-number {
@@ -297,7 +307,8 @@
               }
               
               &.display-text {
-                max-width: 120px;
+                max-width: 200px;
+                width: 200px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
@@ -312,6 +323,8 @@
               &.creation-date {
                 white-space: nowrap;
                 font-size: 0.75rem;
+                max-width: 110px;
+                width: 110px;
               }
               
               &.user {
@@ -452,6 +465,17 @@
       }
     }
     
+    &.btn-success {
+      background-color: #28a745;
+      color: #28a745 !important; // Green text
+      font-weight: 600;
+      
+      &:hover:not(:disabled) {
+        background-color: #218838;
+        color: #28a745 !important;
+      }
+    }
+    
     &.btn-warning {
       background-color: #ffc107;
       color: #212529;
@@ -573,6 +597,15 @@
 }
 :host-context(body.dark-theme) .all-orders-container .btn.btn-info {
   background-color: #1c7a8b;
+}
+:host-context(body.dark-theme) .all-orders-container .btn.btn-success {
+  background-color: #1e7e34;
+  color: #2ecc71 !important;
+  
+  &:hover:not(:disabled) {
+    background-color: #1c7430;
+    color: #2ecc71 !important;
+  }
 }
 :host-context(body.dark-theme) .all-orders-container .btn.btn-warning {
   background-color: #d39e00;

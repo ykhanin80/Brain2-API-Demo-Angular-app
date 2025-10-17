@@ -91,9 +91,16 @@
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
   margin-bottom: 2rem;
+  align-items: start;
+  
+  // First 4 items (Article Number, Article Name, Batch Number, Order Number) in row 1
+  // Next 5 items in row 2 with Device Names taking 2 columns
+  .input-group:nth-child(5) {
+    grid-column: span 2; // Device Names takes 2 columns
+  }
 }
 
 .input-group {
@@ -117,10 +124,10 @@
   
   .form-input {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.65rem 0.75rem;
     border: 2px solid #e0e6ed;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     transition: border-color 0.3s ease;
     background-color: #fafbfc;
     
@@ -263,7 +270,7 @@
 /* Multi-select device dropdown styles */
 .multi-select-container {
   width: 100%;
-  border: 1px solid #ddd;
+  border: 2px solid #e0e6ed;
   border-radius: 8px;
   background: white;
   
@@ -271,24 +278,27 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-    border-radius: 8px 8px 0 0;
+    padding: 0.65rem 0.75rem;
+    background: #fafbfc;
+    border-bottom: 1px solid #e0e6ed;
+    border-radius: 6px 6px 0 0;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s;
+    min-height: 46px;
     
     &:hover {
-      background: #e9ecef;
+      background: #f0f2f4;
     }
     
     .selected-count {
-      font-weight: 600;
+      font-weight: 500;
       color: #495057;
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      font-size: 0.9rem;
+      white-space: nowrap;
       
       .collapse-indicator {
         font-size: 0.75rem;
@@ -301,8 +311,10 @@
       gap: 0.5rem;
       
       button {
-        padding: 0.25rem 0.75rem;
-        font-size: 0.875rem;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        min-height: auto;
       }
     }
   }
@@ -392,6 +404,20 @@
   }
 }
 
+/* Dark mode: device input container refresh button */
+:host-context(body.dark-theme) .input-group .device-input-container {
+  .refresh-btn {
+    background: #2a2d33;
+    border-color: #3d4149;
+    color: #b8c2cc;
+    
+    &:hover:not(:disabled) {
+      background: #343a42;
+      color: #e2e8f0;
+    }
+  }
+}
+
 /* Dark mode multi-select styles */
 :host-context(body.dark-theme) .multi-select-container {
   background: #2a2d33;
@@ -427,6 +453,20 @@
   .multi-select-empty,
   .multi-select-loading {
     color: #a9b0b5;
+  }
+  
+  .multi-select-header .multi-select-actions {
+    button {
+      background: #2a2d33;
+      border-color: #3d4149;
+      color: #b8c2cc;
+      
+      &:hover:not(:disabled) {
+        background: #343a42;
+        border-color: #4a9eff;
+        color: #e2e8f0;
+      }
+    }
   }
 }
 
@@ -1242,6 +1282,30 @@
     
     th, td {
       padding: 0.5rem 0.25rem;
+    }
+  }
+}
+
+// Medium screens - 2 columns
+@media (min-width: 769px) and (max-width: 1199px) {
+  .filters-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    
+    .input-group:nth-child(5) {
+      grid-column: span 1; // Device Names takes 1 column on medium screens
+    }
+  }
+}
+
+// Large screens - 2 row layout (4 columns per row)
+@media (min-width: 1200px) {
+  .filters-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    
+    .input-group:nth-child(5) {
+      grid-column: span 2; // Device Names takes 2 columns
     }
   }
 }
