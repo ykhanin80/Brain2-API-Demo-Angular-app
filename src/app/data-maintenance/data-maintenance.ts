@@ -2710,15 +2710,39 @@ export class DataMaintenanceComponent implements OnInit {
   }
 
   goToEditPage(article: LabelerArticle) {
-    // Proactively close any overlays that might intercept input
-    this.closeAllOverlays();
-    // Reset raw input buffers to avoid stale values
-    this.rawEditFields = {};
-    this.rawTextFieldNumbersEdit = {};
-    this.rawTextFieldTextsEdit = {};
-    this.selectedArticle.set({ ...article });
-    this.apiResponse.set({ type: null, message: '' });
-    this.currentView.set('edit');
+    try {
+      console.log('[DataMaintenance] goToEditPage called with article:', article?.number);
+      
+      // Safety check: ensure article is valid
+      if (!article || !article.number) {
+        console.error('[DataMaintenance] Invalid article passed to goToEditPage:', article);
+        this.error.set('Invalid article data');
+        return;
+      }
+      
+      // Proactively close any overlays that might intercept input
+      this.closeAllOverlays();
+      
+      // Reset raw input buffers to avoid stale values
+      this.rawEditFields = {};
+      this.rawTextFieldNumbersEdit = {};
+      this.rawTextFieldTextsEdit = {};
+      
+      // Deep copy to avoid reference issues
+      this.selectedArticle.set({ ...article });
+      this.apiResponse.set({ type: null, message: '' });
+      this.currentView.set('edit');
+      
+      console.log('[DataMaintenance] Edit page loaded successfully for article:', article.number);
+    } catch (error) {
+      console.error('[DataMaintenance] Error in goToEditPage:', error);
+      this.error.set('Failed to open edit page. Please try again.');
+      this.apiResponse.set({
+        type: 'error',
+        message: 'Failed to open edit page. Please try refreshing the page.',
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 
   async goToCopyPage(article: LabelerArticle) {

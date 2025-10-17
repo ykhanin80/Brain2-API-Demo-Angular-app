@@ -869,6 +869,94 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
   margin-top: 2px;
 }
 
+/* Dark mode for Copy Article page */
+:host-context(body.dark-theme) .copy-article-page {
+  background: #1f252c;
+  color: #e2e8f0;
+  
+  .page-header {
+    border-bottom-color: #2f3842;
+    
+    h1 {
+      color: #e2e8f0;
+    }
+    
+    .subtitle {
+      color: #b8c2cc;
+    }
+  }
+  
+  .plu-required {
+    border-color: #4a9eff;
+    background: #1a2832;
+    color: #e2e8f0;
+  }
+  
+  .field-hint {
+    color: #64b5f6;
+  }
+  
+  .api-response {
+    background: #2a2d33;
+    border-color: #3d4149;
+    color: #e2e8f0;
+  }
+  
+  .api-response-success {
+    background: #1a2f26;
+    border-color: #2d5a37;
+    
+    i {
+      color: #4caf50;
+    }
+  }
+  
+  .api-response-error {
+    background: #2d1f1f;
+    border-color: #5a2e2e;
+    
+    i {
+      color: #ff6b6b;
+    }
+  }
+  
+  .copy-form-container {
+    background: #232a31;
+    
+    input,
+    select,
+    textarea {
+      background: #1a2027;
+      border-color: #303841;
+      color: #e2e8f0;
+      
+      &:focus {
+        border-color: #4a9eff;
+        box-shadow: 0 0 0 3px rgba(74, 158, 255, 0.15);
+      }
+      
+      &:disabled {
+        background: #141920;
+        color: #6c7a89;
+      }
+    }
+    
+    label {
+      color: #cfd8e3;
+    }
+    
+    .form-section {
+      background: #1f252c;
+      border-color: #2f3842;
+      
+      h3 {
+        color: #e2e8f0;
+        border-bottom-color: #2f3842;
+      }
+    }
+  }
+}
+
 // Animations
 @keyframes spin {
   0% { transform: rotate(0deg); }
