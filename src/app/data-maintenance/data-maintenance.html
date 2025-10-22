@@ -1118,11 +1118,12 @@
                       type="text"
                       id="newTextField1Num"
                       inputmode="numeric"
-                      pattern="\\d{0,10}"
-                      maxlength="10"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
                       [value]="rawTextFieldNumbersCreate['textField1'] || (newArticle().articlePLU?.textField1?.number === -1 ? '' : newArticle().articlePLU?.textField1?.number)"
                       (input)="onCreateTextFieldNumberInput('textField1', $event)"
                       (blur)="commitCreateTextFieldNumber('textField1')"
+                      placeholder="Up to 9 digits"
                     />
                   </div>
                   <div class="text-col">
@@ -1130,10 +1131,11 @@
                     <input
                       type="text"
                       id="newTextField1Text"
-                      maxlength="64"
+                      maxlength="4000"
                       [value]="rawTextFieldTextsCreate['textField1'] ?? (newArticle().articlePLU?.textField1?.text || '')"
                       (input)="onCreateTextFieldTextInput('textField1', $event)"
                       (blur)="onCreateTextFieldTextBlur('textField1')"
+                      placeholder="Enter text. Max length up to 4000 characters"
                     />
                   </div>
                 </div>
@@ -1144,11 +1146,12 @@
                       type="text"
                       id="newTextField2Num"
                       inputmode="numeric"
-                      pattern="\\d{0,10}"
-                      maxlength="10"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
                       [value]="rawTextFieldNumbersCreate['textField2'] || (newArticle().articlePLU?.textField2?.number === -1 ? '' : newArticle().articlePLU?.textField2?.number)"
                       (input)="onCreateTextFieldNumberInput('textField2', $event)"
                       (blur)="commitCreateTextFieldNumber('textField2')"
+                      placeholder="Up to 9 digits"
                     />
                   </div>
                   <div class="text-col">
@@ -1156,10 +1159,265 @@
                     <input
                       type="text"
                       id="newTextField2Text"
-                      maxlength="64"
+                      maxlength="4000"
                       [value]="rawTextFieldTextsCreate['textField2'] ?? (newArticle().articlePLU?.textField2?.text || '')"
                       (input)="onCreateTextFieldTextInput('textField2', $event)"
                       (blur)="onCreateTextFieldTextBlur('textField2')"
+                      placeholder="Enter text. Max length up to 4000 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField3Num">Text Field 3 #</label>
+                    <input
+                      type="text"
+                      id="newTextField3Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField3'] || (newArticle().articlePLU?.textField3?.number === -1 ? '' : newArticle().articlePLU?.textField3?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField3', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField3')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField3Text">Text Field 3 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField3Text"
+                      maxlength="1300"
+                      [value]="rawTextFieldTextsCreate['textField3'] ?? (newArticle().articlePLU?.textField3?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField3', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField3')"
+                      placeholder="Enter text. Max length up to 1300 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField4Num">Text Field 4 #</label>
+                    <input
+                      type="text"
+                      id="newTextField4Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField4'] || (newArticle().articlePLU?.textField4?.number === -1 ? '' : newArticle().articlePLU?.textField4?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField4', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField4')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField4Text">Text Field 4 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField4Text"
+                      maxlength="1000"
+                      [value]="rawTextFieldTextsCreate['textField4'] ?? (newArticle().articlePLU?.textField4?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField4', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField4')"
+                      placeholder="Enter text. Max length up to 1000 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField5Num">Text Field 5 #</label>
+                    <input
+                      type="text"
+                      id="newTextField5Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField5'] || (newArticle().articlePLU?.textField5?.number === -1 ? '' : newArticle().articlePLU?.textField5?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField5', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField5')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField5Text">Text Field 5 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField5Text"
+                      maxlength="1000"
+                      [value]="rawTextFieldTextsCreate['textField5'] ?? (newArticle().articlePLU?.textField5?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField5', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField5')"
+                      placeholder="Enter text. Max length up to 1000 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField6Num">Text Field 6 #</label>
+                    <input
+                      type="text"
+                      id="newTextField6Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField6'] || (newArticle().articlePLU?.textField6?.number === -1 ? '' : newArticle().articlePLU?.textField6?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField6', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField6')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField6Text">Text Field 6 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField6Text"
+                      maxlength="200"
+                      [value]="rawTextFieldTextsCreate['textField6'] ?? (newArticle().articlePLU?.textField6?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField6', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField6')"
+                      placeholder="Enter text. Max length up to 200 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField7Num">Text Field 7 #</label>
+                    <input
+                      type="text"
+                      id="newTextField7Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField7'] || (newArticle().articlePLU?.textField7?.number === -1 ? '' : newArticle().articlePLU?.textField7?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField7', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField7')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField7Text">Text Field 7 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField7Text"
+                      maxlength="200"
+                      [value]="rawTextFieldTextsCreate['textField7'] ?? (newArticle().articlePLU?.textField7?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField7', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField7')"
+                      placeholder="Enter text. Max length up to 200 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField8Num">Text Field 8 #</label>
+                    <input
+                      type="text"
+                      id="newTextField8Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField8'] || (newArticle().articlePLU?.textField8?.number === -1 ? '' : newArticle().articlePLU?.textField8?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField8', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField8')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField8Text">Text Field 8 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField8Text"
+                      maxlength="200"
+                      [value]="rawTextFieldTextsCreate['textField8'] ?? (newArticle().articlePLU?.textField8?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField8', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField8')"
+                      placeholder="Enter text. Max length up to 200 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField9Num">Text Field 9 #</label>
+                    <input
+                      type="text"
+                      id="newTextField9Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField9'] || (newArticle().articlePLU?.textField9?.number === -1 ? '' : newArticle().articlePLU?.textField9?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField9', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField9')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField9Text">Text Field 9 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField9Text"
+                      maxlength="200"
+                      [value]="rawTextFieldTextsCreate['textField9'] ?? (newArticle().articlePLU?.textField9?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField9', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField9')"
+                      placeholder="Enter text. Max length up to 200 characters"
+                    />
+                  </div>
+                </div>
+                <div class="inline-text-field-row">
+                  <div class="number-col">
+                    <label for="newTextField10Num">Text Field 10 #</label>
+                    <input
+                      type="text"
+                      id="newTextField10Num"
+                      inputmode="numeric"
+                      pattern="\\d{0,9}"
+                      maxlength="9"
+                      [value]="rawTextFieldNumbersCreate['textField10'] || (newArticle().articlePLU?.textField10?.number === -1 ? '' : newArticle().articlePLU?.textField10?.number)"
+                      (input)="onCreateTextFieldNumberInput('textField10', $event)"
+                      (blur)="commitCreateTextFieldNumber('textField10')"
+                      placeholder="Up to 9 digits"
+                    />
+                  </div>
+                  <div class="text-col">
+                    <label for="newTextField10Text">Text Field 10 Text</label>
+                    <input
+                      type="text"
+                      id="newTextField10Text"
+                      maxlength="200"
+                      [value]="rawTextFieldTextsCreate['textField10'] ?? (newArticle().articlePLU?.textField10?.text || '')"
+                      (input)="onCreateTextFieldTextInput('textField10', $event)"
+                      (blur)="onCreateTextFieldTextBlur('textField10')"
+                      placeholder="Enter text. Max length up to 200 characters"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Simple Texts Sub-block -->
+              <div class="simple-texts-container">
+                <h5 class="field-group-title">Simple Texts</h5>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="newSimpleText1">Simple Text 1</label>
+                    <input
+                      type="text"
+                      id="newSimpleText1"
+                      maxlength="30"
+                      [value]="newArticle().articlePLU?.simpleText1 || ''"
+                      (input)="updateNewArticlePLUField('simpleText1', $event)"
+                      placeholder="Enter simple text 1. Max length up to 30 characters"
+                    />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="newSimpleText2">Simple Text 2</label>
+                    <input
+                      type="text"
+                      id="newSimpleText2"
+                      maxlength="30"
+                      [value]="newArticle().articlePLU?.simpleText2 || ''"
+                      (input)="updateNewArticlePLUField('simpleText2', $event)"
+                      placeholder="Enter simple text 2. Max length up to 30 characters"
                     />
                   </div>
                 </div>
@@ -1188,6 +1446,28 @@
                     id="newCodeString1"
                     [value]="newArticle().articlePLU?.codeString1 || ''"
                     (input)="updateNewArticlePLUField('codeString1', $event)"
+                  />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newCodeField2">Code Structure # 2</label>
+                  <input
+                    type="number"
+                    id="newCodeField2"
+                    [value]="newArticle().articlePLU?.codeField2 || 0"
+                    (input)="updateNewArticlePLUField('codeField2', $event)"
+                    min="0"
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="newCodeString2">Code Substring 2</label>
+                  <input
+                    type="text"
+                    id="newCodeString2"
+                    [value]="newArticle().articlePLU?.codeString2 || ''"
+                    (input)="updateNewArticlePLUField('codeString2', $event)"
                   />
                 </div>
               </div>
@@ -1360,9 +1640,8 @@
               <div class="form-group"><label for="editStaticText">Static Text #</label><input type="number" id="editStaticText" [value]="selectedArticle()?.articlePLU?.staticText || 0" (input)="updateSelectedArticlePLUField('staticText', $event)" min="0" class="number-field" /></div>
               <div class="dynamic-fields-container dense-mode compact-text-fields">
                 <h5 class="field-group-title">Text Fields</h5>
-                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle()); trackBy: trackByTextField" class="tf-inline-row">
-                  <label class="tf-label" [for]="'edit' + textField.key + 'Num'">TF {{ textField.index }}</label>
-                  <input type="text" inputmode="numeric" pattern="\\d{0,10}" maxlength="10" [id]="'edit' + textField.key + 'Num'" [value]="textField.field.number === -1 ? '' : (rawTextFieldNumbersEdit[textField.key] || textField.field.number)" (input)="onEditTextFieldNumberInput(textField.key, $event)" (blur)="commitEditTextFieldNumber(textField.key)" class="tf-num" />
+                <div *ngFor="let textField of getTextFieldsWithValues(selectedArticle()); trackBy: trackByTextField" class="tf-inline-row tf-text-only">
+                  <label class="tf-label" [for]="'edit' + textField.key + 'Text'">TF {{ textField.index }}</label>
                   <input type="text" [id]="'edit' + textField.key + 'Text'" [value]="rawTextFieldTextsEdit[textField.key] ?? (textField.field.text || '')" (input)="onEditTextFieldTextInput(textField.key, $event)" (blur)="onEditTextFieldTextBlur(textField.key)" class="tf-text" placeholder="Text Field {{ textField.index }} Text" />
                 </div>
               </div>

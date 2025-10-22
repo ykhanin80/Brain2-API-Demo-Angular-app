@@ -1195,6 +1195,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
       background: #f8f9fa;
       border-radius: 6px;
       border: 1px solid #e9ecef;
+      overflow: hidden;
 
       .subsection-title {
         color: #495057;
@@ -1697,6 +1698,29 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .inline-text-field-row input { width:100%; padding:.45rem .55rem; border:1px solid #ced4da; border-radius:6px; font-size:.75rem; }
 .inline-text-field-row input:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.15); }
 
+// Simple Texts container on create article page
+.simple-texts-container {
+  margin-top: 1rem;
+  
+  .field-group-title {
+    color: #495057;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 20px;
+    
+    .form-group {
+      flex: 1;
+    }
+  }
+}
+
 /* Dense edit view overrides to make dynamic field groups compact like Simple Texts */
 .dynamic-fields-container.dense-mode .text-field-row,
 .dynamic-fields-container.dense-mode .code-field-row { background: transparent; border:none; padding:4px 0; margin-bottom:6px; display:flex; gap:8px; align-items:flex-start; }
@@ -1708,13 +1732,26 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 .dynamic-fields-container.dense-mode label { font-size:.65rem; font-weight:500; text-transform:uppercase; letter-spacing:.5px; color:#555; margin-bottom:2px; display:block; }
 
 /* Ultra compact text field inline rows for edit page */
-.compact-text-fields { padding:4px 6px !important; }
+.compact-text-fields { padding:4px 6px !important; overflow:hidden; }
 .compact-text-fields .field-group-title { margin-bottom:4px !important; font-size:.7rem !important; padding-bottom:2px !important; }
-.tf-inline-row { display:grid; grid-template-columns: 48px 72px 1fr; align-items:center; gap:4px; margin-bottom:3px; }
+.tf-inline-row { display:grid; grid-template-columns: 48px 72px 1fr; align-items:center; gap:4px; margin-bottom:3px; overflow:hidden; }
+.tf-inline-row.tf-text-only { grid-template-columns: 48px 1fr; } /* Text-only layout for edit mode */
 .tf-inline-row:last-child { margin-bottom:0; }
 .tf-label { font-size:.55rem; font-weight:600; text-align:right; white-space:nowrap; }
 .tf-num { width:70px; padding:.25rem .35rem !important; font-size:.9rem !important; border:1px solid #cdd4db; border-radius:4px; }
-.tf-text { width:100%; padding:.25rem .4rem !important; font-size:.9rem !important; border:1px solid #cdd4db; border-radius:4px; }
+.tf-text { 
+  width:100%; 
+  min-width: 0;
+  max-width:100%; 
+  padding:.25rem .4rem !important; 
+  font-size:.9rem !important; 
+  border:1px solid #cdd4db; 
+  border-radius:4px; 
+  overflow:hidden; 
+  text-overflow:ellipsis;
+  box-sizing: border-box;
+  word-break: break-word;
+}
 .tf-num:focus, .tf-text:focus { outline:none; border-color:#1976d2; box-shadow:0 0 0 2px rgba(25,118,210,.12); }
 .compact-text-fields input { line-height:1.1; }
 
@@ -1763,7 +1800,7 @@ body.has-import-open { padding-top:140px; overflow:hidden; }
 
 /* Simple table-based split (requested) */
 .edit-split-table { width:100%; border-collapse:collapse; table-layout:fixed; margin:0 0 1rem; }
-.edit-split-table td { vertical-align:top; border:2px solid #000; padding:8px 12px; }
+.edit-split-table td { vertical-align:top; border:2px solid #000; padding:8px 12px; overflow:hidden; }
 .edit-split-table .left-cell { width:50%; }
 .edit-split-table .right-cell { width:50%; }
 
@@ -2133,5 +2170,154 @@ body.dark-theme .data-maintenance .api-response-error { background:#3a1f1f !impo
   .form-actions {
     background: #1f252c !important;
     border-top-color: #303841 !important;
+  }
+  
+  // Dark theme for Simple Texts section
+  .simple-texts-container {
+    .field-group-title {
+      color: #b8c2cc !important;
+      border-bottom-color: #39424d !important;
+    }
+  }
+}
+
+/* Dark theme for Edit Article Page */
+:host-context(body.dark-theme) .edit-article-page.dm-card {
+  background: #1f252c !important;
+  
+  .page-header {
+    border-bottom-color: #2f3842 !important;
+    
+    .header-left h1 {
+      color: #64b5ff !important;
+    }
+    
+    .header-left .subtitle {
+      color: #9aa4b1 !important;
+    }
+  }
+  
+  .edit-form-container {
+    background: #1f252c !important;
+    border: 1px solid #2b333c !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55) !important;
+  }
+  
+  .edit-split-table {
+    background: transparent !important;
+    
+    .left-cell,
+    .right-cell {
+      background: transparent !important;
+    }
+  }
+}
+
+/* Dark theme for Edit Article Form Elements */
+:host-context(body.dark-theme) .edit-article-page .edit-form-container {
+  
+  .form-section {
+    background: #1f252c !important;
+    border-color: #303841 !important;
+    
+    h3.section-title {
+      background: linear-gradient(135deg, #0d3d63, #0b2f4d) !important;
+      color: #ffffff !important;
+    }
+    
+    .form-subsection {
+      background: #202830 !important;
+      border-color: #2d353e !important;
+      
+      .subsection-title {
+        color: #b8c2cc !important;
+        border-bottom-color: #39424d !important;
+      }
+      
+      .field-group-title {
+        color: #9aa4b1 !important;
+      }
+    }
+  }
+  
+  .article-form.compact-form {
+    label,
+    .tf-label,
+    .stacked {
+      color: #b8c2cc !important;
+    }
+    
+    input,
+    select,
+    textarea {
+      background: #262c33 !important;
+      border-color: #39424d !important;
+      color: #e2e8f0 !important;
+      
+      &:focus {
+        border-color: #1976d2 !important;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3) !important;
+      }
+      
+      &::placeholder {
+        color: #5e6874 !important;
+      }
+      
+      &.readonly,
+      &:disabled {
+        background: #262d34 !important;
+        color: #7d8893 !important;
+        cursor: not-allowed;
+      }
+    }
+    
+    .tf-num,
+    .tf-text,
+    .st-input {
+      background: #262c33 !important;
+      border-color: #39424d !important;
+      color: #e2e8f0 !important;
+      
+      &:focus {
+        border-color: #1976d2 !important;
+        box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3) !important;
+      }
+    }
+    
+    .checkbox-label {
+      background: #262d34 !important;
+      border-color: #3a434d !important;
+      color: #c2cbd4 !important;
+      
+      &:hover {
+        border-color: #4b5662 !important;
+      }
+      
+      input[type="checkbox"]:checked + span {
+        color: #64b5ff !important;
+      }
+    }
+  }
+  
+  .form-actions {
+    background: #1f252c !important;
+    border-top-color: #303841 !important;
+  }
+  
+  .dynamic-fields-container {
+    background: transparent !important;
+    
+    .tf-inline-row {
+      background: transparent !important;
+      border-color: #303841 !important;
+    }
+    
+    .simple-texts-grid {
+      .simple-text-item {
+        label {
+          color: #b8c2cc !important;
+        }
+      }
+    }
   }
 }

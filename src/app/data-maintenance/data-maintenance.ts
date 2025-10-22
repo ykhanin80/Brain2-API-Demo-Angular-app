@@ -2998,7 +2998,7 @@ export class DataMaintenanceComponent implements OnInit {
       weightUnit: 'lb',
       weightDecimalPlaces: 2,
       active: true,
-      approved: false,
+      approved: true,
       number: '',
       name: '',
       description: ''
@@ -3023,13 +3023,10 @@ export class DataMaintenanceComponent implements OnInit {
     
     const weightUnitMap: { [key: string]: string } = {
       'kg': '(kg)',
-      'g': '(g)',
       'lb': '(lb)',
-      'oz': '(oz)',
       'pounds': '(lb)',
-      'grams': '(g)',
-      'kilograms': '(kg)',
-      'ounces': '(oz)'
+      'kilograms': '(kg)'
+      
     };
     
     return weightUnitMap[article.weightUnit?.toLowerCase() || ''] || `(${article.weightUnit || 'kg'})`;
