@@ -13,7 +13,7 @@
         <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
         <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
         <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
-        <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button>
+        <!-- <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button> -->
         <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
         <!-- Parameters tabs -->
         <button class="sub-tab" [class.active]="currentSubPage()==='label-parameters'" (click)="goToLabelParametersSubPage()">Labeler Parameters</button>
@@ -28,10 +28,6 @@
           <button class="btn btn-secondary" (click)="downloadImportTemplate()">
             <i class="icon-download"></i>
             Download CSV Template
-          </button>
-          <button class="btn btn-primary" (click)="goToCreatePage()">
-            <i class="icon-plus"></i>
-            Create Article
           </button>
         </ng-container>
 
@@ -64,10 +60,6 @@
         </ng-container>
 
         <ng-container *ngIf="currentSubPage()==='exceptions'">
-          <button class="btn btn-primary" (click)="openExceptionsModal()">
-            <i class="icon-plus"></i>
-            Add Exception
-          </button>
           <button class="btn btn-secondary" (click)="exOpenImportDialog()">
             <i class="icon-upload"></i>
             Import CSV
@@ -82,6 +74,14 @@
 
   <!-- Articles Section -->
   <ng-container *ngIf="currentSubPage()==='articles'">
+  <!-- Create Article Button -->
+  <div class="top-action-bar">
+    <button class="btn btn-primary" (click)="goToCreatePage()">
+      <i class="icon-plus"></i>
+      Create Article
+    </button>
+  </div>
+  
   <!-- Search Section -->
   <div class="search-section">
     <div class="search-form">
@@ -352,6 +352,19 @@
 
   <!-- Exceptions Section (modal only) -->
     <ng-container *ngIf="currentSubPage()==='exceptions'">
+      <!-- Add Exception Button at top -->
+      <div class="top-action-bar">
+        <button class="btn btn-primary" (click)="openExceptionsModal()">
+          <i class="icon-plus"></i>
+          Add Exception
+        </button>
+      </div>
+      
+      <div class="dm-placeholder">
+        <h2>⚠️ Article Exceptions</h2>
+        <p>Use the Add Exception button to configure article-specific exceptions. Import CSV for bulk operations.</p>
+      </div>
+      
       <!-- Exceptions Import Panel -->
       <div class="import-inline full-bleed global-fixed" *ngIf="exImportState().open && currentSubPage()==='exceptions'">
         <div class="import-inline-header">
@@ -775,7 +788,7 @@
     <div class="page-header">
       <div class="header-left">
         <h1>Create New Article</h1>
-        <p class="subtitle">Add a new labeler article to the system</p>
+        <p class="subtitle">Add a new labeler article to Brain2</p>
       </div>
       <div class="header-right">
         <button class="btn btn-secondary" (click)="goToListPage()">

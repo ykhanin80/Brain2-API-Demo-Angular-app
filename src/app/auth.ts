@@ -168,9 +168,9 @@ export class Auth {
   /**
    * Try to compute token expiry (epoch ms).
    * 1) If token is JWT with exp (seconds), use that.
-   * 2) Else fallback to issuedAt + defaultTtlMs (default 24h).
+   * 2) Else fallback to issuedAt + defaultTtlMs (default 28h).
    */
-  getTokenExpiryMs(defaultTtlMs: number = 24*60*60*1000): number | null {
+  getTokenExpiryMs(defaultTtlMs: number = 28*60*60*1000): number | null {
     const token = this.getToken();
     if (!token) return null;
     // Try decode JWT exp
@@ -179,13 +179,25 @@ export class Auth {
       if (parts.length === 3) {
         const payload = JSON.parse(atob(parts[1]));
         if (payload && typeof payload.exp === 'number') {
-          return payload.exp * 1000;
+          const expiryMs = payload.exp * 1000;
+          console.log('[Auth] Token exp from JWT:', new Date(expiryMs).toLocaleString(), 
+                      `(${Math.floor((expiryMs - Date.now()) / 1000 / 60)} minutes remaining)`);
+          return expiryMs;
         }
       }
-    } catch {}
-    // Fallback: issuedAt + default TTL (assumed 24h)
+    } catch (e) {
+      console.warn('[Auth] Failed to decode JWT token:', e);
+    }
+    // Fallback: issuedAt + default TTL (assumed 28h)
     const issuedAt = this.getTokenIssuedAt();
-    return issuedAt ? issuedAt + defaultTtlMs : null;
+    if (issuedAt) {
+      const fallbackExpiry = issuedAt + defaultTtlMs;
+      const hoursFromNow = Math.floor((fallbackExpiry - Date.now()) / 1000 / 60 / 60);
+      console.log('[Auth] Using fallback expiry (28h from issue):', new Date(fallbackExpiry).toLocaleString(),
+                  `(~${hoursFromNow} hours remaining)`);
+      return fallbackExpiry;
+    }
+    return null;
   }
   
   private hasValidToken(): boolean {
