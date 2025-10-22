@@ -488,3 +488,268 @@
     }
   }
 }
+
+/* ============================================
+   DARK MODE STYLES
+   ============================================ */
+:host-context(body.dark-theme) {
+  .edit-order-container {
+    background: #1f252c;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+
+    .page-header {
+      border-bottom-color: #2f3842;
+
+      h2 {
+        color: #64b5ff;
+      }
+    }
+
+    .order-form {
+      .form-group {
+        label {
+          color: #b8c2cc;
+        }
+
+        .input-group {
+          .order-input {
+            background: #262c33;
+            border-color: #39424d;
+            color: #e2e8f0;
+
+            &:focus {
+              border-color: #1976d2;
+              box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3);
+            }
+
+            &:disabled {
+              background-color: #202830;
+              color: #7d8893;
+            }
+
+            &::placeholder {
+              color: #5e6874;
+            }
+          }
+        }
+      }
+    }
+
+    .error-message {
+      background-color: #3a1f1f;
+      border-color: #5c2424;
+
+      h4, p {
+        color: #f5b0b0;
+      }
+    }
+
+    .success-message {
+      background-color: #1f3321;
+      border-color: #2d4a30;
+
+      h4, p {
+        color: #a8d4ae;
+      }
+    }
+
+    .order-edit-form {
+      .form-header {
+        border-bottom-color: #1976d2;
+
+        h2 {
+          color: #64b5ff;
+        }
+
+        .changes-indicator {
+          .changes-badge {
+            &.modified {
+              background-color: #3e3420;
+              color: #ffc107;
+              border-color: #5a4a2e;
+            }
+
+            &.clean {
+              background-color: #1f3321;
+              color: #a8d4ae;
+              border-color: #2d4a30;
+            }
+          }
+        }
+      }
+
+      .form-section {
+        background: #202830;
+        border-left-color: #1976d2;
+
+        .section-header {
+          color: #64b5ff;
+        }
+
+        .form-group {
+          label {
+            color: #b8c2cc;
+          }
+
+          .form-input {
+            background: #262c33;
+            border-color: #39424d;
+            color: #e2e8f0;
+
+            &:focus {
+              border-color: #1976d2;
+              box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.3);
+            }
+
+            &:disabled {
+              background-color: #1a1f26;
+              color: #7d8893;
+            }
+
+            &::placeholder {
+              color: #5e6874;
+            }
+          }
+        }
+
+        .quantity-group {
+          h4 {
+            color: #9aa4b1;
+            border-bottom-color: #2f3842;
+          }
+        }
+
+        .transfer-values-container {
+          .transfer-value-row {
+            background: #262c33;
+            border-color: #39424d;
+          }
+
+          .no-transfer-values {
+            color: #7d8893;
+          }
+        }
+      }
+
+      .form-actions {
+        border-top-color: #2f3842;
+      }
+    }
+
+    .btn {
+      &.btn-primary {
+        background-color: #1976d2;
+
+        &:hover:not(:disabled) {
+          background-color: #0d5ca8;
+        }
+
+        &:disabled {
+          background-color: #4a5561;
+        }
+      }
+
+      &.btn-secondary {
+        background-color: #4a5561;
+
+        &:hover:not(:disabled) {
+          background-color: #5e6874;
+        }
+      }
+
+      &.btn-danger {
+        background-color: #c82333;
+
+        &:hover:not(:disabled) {
+          background-color: #a71d2a;
+        }
+      }
+
+      &.btn-success {
+        background-color: #218838;
+
+        &:hover:not(:disabled) {
+          background-color: #1e7e34;
+        }
+      }
+    }
+
+    .modification-response {
+      background: linear-gradient(135deg, #1a2631 0%, #1f2a35 100%);
+      border-left-color: #1976d2;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      &.error {
+        background: linear-gradient(135deg, #2e1f1f 0%, #3a2424 100%);
+        border-left-color: #c82333;
+
+        h4, h5 {
+          color: #f5b0b0;
+        }
+
+        .response-meta {
+          background-color: rgba(38, 44, 51, 0.9);
+
+          .meta-row {
+            border-bottom-color: rgba(200, 35, 51, 0.2);
+
+            .meta-value {
+              color: #f5b0b0;
+            }
+          }
+
+          .status-badge.error {
+            background-color: #3a1f1f;
+            color: #f5b0b0;
+          }
+        }
+      }
+
+      h4, h5 {
+        color: #64b5ff;
+      }
+
+      .response-meta {
+        background-color: rgba(38, 44, 51, 0.8);
+
+        .meta-row {
+          border-bottom-color: rgba(25, 118, 210, 0.2);
+
+          .meta-label {
+            color: #9aa4b1;
+          }
+
+          .meta-value {
+            color: #64b5ff;
+          }
+
+          .status-badge.success {
+            background-color: #1f3321;
+            color: #a8d4ae;
+          }
+        }
+      }
+
+      .response-data {
+        .response-json {
+          background-color: #1a1f26;
+          color: #e2e8f0;
+        }
+      }
+    }
+
+    .transfer-values-section {
+      background: #202830;
+      border-color: #218838;
+
+      .form-header {
+        border-bottom-color: #218838;
+      }
+
+      .no-transfer-values {
+        color: #7d8893;
+      }
+    }
+  }
+}
+

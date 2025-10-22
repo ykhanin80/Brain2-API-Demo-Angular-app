@@ -40,8 +40,6 @@
             <i class="icon-download"></i>
             Download CSV Template
           </button>
-          <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
-          <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
         </ng-container>
 
         <ng-container *ngIf="currentSubPage()==='customers'">
@@ -52,10 +50,6 @@
           <button class="btn btn-secondary" (click)="cuDownloadImportTemplate()">
             <i class="icon-download"></i>
             Download CSV Template
-          </button>
-          <button class="btn btn-primary" [disabled]="isLoading()" (click)="openAddCustomerModal()">
-            <i class="icon-plus"></i>
-            Add Customer
           </button>
         </ng-container>
 
@@ -132,6 +126,10 @@
       <div class="dm-placeholder">
         <h2>👥 Customers</h2>
         <p>Use the Add Customer button to open the dialog, edit values, then POST to API.</p>
+        <button class="btn btn-primary" [disabled]="isLoading()" (click)="openAddCustomerModal()">
+          <i class="icon-plus"></i>
+          Add Customer
+        </button>
       </div>
 
       <!-- Add Customer Modal -->
@@ -352,17 +350,13 @@
 
   <!-- Exceptions Section (modal only) -->
     <ng-container *ngIf="currentSubPage()==='exceptions'">
-      <!-- Add Exception Button at top -->
-      <div class="top-action-bar">
+      <div class="dm-placeholder">
+        <h2>⚠️ Article Exceptions</h2>
+        <p>Use the Add Exception button to configure article-specific exceptions. Import CSV for bulk operations.</p>
         <button class="btn btn-primary" (click)="openExceptionsModal()">
           <i class="icon-plus"></i>
           Add Exception
         </button>
-      </div>
-      
-      <div class="dm-placeholder">
-        <h2>⚠️ Article Exceptions</h2>
-        <p>Use the Add Exception button to configure article-specific exceptions. Import CSV for bulk operations.</p>
       </div>
       
       <!-- Exceptions Import Panel -->
@@ -573,6 +567,13 @@
           <input type="text" [value]="staticTextData().description" (input)="updateStaticTextDescription($event)" maxlength="64" />
         </label>
       </div>
+      
+      <!-- Static Text Action Buttons -->
+      <div class="st-actions">
+        <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
+        <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
+      </div>
+      
       <!-- Nutrition label overlay preview with distributed text fields -->
       <div class="nutrition-overlay-wrapper">
   <div class="nutrition-overlay-canvas layout-dual">
