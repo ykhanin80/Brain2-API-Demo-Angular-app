@@ -4,6 +4,24 @@
   <button type="button" class="btn btn-outline back-btn" (click)="returnToDashboard()">🏠 Back to Dashboard</button>
   </header>
 
+  <!-- Quick Action Buttons -->
+  @if (configuredActions().length > 0) {
+    <section class="quick-actions">
+      <h3>Quick Actions</h3>
+      <div class="action-buttons-grid">
+        @for (config of configuredActions(); track config.id) {
+          <button 
+            type="button" 
+            class="action-btn" 
+            (click)="quickStartJob(config.jobName)"
+            [disabled]="isSubmitting">
+            {{ config.buttonLabel }}
+          </button>
+        }
+      </div>
+    </section>
+  }
+
   <section class="job-form">
     <h3>[POST] Start Action</h3>
     <div class="field-row">
@@ -49,21 +67,6 @@
       <div class="success" *ngIf="successMessage">{{successMessage}}</div>
       <div class="error" *ngIf="errorMessage">{{errorMessage}}</div>
     </div>
-    
-    <!-- POST Response Window -->
-    <div *ngIf="postResponse" class="api-response-window">
-      <h4>POST Response:</h4>
-      <div class="response-details">
-        <div class="response-meta">
-          <span class="method">POST</span>
-          <span class="url">{{postUrl}}</span>
-          <span class="status" [class.success]="!postResponse.isError" [class.error]="postResponse.isError">
-            {{postResponse.isError ? 'ERROR' : 'SUCCESS'}}
-          </span>
-        </div>
-        <pre class="response-body">{{postResponse.response | json}}</pre>
-      </div>
-    </div>
   </section>
 
   <!-- Combined Response Window -->
@@ -72,8 +75,13 @@
     
     <!-- POST Response -->
     <div *ngIf="postResponse" class="api-response-window">
-      <h4>POST Response:</h4>
-      <div class="response-details">
+      <div class="response-header">
+        <h4>POST Response:</h4>
+        <button type="button" class="toggle-btn" (click)="togglePostResponse()">
+          {{ isPostResponseExpanded ? '▼ Collapse' : '▶ Expand' }}
+        </button>
+      </div>
+      <div class="response-details" *ngIf="isPostResponseExpanded">
         <div class="response-meta">
           <span class="method">POST</span>
           <span class="url">{{postUrl}}</span>
@@ -93,8 +101,13 @@
 
     <!-- GET Response -->
     <div *ngIf="getResponse" class="api-response-window">
-      <h4>GET Response (Job Status):</h4>
-      <div class="response-details">
+      <div class="response-header">
+        <h4>GET Response (Job Status):</h4>
+        <button type="button" class="toggle-btn" (click)="toggleGetResponse()">
+          {{ isGetResponseExpanded ? '▼ Collapse' : '▶ Expand' }}
+        </button>
+      </div>
+      <div class="response-details" *ngIf="isGetResponseExpanded">
         <div class="response-meta">
           <span class="method">GET</span>
           <span class="url">{{getUrl}}</span>

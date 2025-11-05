@@ -1,0 +1,64 @@
+<div class="user-login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>🔐 User Login</h1>
+      <p class="subtitle">Please login to access the Order Application</p>
+    </div>
+
+    <form class="login-form" (submit)="onSubmit(); $event.preventDefault()">
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="error-banner">
+          <i class="icon-alert"></i>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Username Field -->
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          [value]="username()"
+          (input)="onUsernameInput($event)"
+          (keypress)="onKeyPress($event)"
+          placeholder="Enter your username"
+          autocomplete="username"
+          [disabled]="isLoading()"
+          required
+        />
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          [value]="password()"
+          (input)="onPasswordInput($event)"
+          (keypress)="onKeyPress($event)"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          [disabled]="isLoading()"
+          required
+        />
+      </div>
+
+      <!-- Login Button -->
+      <button
+        type="submit"
+        class="btn btn-primary btn-login"
+        [disabled]="isLoading() || !username() || !password()"
+      >
+        @if (isLoading()) {
+          <span class="spinner"></span>
+          <span>Logging in...</span>
+        } @else {
+          <span>Login</span>
+        }
+      </button>
+    </form>
+  </div>
+</div>

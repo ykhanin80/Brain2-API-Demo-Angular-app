@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ApiConfig } from '../api-config';
 import { Router } from '@angular/router';
+import { ActionsConfigService, ActionButtonConfig } from '../actions-config.service';
 
 interface JobRequest {
   jobType: string;
@@ -35,6 +36,10 @@ export class ActionsComponent {
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);
   private readonly router = inject(Router);
+  private readonly actionsConfigService = inject(ActionsConfigService);
+
+  // Configured action buttons
+  configuredActions = this.actionsConfigService.configs;
 
   // Form model
   newJob: JobRequest = { jobType: '', parameters: {} };
@@ -58,6 +63,10 @@ export class ActionsComponent {
   getUrl = '';
   extractedJobId = '';
   
+  // Expand/collapse state for API responses
+  isPostResponseExpanded = false;
+  isGetResponseExpanded = false;
+  
   // Progress tracking
   jobProgress: number | null = null;
   pollingInterval: any = null;
@@ -77,6 +86,12 @@ export class ActionsComponent {
     const clone = { ...this.newJob.parameters };
     delete clone[key];
     this.newJob.parameters = clone;
+  }
+
+  // Quick start job with pre-configured job name from button
+  quickStartJob(jobName: string): void {
+    this.newJob.jobType = jobName;
+    this.submitJob();
   }
 
   // POST /api/v1/jobs
@@ -296,6 +311,17 @@ export class ActionsComponent {
     this.errorMessage = '';
     this.successMessage = '';
     this.statusMessage = '';
+    this.isPostResponseExpanded = false;
+    this.isGetResponseExpanded = false;
+  }
+
+  // Toggle API response visibility
+  togglePostResponse(): void {
+    this.isPostResponseExpanded = !this.isPostResponseExpanded;
+  }
+
+  toggleGetResponse(): void {
+    this.isGetResponseExpanded = !this.isGetResponseExpanded;
   }
 
   refresh(): void { this.loadJobs(); }

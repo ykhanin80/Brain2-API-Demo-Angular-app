@@ -1,6 +1,17 @@
 ﻿<header class="app-header">
   <nav>
-  <h1 [style.color]="darkMode() ? '#ffffff' : '#333333'">Brain2 API Demo App</h1>
+    <div class="nav-left">
+      <!-- Burger Menu Button (Admin only) -->
+      <button *ngIf="localUser() && localUser()!.role === 'admin'" 
+              class="burger-menu-btn" 
+              (click)="toggleMenu()"
+              [style.color]="darkMode() ? '#ffffff' : '#333333'">
+        <i class="menu-icon">☰</i>
+      </button>
+      
+      <h1 [style.color]="darkMode() ? '#ffffff' : '#333333'">Brain2 API Demo App</h1>
+    </div>
+    
     <div class="nav-actions">
       <div class="system-status-header" 
            [style.background-color]="darkMode() ? '#2a2a2a' : '#f8f9fa'" 
@@ -33,13 +44,57 @@
       <button mat-button type="button" (click)="toggleDarkMode()" class="mode-toggle-btn">
         {{ darkMode() ? 'Light Mode' : 'Dark Mode' }}
       </button>
-      <span *ngIf="(isAuthenticated$ | async); else pleaseLogin">Welcome, {{ (currentUser$ | async)?.name }}</span>
+      
+      <!-- Local User Info -->
+      <div class="user-info" *ngIf="localUser()">
+        <span class="user-name">{{ localUser()!.displayName }}</span>
+        <span class="user-role" 
+              [style.background]="localUser()!.role === 'admin' ? '#dc3545' : localUser()!.role === 'operator' ? '#007bff' : '#6c757d'">
+          {{ localUser()!.role }}
+        </span>
+      </div>
+      
+      <!-- Brain2 Auth Status -->
+      <span *ngIf="(isAuthenticated$ | async); else pleaseLogin">
+        Brain2: {{ (currentUser$ | async)?.name }}
+      </span>
       <ng-template #pleaseLogin>
-        <button mat-button color="primary" [routerLink]="['/login']">Log in</button>
+        <button mat-button color="primary" [routerLink]="['/login']" *ngIf="localUser()">Connect Brain2</button>
       </ng-template>
-      <button *ngIf="(isAuthenticated$ | async)" (click)="logout()" class="logout-btn">Logout</button>
+      
+      <!-- Logout Buttons -->
+      <button *ngIf="(isAuthenticated$ | async)" (click)="logout()" class="logout-btn secondary">Disconnect Brain2</button>
+      <button *ngIf="localUser()" (click)="logoutUser()" class="logout-btn">Logout</button>
     </div>
   </nav>
+  
+  <!-- Admin Menu Dropdown -->
+  <div class="admin-menu-dropdown" *ngIf="menuOpen()" (click)="closeMenu()">
+    <div class="menu-panel" (click)="$event.stopPropagation()" 
+         [style.background]="darkMode() ? '#2d3748' : '#ffffff'"
+         [style.border-color]="darkMode() ? '#4a5568' : '#e2e8f0'">
+      <div class="menu-header" [style.border-bottom]="darkMode() ? '1px solid #4a5568' : '1px solid #e2e8f0'">
+        <h3 [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">Admin Menu</h3>
+        <button class="close-btn" (click)="closeMenu()" [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">×</button>
+      </div>
+      <ul class="menu-items">
+        <li>
+          <a [routerLink]="['/admin']" (click)="closeMenu()" 
+             [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+            <i>👤</i>
+            <span>User Management</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/admin']" [queryParams]="{tab: 'actions'}" (click)="closeMenu()"
+             [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+            <i>⚙️</i>
+            <span>Actions Configuration</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
 </header>
 
 <main class="app-content">

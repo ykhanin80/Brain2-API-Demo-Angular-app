@@ -1,0 +1,399 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <div class="header-left">
+      <h1>⚙️ Administration</h1>
+      <p class="subtitle">Manage users and system configuration</p>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" routerLink="/dashboard">
+        <i class="icon-arrow-left"></i>
+        Back to Dashboard
+      </button>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  @if (message()) {
+    <div class="message-banner" [ngClass]="'message-' + message()!.type">
+      <i>{{ message()!.type === 'success' ? '✓' : '⚠' }}</i>
+      <span>{{ message()!.text }}</span>
+      <button class="close-btn" (click)="message.set(null)">×</button>
+    </div>
+  }
+
+  <!-- Tabs -->
+  <div class="admin-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'users'"
+      (click)="switchTab('users')">
+      <i>👤</i>
+      <span>User Management</span>
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'actions'"
+      (click)="switchTab('actions')">
+      <i>⚙️</i>
+      <span>Actions Configuration</span>
+    </button>
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- User Management Tab -->
+    @if (activeTab() === 'users') {
+      <div class="users-section">
+        <div class="section-header">
+          <h2>User Management</h2>
+          <button class="btn btn-primary" (click)="startAddUser()" [disabled]="editingUser() !== null">
+            <i>+</i>
+            Add User
+          </button>
+        </div>
+
+        <!-- Users Table -->
+        <div class="users-table-container">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Display Name</th>
+                <th>Role</th>
+                <th>Password</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.username) {
+                <tr [class.editing]="editingUser()?.username === user.username">
+                  @if (editingUser()?.username === user.username || (editingUser()?.isNew && isAddingUser())) {
+                    <!-- Edit Mode -->
+                    <td>
+                      <input 
+                        type="text" 
+                        [value]="editingUser()!.username"
+                        (input)="updateField('username', $event)"
+                        [disabled]="!editingUser()!.isNew"
+                        placeholder="username"
+                      />
+                    </td>
+                    <td>
+                      <input 
+                        type="text" 
+                        [value]="editingUser()!.displayName"
+                        (input)="updateField('displayName', $event)"
+                        placeholder="Display Name"
+                      />
+                    </td>
+                    <td>
+                      <select 
+                        [value]="editingUser()!.role"
+                        (change)="updateField('role', $event)">
+                        <option value="admin">Admin</option>
+                        <option value="operator">Operator</option>
+                        <option value="viewer">Viewer</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input 
+                        type="password" 
+                        [value]="editingUser()!.password"
+                        (input)="updateField('password', $event)"
+                        [placeholder]="editingUser()!.isNew ? 'New password' : 'Leave blank to keep current'"
+                      />
+                    </td>
+                    <td class="actions-cell">
+                      <button class="btn btn-small btn-success" (click)="saveUser()">Save</button>
+                      <button class="btn btn-small btn-secondary" (click)="cancelEdit()">Cancel</button>
+                    </td>
+                  } @else {
+                    <!-- View Mode -->
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.displayName }}</td>
+                    <td>
+                      <span class="role-badge" [class]="'role-' + user.role">
+                        {{ user.role }}
+                      </span>
+                    </td>
+                    <td>{{ user.password }}</td>
+                    <td class="actions-cell">
+                      <button class="btn btn-small btn-edit" (click)="startEditUser(user)" [disabled]="editingUser() !== null">
+                        Edit
+                      </button>
+                      <button 
+                        class="btn btn-small btn-delete" 
+                        (click)="deleteUser(user.username)"
+                        [disabled]="user.username === 'admin' || editingUser() !== null">
+                        Delete
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+              
+              <!-- Add New User Row (only when adding) -->
+              @if (isAddingUser() && editingUser()?.isNew) {
+                <tr class="editing new-user-row">
+                  <td>
+                    <input 
+                      type="text" 
+                      [value]="editingUser()!.username"
+                      (input)="updateField('username', $event)"
+                      placeholder="username"
+                    />
+                  </td>
+                  <td>
+                    <input 
+                      type="text" 
+                      [value]="editingUser()!.displayName"
+                      (input)="updateField('displayName', $event)"
+                      placeholder="Display Name"
+                    />
+                  </td>
+                  <td>
+                    <select 
+                      [value]="editingUser()!.role"
+                      (change)="updateField('role', $event)">
+                      <option value="admin">Admin</option>
+                      <option value="operator">Operator</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input 
+                      type="password" 
+                      [value]="editingUser()!.password"
+                      (input)="updateField('password', $event)"
+                      placeholder="New password"
+                    />
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn btn-small btn-success" (click)="saveUser()">Save</button>
+                    <button class="btn btn-small btn-secondary" (click)="cancelEdit()">Cancel</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="help-text">
+          <p><strong>Role Permissions:</strong></p>
+          <ul>
+            <li><strong>Admin:</strong> Full access to all pages and settings</li>
+            <li><strong>Operator:</strong> Access to Actions page only</li>
+            <li><strong>Viewer:</strong> Read-only access to Dashboard and All Orders</li>
+          </ul>
+        </div>
+      </div>
+    }
+
+    <!-- Actions Configuration Tab -->
+    @if (activeTab() === 'actions') {
+      <div class="actions-config-section">
+        <div class="section-header">
+          <h2>Actions Configuration</h2>
+          <p class="description">Configure action buttons that map production lines to Brain2 jobs</p>
+        </div>
+
+        <!-- Production Lines Info -->
+        <div class="info-panel">
+          <div class="info-header">
+            <h3>📡 Production Lines</h3>
+            @if (isLoadingLines()) {
+              <span class="loading-badge">Loading...</span>
+            } @else {
+              <span class="success-badge">{{ productionLines().length }} lines loaded</span>
+            }
+          </div>
+          <p class="info-text">
+            Production lines are fetched from <code>/api/v1/production-lines</code>.
+            Configure buttons below to trigger specific jobs for each line.
+          </p>
+          @if (productionLines().length > 0) {
+            <div class="lines-list">
+              @for (line of productionLines(); track line.id) {
+                <span class="line-tag">{{ line.name }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Action Buttons Configuration -->
+        <div class="config-panel">
+          <div class="panel-header">
+            <h3>🎯 Action Buttons</h3>
+            <button class="btn btn-primary" (click)="startAddAction()" [disabled]="editingAction() !== null">
+              <i>+</i>
+              Add Action Button
+            </button>
+          </div>
+
+          <div class="help-text-box">
+            <p><strong>How it works:</strong></p>
+            <ul>
+              <li>Each button maps a <strong>Production Line</strong> → <strong>Job Name</strong></li>
+              <li>When clicked on Actions page, it calls <code>/api/v1/jobs</code> with the job name</li>
+              <li>Job names must match custom jobs created in Brain2</li>
+            </ul>
+          </div>
+
+          <!-- Action Buttons Table -->
+          <div class="actions-table-container">
+            @if (actionConfigs().length === 0 && !isAddingAction()) {
+              <div class="empty-state">
+                <div class="empty-icon">�</div>
+                <h4>No action buttons configured</h4>
+                <p>Click "Add Action Button" to create your first button</p>
+              </div>
+            } @else {
+              <table class="actions-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">Order</th>
+                    <th>Button Label</th>
+                    <th>Production Line</th>
+                    <th>Job Name</th>
+                    <th style="width: 200px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (action of actionConfigs(); track action.id; let i = $index) {
+                    <tr [class.editing]="editingAction()?.id === action.id">
+                      @if (editingAction()?.id === action.id) {
+                        <!-- Edit Mode -->
+                        <td class="order-cell">{{ i + 1 }}</td>
+                        <td>
+                          <input 
+                            type="text" 
+                            [value]="editingAction()!.buttonLabel"
+                            (input)="updateActionField('buttonLabel', $event)"
+                            placeholder="e.g., Line 1"
+                          />
+                        </td>
+                        <td>
+                          <select 
+                            [value]="editingAction()!.productionLine"
+                            (change)="updateActionField('productionLine', $event)">
+                            <option value="">Select line...</option>
+                            @for (line of productionLines(); track line.id) {
+                              <option [value]="line.name">{{ line.name }}</option>
+                            }
+                          </select>
+                        </td>
+                        <td>
+                          <input 
+                            type="text" 
+                            [value]="editingAction()!.jobName"
+                            (input)="updateActionField('jobName', $event)"
+                            placeholder="e.g., SendToLine1"
+                          />
+                        </td>
+                        <td class="actions-cell">
+                          <button class="btn btn-small btn-success" (click)="saveAction()">Save</button>
+                          <button class="btn btn-small btn-secondary" (click)="cancelEditAction()">Cancel</button>
+                        </td>
+                      } @else {
+                        <!-- View Mode -->
+                        <td class="order-cell">
+                          <div class="order-controls">
+                            <span class="order-number">{{ i + 1 }}</span>
+                            <div class="order-buttons">
+                              <button 
+                                class="btn-arrow" 
+                                (click)="moveActionUp(i)"
+                                [disabled]="i === 0 || editingAction() !== null"
+                                title="Move up">▲</button>
+                              <button 
+                                class="btn-arrow" 
+                                (click)="moveActionDown(i)"
+                                [disabled]="i === actionConfigs().length - 1 || editingAction() !== null"
+                                title="Move down">▼</button>
+                            </div>
+                          </div>
+                        </td>
+                        <td><strong>{{ action.buttonLabel }}</strong></td>
+                        <td>
+                          <span class="line-badge">{{ action.productionLine }}</span>
+                        </td>
+                        <td><code>{{ action.jobName }}</code></td>
+                        <td class="actions-cell">
+                          <button 
+                            class="btn btn-small btn-edit" 
+                            (click)="startEditAction(action)"
+                            [disabled]="editingAction() !== null">
+                            Edit
+                          </button>
+                          <button 
+                            class="btn btn-small btn-delete" 
+                            (click)="deleteAction(action.id)"
+                            [disabled]="editingAction() !== null">
+                            Delete
+                          </button>
+                        </td>
+                      }
+                    </tr>
+                  }
+                  
+                  <!-- Add New Action Row -->
+                  @if (isAddingAction() && editingAction()) {
+                    <tr class="editing new-action-row">
+                      <td class="order-cell">{{ actionConfigs().length + 1 }}</td>
+                      <td>
+                        <input 
+                          type="text" 
+                          [value]="editingAction()!.buttonLabel"
+                          (input)="updateActionField('buttonLabel', $event)"
+                          placeholder="e.g., Line 1"
+                        />
+                      </td>
+                      <td>
+                        <select 
+                          [value]="editingAction()!.productionLine"
+                          (change)="updateActionField('productionLine', $event)">
+                          <option value="">Select line...</option>
+                          @for (line of productionLines(); track line.id) {
+                            <option [value]="line.name">{{ line.name }}</option>
+                          }
+                        </select>
+                      </td>
+                      <td>
+                        <input 
+                          type="text" 
+                          [value]="editingAction()!.jobName"
+                          (input)="updateActionField('jobName', $event)"
+                          placeholder="e.g., SendToLine1"
+                        />
+                      </td>
+                      <td class="actions-cell">
+                        <button class="btn btn-small btn-success" (click)="saveAction()">Save</button>
+                        <button class="btn btn-small btn-secondary" (click)="cancelEditAction()">Cancel</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="help-section">
+          <h4>💡 Setup Instructions</h4>
+          <ol>
+            <li><strong>Create custom jobs in Brain2</strong> with descriptive names (e.g., "SendToLine1", "SendWholeBirdsLine1")</li>
+            <li><strong>Click "Add Action Button"</strong> to create a new button configuration</li>
+            <li><strong>Select a production line</strong> from the dropdown (fetched from Brain2 API)</li>
+            <li><strong>Enter the job name</strong> that matches your Brain2 custom job</li>
+            <li><strong>Set a button label</strong> that will appear on the Actions page</li>
+            <li>Use <strong>▲ ▼</strong> arrows to reorder buttons on the Actions page</li>
+          </ol>
+          <p class="note">
+            <strong>Note:</strong> Operators will see these buttons on the Actions page and can trigger the configured jobs.
+          </p>
+        </div>
+      </div>
+    }
+  </div>
+</div>

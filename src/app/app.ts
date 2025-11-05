@@ -3,10 +3,11 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Subscription, interval } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
-import { RouterOutlet, RouterLink } from '@angular/router';
+import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth } from './auth';
 import { ApiConfig } from './api-config';
+import { UserService } from './user.service';
 
 @Component({
   selector: 'app-root',
@@ -17,10 +18,13 @@ import { ApiConfig } from './api-config';
 export class App implements OnInit, OnDestroy {
   protected readonly title = signal('order-app');
   private readonly authService = inject(Auth);
+  private readonly userService = inject(UserService);
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);
+  private readonly router = inject(Router);
   readonly darkMode = signal(true);
   readonly apiConnected = signal<boolean | null>(null);
+  readonly menuOpen = signal(false);
   private connSub?: Subscription;
   // Token countdown
   readonly tokenSecondsLeft = signal<number | null>(null);
@@ -39,6 +43,9 @@ export class App implements OnInit, OnDestroy {
   // Expose auth observables to template
   readonly isAuthenticated$ = this.authService.isAuthenticated$;
   readonly currentUser$ = this.authService.currentUser$;
+  
+  // Expose local user info
+  readonly localUser = this.userService.currentUser;
   
   ngOnInit(): void {
     // Periodically check API connectivity (every 30s) and immediately on load
@@ -82,6 +89,21 @@ export class App implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout();
   }
+  
+  logoutUser(): void {
+    this.userService.logout();
+    this.authService.logout();
+    this.router.navigate(['/user-login']);
+  }
+  
+  toggleMenu(): void {
+    this.menuOpen.update(v => !v);
+  }
+  
+  closeMenu(): void {
+    this.menuOpen.set(false);
+  }
+  
   toggleDarkMode(){ this.darkMode.update(v => !v); }
   
 }
