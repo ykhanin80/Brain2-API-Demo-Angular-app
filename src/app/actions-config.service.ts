@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 export interface ActionButtonConfig {
   id: string;
   buttonLabel: string;
-  productionLine: string; // e.g., "Line 1", "Whole Birds Line1"
+  productionLine?: string; // Optional - e.g., "Line 1", "Whole Birds Line1"
   jobName: string; // The custom job name created in Brain2
   order: number; // Display order on Actions page
 }
@@ -98,6 +98,13 @@ export class ActionsConfigService {
       // On error, keep empty array or try to load from localStorage as fallback
       this.loadFromLocalStorageFallback();
     }
+  }
+
+  /**
+   * Manually refresh configurations from server (public method)
+   */
+  async refreshConfigs(): Promise<void> {
+    await this.loadConfigs();
   }
 
   /**

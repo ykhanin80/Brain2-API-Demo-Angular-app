@@ -1,18 +1,35 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
-export type UserRole = 'admin' | 'operator' | 'viewer';
+export type UserRole = 'admin' | 'operator' | 'viewer' | 'custom';
+
+export type PagePermission = 
+  | 'dashboard' 
+  | 'create-order' 
+  | 'all-orders' 
+  | 'capture' 
+  | 'actions' 
+  | 'data-maintenance' 
+  | 'package-record' 
+  | 'label-preview' 
+  | 'settings';
 
 export interface User {
   username: string;
-  password: string; // In production, this would be hashed
+  password?: string; // Only used when creating/updating
   role: UserRole;
   displayName: string;
+  permissions?: PagePermission[]; // Custom permissions for each user
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthSession {
   username: string;
   role: UserRole;
   displayName: string;
+  permissions: PagePermission[];
   loginTime: number;
 }
 
@@ -21,7 +38,7 @@ export interface AuthSession {
 })
 export class UserService {
   /**
-   * Predefined users - in production, this would come from a backend
+   * Users are now stored server-side in data/users.json
    * 
    * DEFAULT CREDENTIALS:
    * -------------------
@@ -41,34 +58,13 @@ export class UserService {
    *   Access: Dashboard and All Orders (view only)
    * 
    * CHANGE THESE PASSWORDS BEFORE DEPLOYMENT!
+   * 
+   * Passwords are stored as SHA-256 hashes on the server.
    */
-  private users: User[] = [
-    {
-      username: 'admin',
-      password: 'admin123',
-      role: 'admin',
-      displayName: 'Administrator'
-    },
-    {
-      username: 'operator',
-      password: 'operator123',
-      role: 'operator',
-      displayName: 'Actions Operator'
-    },
-    {
-      username: 'viewer',
-      password: 'viewer123',
-      role: 'viewer',
-      displayName: 'Viewer'
-    }
-  ];
-
+  private http = inject(HttpClient);
   private currentUserSignal = signal<AuthSession | null>(null);
   
   constructor() {
-    // Load users from localStorage (if any were saved)
-    this.loadUsersFromStorage();
-    
     // Try to restore session from localStorage
     this.restoreSession();
   }
@@ -95,16 +91,17 @@ export class UserService {
 
   /**
    * Check if current user has at least the specified role level
-   * admin > operator > viewer
+   * admin > operator > viewer > custom (custom is checked by permissions)
    */
   hasMinimumRole(minimumRole: UserRole): boolean {
     const user = this.currentUserSignal();
     if (!user) return false;
 
     const roleHierarchy: Record<UserRole, number> = {
-      'admin': 3,
-      'operator': 2,
-      'viewer': 1
+      'admin': 4,
+      'operator': 3,
+      'viewer': 2,
+      'custom': 1
     };
 
     return roleHierarchy[user.role] >= roleHierarchy[minimumRole];
@@ -113,26 +110,38 @@ export class UserService {
   /**
    * Attempt to login with username and password
    */
-  login(username: string, password: string): { success: boolean; message: string } {
-    const user = this.users.find(
-      u => u.username === username && u.password === password
-    );
+  async login(username: string, password: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<{ success: boolean; message?: string; user?: Omit<User, 'password'> }>(
+          '/api/users/validate',
+          { username, password }
+        )
+      );
 
-    if (!user) {
-      return { success: false, message: 'Invalid username or password' };
+      if (response.success && response.user) {
+        const session: AuthSession = {
+          username: response.user.username,
+          role: response.user.role,
+          displayName: response.user.displayName,
+          permissions: response.user.permissions || this.getDefaultPermissions(response.user.role),
+          loginTime: Date.now()
+        };
+
+        this.currentUserSignal.set(session);
+        this.saveSession(session);
+
+        return { success: true, message: 'Login successful' };
+      }
+
+      return { success: false, message: response.message || 'Login failed' };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return { 
+        success: false, 
+        message: error?.error?.message || 'Login failed - server error' 
+      };
     }
-
-    const session: AuthSession = {
-      username: user.username,
-      role: user.role,
-      displayName: user.displayName,
-      loginTime: Date.now()
-    };
-
-    this.currentUserSignal.set(session);
-    this.saveSession(session);
-
-    return { success: true, message: 'Login successful' };
   }
 
   /**
@@ -183,28 +192,52 @@ export class UserService {
     const names: Record<UserRole, string> = {
       'admin': 'Administrator',
       'operator': 'Operator',
-      'viewer': 'Viewer'
+      'viewer': 'Viewer',
+      'custom': 'Custom'
     };
     return names[role];
   }
 
   /**
-   * Get list of pages accessible to current user
+   * Get default permissions based on role
    */
-  getAccessiblePages(): string[] {
-    const user = this.currentUserSignal();
-    if (!user) return [];
-
-    switch (user.role) {
+  getDefaultPermissions(role: UserRole): PagePermission[] {
+    switch (role) {
       case 'admin':
-        return ['dashboard', 'create-order', 'all-orders', 'actions', 'data-maintenance', 'settings'];
+        return ['dashboard', 'create-order', 'all-orders', 'capture', 'actions', 'data-maintenance', 'package-record', 'label-preview', 'settings'];
       case 'operator':
         return ['actions'];
       case 'viewer':
         return ['dashboard', 'all-orders'];
+      case 'custom':
+        return [];
       default:
         return [];
     }
+  }
+
+  /**
+   * Get list of pages accessible to current user
+   */
+  getAccessiblePages(): PagePermission[] {
+    const user = this.currentUserSignal();
+    if (!user) return [];
+
+    // If user has custom permissions, use those
+    if (user.permissions && user.permissions.length > 0) {
+      return user.permissions;
+    }
+
+    // Otherwise use role-based defaults
+    return this.getDefaultPermissions(user.role);
+  }
+
+  /**
+   * Check if user has permission to access a specific page
+   */
+  hasPermission(page: PagePermission): boolean {
+    const permissions = this.getAccessiblePages();
+    return permissions.includes(page);
   }
 
   /**
@@ -221,83 +254,76 @@ export class UserService {
   /**
    * Get all users (for admin management)
    */
-  getAllUsers(): User[] {
-    return [...this.users];
+  async getAllUsers(): Promise<User[]> {
+    try {
+      return await firstValueFrom(
+        this.http.get<User[]>('/api/users')
+      );
+    } catch (error) {
+      console.error('Error loading users:', error);
+      return [];
+    }
   }
 
   /**
    * Add a new user
    */
-  addUser(user: User): { success: boolean; message: string } {
-    // Check if username already exists
-    if (this.users.some(u => u.username === user.username)) {
-      return { success: false, message: 'Username already exists' };
+  async addUser(user: User): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<{ success: boolean; message: string }>(
+          '/api/users',
+          user
+        )
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error adding user:', error);
+      return { 
+        success: false, 
+        message: error?.error?.message || 'Failed to add user' 
+      };
     }
-
-    this.users.push({ ...user });
-    this.saveUsersToStorage();
-    return { success: true, message: 'User created successfully' };
   }
 
   /**
    * Update an existing user
    */
-  updateUser(username: string, updates: Partial<User>): { success: boolean; message: string } {
-    const index = this.users.findIndex(u => u.username === username);
-    if (index === -1) {
-      return { success: false, message: 'User not found' };
+  async updateUser(username: string, updates: Partial<User>): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await firstValueFrom(
+        this.http.put<{ success: boolean; message: string }>(
+          `/api/users/${username}`,
+          updates
+        )
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      return { 
+        success: false, 
+        message: error?.error?.message || 'Failed to update user' 
+      };
     }
-
-    // Don't allow changing username
-    if (updates.username && updates.username !== username) {
-      return { success: false, message: 'Cannot change username' };
-    }
-
-    this.users[index] = { ...this.users[index], ...updates };
-    this.saveUsersToStorage();
-    return { success: true, message: 'User updated successfully' };
   }
 
   /**
    * Delete a user
    */
-  deleteUser(username: string): { success: boolean; message: string } {
-    if (username === 'admin') {
-      return { success: false, message: 'Cannot delete admin user' };
-    }
-
-    const index = this.users.findIndex(u => u.username === username);
-    if (index === -1) {
-      return { success: false, message: 'User not found' };
-    }
-
-    this.users.splice(index, 1);
-    this.saveUsersToStorage();
-    return { success: true, message: 'User deleted successfully' };
-  }
-
-  /**
-   * Save users to localStorage
-   */
-  private saveUsersToStorage(): void {
+  async deleteUser(username: string): Promise<{ success: boolean; message: string }> {
     try {
-      localStorage.setItem('localUsers', JSON.stringify(this.users));
-    } catch (e) {
-      console.error('Failed to save users to storage:', e);
-    }
-  }
-
-  /**
-   * Load users from localStorage
-   */
-  private loadUsersFromStorage(): void {
-    try {
-      const stored = localStorage.getItem('localUsers');
-      if (stored) {
-        this.users = JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error('Failed to load users from storage:', e);
+      const response = await firstValueFrom(
+        this.http.delete<{ success: boolean; message: string }>(
+          `/api/users/${username}`
+        )
+      );
+      return response;
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      return { 
+        success: false, 
+        message: error?.error?.message || 'Failed to delete user' 
+      };
     }
   }
 }

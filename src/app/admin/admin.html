@@ -60,15 +60,16 @@
                 <th>Username</th>
                 <th>Display Name</th>
                 <th>Role</th>
+                <th>Permissions</th>
                 <th>Password</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               @for (user of users(); track user.username) {
-                <tr [class.editing]="editingUser()?.username === user.username">
-                  @if (editingUser()?.username === user.username && !editingUser()?.isNew) {
-                    <!-- Edit Mode -->
+                @if (editingUser()?.username === user.username && !editingUser()?.isNew) {
+                <tr class="editing">
+                  <!-- Edit Mode -->
                     <td>
                       <input 
                         type="text" 
@@ -93,7 +94,22 @@
                         <option value="admin">Admin</option>
                         <option value="operator">Operator</option>
                         <option value="viewer">Viewer</option>
+                        <option value="custom">Custom</option>
                       </select>
+                    </td>
+                    <td>
+                      <div class="permissions-inline-editor">
+                        @for (page of availablePages; track page.key) {
+                          <label class="permission-checkbox-inline" [title]="page.label">
+                            <input 
+                              type="checkbox" 
+                              [checked]="hasPermission(page.key)"
+                              (change)="togglePermission(page.key)"
+                            />
+                            <span class="permission-icon">{{ page.icon }}</span>
+                          </label>
+                        }
+                      </div>
                     </td>
                     <td>
                       <input 
@@ -107,14 +123,22 @@
                       <button class="btn btn-small btn-success" (click)="saveUser()">Save</button>
                       <button class="btn btn-small btn-secondary" (click)="cancelEdit()">Cancel</button>
                     </td>
-                  } @else {
-                    <!-- View Mode -->
+                  </tr>
+                } @else {
+                <tr>
+                  <!-- View Mode -->
                     <td>{{ user.username }}</td>
                     <td>{{ user.displayName }}</td>
                     <td>
                       <span class="role-badge" [class]="'role-' + user.role">
                         {{ user.role }}
                       </span>
+                    </td>
+                    <td class="permissions-display">
+                      <span class="permissions-icons" [title]="getPermissionsCount(user.permissions) + ' permissions'">
+                        {{ getPermissionsText(user.permissions) }}
+                      </span>
+                      <span class="permissions-count">({{ getPermissionsCount(user.permissions) }})</span>
                     </td>
                     <td>{{ user.password }}</td>
                     <td class="actions-cell">
@@ -128,8 +152,8 @@
                         Delete
                       </button>
                     </td>
-                  }
-                </tr>
+                  </tr>
+                }
               }
               
               <!-- Add New User Row (only when adding) -->
@@ -158,7 +182,22 @@
                       <option value="admin">Admin</option>
                       <option value="operator">Operator</option>
                       <option value="viewer">Viewer</option>
+                      <option value="custom">Custom</option>
                     </select>
+                  </td>
+                  <td>
+                    <div class="permissions-inline-editor">
+                      @for (page of availablePages; track page.key) {
+                        <label class="permission-checkbox-inline" [title]="page.label">
+                          <input 
+                            type="checkbox" 
+                            [checked]="hasPermission(page.key)"
+                            (change)="togglePermission(page.key)"
+                          />
+                          <span class="permission-icon">{{ page.icon }}</span>
+                        </label>
+                      }
+                    </div>
                   </td>
                   <td>
                     <input 
@@ -184,7 +223,9 @@
             <li><strong>Admin:</strong> Full access to all pages and settings</li>
             <li><strong>Operator:</strong> Access to Actions page only</li>
             <li><strong>Viewer:</strong> Read-only access to Dashboard and All Orders</li>
+            <li><strong>Custom:</strong> Manually select pages using the checkboxes (role auto-switches to Custom when changing permissions)</li>
           </ul>
+          <p><strong>Permissions:</strong> Check/uncheck page icons to grant or revoke access. Hover over icons to see page names.</p>
         </div>
       </div>
     }
@@ -224,18 +265,25 @@
         <div class="config-panel">
           <div class="panel-header">
             <h3>🎯 Action Buttons</h3>
-            <button class="btn btn-primary" (click)="startAddAction()" [disabled]="editingAction() !== null">
-              <i>+</i>
-              Add Action Button
-            </button>
+            <div class="button-group">
+              <button class="btn btn-secondary" (click)="loadActionConfigs()" title="Refresh from server">
+                <i>🔄</i>
+                Refresh
+              </button>
+              <button class="btn btn-primary" (click)="startAddAction()" [disabled]="editingAction() !== null">
+                <i>+</i>
+                Add Action Button
+              </button>
+            </div>
           </div>
 
           <div class="help-text-box">
             <p><strong>How it works:</strong></p>
             <ul>
-              <li>Each button maps a <strong>Production Line</strong> → <strong>Job Name</strong></li>
+              <li>Each button maps an optional <strong>Production Line</strong> → <strong>Job Name</strong></li>
               <li>When clicked on Actions page, it calls <code>/api/v1/jobs</code> with the job name</li>
               <li>Job names must match custom jobs created in Brain2</li>
+              <li>Production Line is optional and for reference only</li>
             </ul>
           </div>
 
@@ -274,9 +322,9 @@
                         </td>
                         <td>
                           <select 
-                            [value]="editingAction()!.productionLine"
+                            [value]="editingAction()!.productionLine || ''"
                             (change)="updateActionField('productionLine', $event)">
-                            <option value="">Select line...</option>
+                            <option value="">None (optional)</option>
                             @for (line of productionLines(); track line.id) {
                               <option [value]="line.name">{{ line.name }}</option>
                             }
@@ -315,7 +363,11 @@
                         </td>
                         <td><strong>{{ action.buttonLabel }}</strong></td>
                         <td>
-                          <span class="line-badge">{{ action.productionLine }}</span>
+                          @if (action.productionLine) {
+                            <span class="line-badge">{{ action.productionLine }}</span>
+                          } @else {
+                            <span class="text-muted">None</span>
+                          }
                         </td>
                         <td><code>{{ action.jobName }}</code></td>
                         <td class="actions-cell">
@@ -350,9 +402,9 @@
                       </td>
                       <td>
                         <select 
-                          [value]="editingAction()!.productionLine"
+                          [value]="editingAction()!.productionLine || ''"
                           (change)="updateActionField('productionLine', $event)">
-                          <option value="">Select line...</option>
+                          <option value="">None (optional)</option>
                           @for (line of productionLines(); track line.id) {
                             <option [value]="line.name">{{ line.name }}</option>
                           }

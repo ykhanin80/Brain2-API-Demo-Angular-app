@@ -1,8 +1,8 @@
 ﻿<header class="app-header">
   <nav>
     <div class="nav-left">
-      <!-- Burger Menu Button (Admin only) -->
-      <button *ngIf="localUser() && localUser()!.role === 'admin'" 
+      <!-- Burger Menu Button (All authenticated users) -->
+      <button *ngIf="localUser()" 
               class="burger-menu-btn" 
               (click)="toggleMenu()"
               [style.color]="darkMode() ? '#ffffff' : '#333333'">
@@ -74,24 +74,90 @@
          [style.background]="darkMode() ? '#2d3748' : '#ffffff'"
          [style.border-color]="darkMode() ? '#4a5568' : '#e2e8f0'">
       <div class="menu-header" [style.border-bottom]="darkMode() ? '1px solid #4a5568' : '1px solid #e2e8f0'">
-        <h3 [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">Admin Menu</h3>
+        <h3 [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">Navigation Menu</h3>
         <button class="close-btn" (click)="closeMenu()" [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">×</button>
       </div>
       <ul class="menu-items">
-        <li>
-          <a [routerLink]="['/admin']" (click)="closeMenu()" 
-             [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
-            <i>👤</i>
-            <span>User Management</span>
-          </a>
-        </li>
-        <li>
-          <a [routerLink]="['/admin']" [queryParams]="{tab: 'actions'}" (click)="closeMenu()"
-             [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
-            <i>⚙️</i>
-            <span>Actions Configuration</span>
-          </a>
-        </li>
+        @if (hasPermission('dashboard')) {
+          <li>
+            <a [routerLink]="['/dashboard']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>🏠</i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+        }
+        @if (hasPermission('data-maintenance')) {
+          <li>
+            <a [routerLink]="['/data-maintenance']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>🗄️</i>
+              <span>Data Maintenance</span>
+            </a>
+          </li>
+        }
+        @if (hasPermission('all-orders')) {
+          <li>
+            <a [routerLink]="['/all-orders']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>📋</i>
+              <span>Order Management</span>
+            </a>
+          </li>
+        }
+        @if (hasPermission('capture')) {
+          <li>
+            <a [routerLink]="['/capture']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>📸</i>
+              <span>Capture</span>
+            </a>
+          </li>
+        }
+        @if (hasPermission('actions')) {
+          <li>
+            <a [routerLink]="['/actions']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>⚡</i>
+              <span>Actions</span>
+            </a>
+          </li>
+        }
+        @if (hasPermission('package-record')) {
+          <li>
+            <a [routerLink]="['/package-record']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>📦</i>
+              <span>Package Records</span>
+            </a>
+          </li>
+        }
+        @if (hasPermission('label-preview')) {
+          <li>
+            <a [routerLink]="['/label-preview']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>🏷️</i>
+              <span>Label Preview</span>
+            </a>
+          </li>
+        }
+        @if (localUser()?.role === 'admin') {
+          <li class="menu-divider"></li>
+          <li>
+            <a [routerLink]="['/admin']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>👤</i>
+              <span>User Management</span>
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="['/admin']" [queryParams]="{tab: 'actions'}" (click)="closeMenu()"
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>⚙️</i>
+              <span>Actions Configuration</span>
+            </a>
+          </li>
+        }
       </ul>
     </div>
   </div>

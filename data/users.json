@@ -1,0 +1,51 @@
+[
+  {
+    "username": "admin",
+    "passwordHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+    "role": "admin",
+    "displayName": "Administrator",
+    "permissions": [
+      "dashboard",
+      "data-maintenance",
+      "all-orders",
+      "capture",
+      "actions",
+      "package-record",
+      "label-preview"
+    ],
+    "createdAt": "2025-11-06T03:01:27.230Z",
+    "updatedAt": "2025-11-06T03:06:24.085Z"
+  },
+  {
+    "username": "operator",
+    "passwordHash": "ec6e1c25258002eb1c67d15c7f45da7945fa4c58778fd7d88faa5e53e3b4698d",
+    "role": "custom",
+    "displayName": "Actions Operator",
+    "permissions": [
+      "actions"
+    ],
+    "createdAt": "2025-11-06T03:01:27.231Z",
+    "updatedAt": "2025-11-06T04:29:59.650Z"
+  },
+  {
+    "username": "viewer",
+    "passwordHash": "65375049b9e4d7cad6c9ba286fdeb9394b28135a3e84136404cfccfdcc438894",
+    "role": "custom",
+    "displayName": "Viewer",
+    "permissions": [
+      "dashboard",
+      "all-orders"
+    ],
+    "createdAt": "2025-11-06T03:01:27.231Z",
+    "updatedAt": "2025-11-06T04:30:38.901Z"
+  },
+  {
+    "username": "api",
+    "passwordHash": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
+    "role": "custom",
+    "displayName": "api",
+    "permissions": [],
+    "createdAt": "2025-11-06T03:06:39.693Z",
+    "updatedAt": "2025-11-06T04:17:59.179Z"
+  }
+]

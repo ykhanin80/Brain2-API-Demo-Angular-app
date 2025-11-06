@@ -63,12 +63,12 @@ export class UserLoginComponent {
     };
 
     this.auth.login(credentials).subscribe({
-      next: (response) => {
+      next: async (response) => {
         // Brain2 authentication successful
         console.log('Brain2 authentication successful');
 
         // Step 2: Automatically login locally with same credentials
-        const localResult = this.userService.login(username, password);
+        const localResult = await this.userService.login(username, password);
         
         if (localResult.success) {
           // Both logins successful

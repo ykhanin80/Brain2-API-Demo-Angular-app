@@ -7,7 +7,7 @@ import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth } from './auth';
 import { ApiConfig } from './api-config';
-import { UserService } from './user.service';
+import { UserService, PagePermission } from './user.service';
 
 @Component({
   selector: 'app-root',
@@ -29,6 +29,11 @@ export class App implements OnInit, OnDestroy {
   // Token countdown
   readonly tokenSecondsLeft = signal<number | null>(null);
   private tokenTimer?: any;
+
+  // Check if user has permission for a specific page
+  hasPermission(page: PagePermission): boolean {
+    return this.userService.hasPermission(page);
+  }
 
   constructor(){
     effect(() => {

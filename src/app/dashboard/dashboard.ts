@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { APP_VERSION } from '../../version';
+import { UserService, PagePermission } from '../user.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,7 +13,13 @@ import { APP_VERSION } from '../../version';
 })
 export class Dashboard {
   private readonly router = inject(Router);
+  private readonly userService = inject(UserService);
   readonly version = APP_VERSION;
+
+  // Check if user has permission for a specific page
+  hasPermission(page: PagePermission): boolean {
+    return this.userService.hasPermission(page);
+  }
 
   // Navigation methods for each section
   navigateToDataMaintenance(): void {

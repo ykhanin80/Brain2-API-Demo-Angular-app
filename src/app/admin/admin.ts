@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { UserService, UserRole } from '../user.service';
+import { UserService, UserRole, PagePermission } from '../user.service';
 import { ActionsConfigService, ActionButtonConfig } from '../actions-config.service';
 import { ApiConfig } from '../api-config';
 
@@ -12,6 +12,7 @@ interface UserEdit {
   password: string;
   role: UserRole;
   displayName: string;
+  permissions?: PagePermission[];
   isNew?: boolean;
 }
 
@@ -29,6 +30,17 @@ interface ProductionLine {
 })
 export class AdminComponent implements OnInit {
   activeTab = signal<'users' | 'actions'>('users');
+  
+  // Available pages for permission checkboxes
+  readonly availablePages: { key: PagePermission; label: string; icon: string }[] = [
+    { key: 'dashboard', label: 'Dashboard', icon: '🏠' },
+    { key: 'data-maintenance', label: 'Data Maintenance', icon: '🗄️' },
+    { key: 'all-orders', label: 'Order Management', icon: '📋' },
+    { key: 'capture', label: 'Capture', icon: '📸' },
+    { key: 'actions', label: 'Actions', icon: '⚡' },
+    { key: 'package-record', label: 'Package Records', icon: '📦' },
+    { key: 'label-preview', label: 'Label Preview', icon: '🏷️' }
+  ];
   
   // User Management
   users = signal<UserEdit[]>([]);
@@ -77,14 +89,15 @@ export class AdminComponent implements OnInit {
   }
 
   // User Management Methods
-  loadUsers(): void {
+  async loadUsers(): Promise<void> {
     // Load actual users from UserService
-    const allUsers = this.userService.getAllUsers();
+    const allUsers = await this.userService.getAllUsers();
     this.users.set(allUsers.map(u => ({
       username: u.username,
       password: '••••••••', // Mask password in UI
       role: u.role,
-      displayName: u.displayName
+      displayName: u.displayName,
+      permissions: u.permissions || this.userService.getDefaultPermissions(u.role)
     })));
   }
 
@@ -95,12 +108,64 @@ export class AdminComponent implements OnInit {
       password: '',
       role: 'viewer',
       displayName: '',
+      permissions: [],
       isNew: true
     });
   }
 
   startEditUser(user: UserEdit): void {
-    this.editingUser.set({ ...user });
+    this.editingUser.set({ 
+      ...user,
+      permissions: user.permissions ? [...user.permissions] : []
+    });
+  }
+
+  togglePermission(permission: PagePermission): void {
+    const user = this.editingUser();
+    if (!user) return;
+    
+    const permissions = user.permissions || [];
+    const index = permissions.indexOf(permission);
+    
+    let newPermissions: PagePermission[];
+    if (index > -1) {
+      // Remove permission
+      newPermissions = permissions.filter(p => p !== permission);
+    } else {
+      // Add permission
+      newPermissions = [...permissions, permission];
+    }
+    
+    // Automatically set role to 'custom' when manually changing permissions
+    // unless it's already admin and has all permissions
+    const allPermissions = this.availablePages.map(p => p.key);
+    const hasAllPermissions = allPermissions.every(p => newPermissions.includes(p));
+    
+    const newRole = !hasAllPermissions && user.role !== 'custom' ? 'custom' : user.role;
+    
+    this.editingUser.set({ 
+      ...user, 
+      permissions: newPermissions,
+      role: newRole
+    });
+  }
+
+  hasPermission(permission: PagePermission): boolean {
+    const user = this.editingUser();
+    if (!user || !user.permissions) return false;
+    return user.permissions.includes(permission);
+  }
+
+  getPermissionsText(permissions?: PagePermission[]): string {
+    if (!permissions || permissions.length === 0) return 'None';
+    return permissions.map(p => {
+      const page = this.availablePages.find(ap => ap.key === p);
+      return page ? page.icon : '';
+    }).join(' ');
+  }
+
+  getPermissionsCount(permissions?: PagePermission[]): number {
+    return permissions?.length || 0;
   }
 
   cancelEdit(): void {
@@ -108,7 +173,7 @@ export class AdminComponent implements OnInit {
     this.isAddingUser.set(false);
   }
 
-  saveUser(): void {
+  async saveUser(): Promise<void> {
     const user = this.editingUser();
     if (!user) return;
 
@@ -129,15 +194,16 @@ export class AdminComponent implements OnInit {
     // Save to UserService
     if (user.isNew) {
       // Add new user
-      const result = this.userService.addUser({
+      const result = await this.userService.addUser({
         username: user.username,
         password: user.password,
         role: user.role,
-        displayName: user.displayName
+        displayName: user.displayName,
+        permissions: user.permissions
       });
       
       if (result.success) {
-        this.loadUsers(); // Reload from service
+        await this.loadUsers(); // Reload from service
         this.showMessage('success', `User "${user.username}" created successfully`);
         this.cancelEdit();
       } else {
@@ -147,7 +213,8 @@ export class AdminComponent implements OnInit {
       // Update existing user
       const updates: any = {
         displayName: user.displayName,
-        role: user.role
+        role: user.role,
+        permissions: user.permissions
       };
       
       // Only update password if it was changed
@@ -155,10 +222,10 @@ export class AdminComponent implements OnInit {
         updates.password = user.password;
       }
       
-      const result = this.userService.updateUser(user.username, updates);
+      const result = await this.userService.updateUser(user.username, updates);
       
       if (result.success) {
-        this.loadUsers(); // Reload from service
+        await this.loadUsers(); // Reload from service
         this.showMessage('success', `User "${user.username}" updated successfully`);
         this.cancelEdit();
       } else {
@@ -167,17 +234,17 @@ export class AdminComponent implements OnInit {
     }
   }
 
-  deleteUser(username: string): void {
+  async deleteUser(username: string): Promise<void> {
     if (username === 'admin') {
       this.showMessage('error', 'Cannot delete admin user');
       return;
     }
 
     if (confirm(`Are you sure you want to delete user "${username}"?`)) {
-      const result = this.userService.deleteUser(username);
+      const result = await this.userService.deleteUser(username);
       
       if (result.success) {
-        this.loadUsers(); // Reload from service
+        await this.loadUsers(); // Reload from service
         this.showMessage('success', `User "${username}" deleted successfully`);
       } else {
         this.showMessage('error', result.message);
@@ -196,7 +263,14 @@ export class AdminComponent implements OnInit {
     const value = input.value;
     this.editingUser.update(user => {
       if (!user) return null;
-      return { ...user, [field]: value };
+      const updated = { ...user, [field]: value };
+      
+      // If role changed, update permissions to defaults for that role
+      if (field === 'role' && value !== 'custom') {
+        updated.permissions = this.userService.getDefaultPermissions(value as UserRole);
+      }
+      
+      return updated;
     });
   }
 
@@ -204,7 +278,8 @@ export class AdminComponent implements OnInit {
   // Actions Configuration Methods
   // ============================================
 
-  loadActionConfigs(): void {
+  async loadActionConfigs(): Promise<void> {
+    await this.actionsConfigService.refreshConfigs();
     this.actionConfigs.set(this.actionsConfigService.getConfigs());
   }
 
@@ -280,10 +355,7 @@ export class AdminComponent implements OnInit {
       this.showMessage('error', 'Button label is required');
       return;
     }
-    if (!action.productionLine.trim()) {
-      this.showMessage('error', 'Production line is required');
-      return;
-    }
+    // Production line is now optional
     if (!action.jobName.trim()) {
       this.showMessage('error', 'Job name is required');
       return;
@@ -294,7 +366,7 @@ export class AdminComponent implements OnInit {
       // Add new
       this.actionsConfigService.addConfig({
         buttonLabel: action.buttonLabel,
-        productionLine: action.productionLine,
+        productionLine: action.productionLine || undefined,
         jobName: action.jobName
       });
       this.showMessage('success', `Action button "${action.buttonLabel}" created successfully`);

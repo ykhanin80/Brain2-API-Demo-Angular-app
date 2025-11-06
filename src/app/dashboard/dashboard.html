@@ -5,94 +5,102 @@
   </header>
   <div class="dashboard-grid">
     <!-- Data Maintenance Section -->
-    <div class="dashboard-card active" (click)="navigateToDataMaintenance()">
-      <div class="card-icon">🗄️</div>
-      <h3>Data Maintenance</h3>
-      <p>Manage labeler articles with full CRUD operations</p>
-      <div class="card-features">
-        <span class="feature-tag">Article Management</span>
-        <span class="feature-tag">Create / Rear / Update / Delete PLUs and Static Texts</span>
-        
+    @if (hasPermission('data-maintenance')) {
+      <div class="dashboard-card active" (click)="navigateToDataMaintenance()">
+        <div class="card-icon">🗄️</div>
+        <h3>Data Maintenance</h3>
+        <p>Manage labeler articles and device parameters with full CRUD operations</p>
+        <div class="card-features">
+          <span class="feature-tag">Master Data</span>
+          <span class="feature-tag">Device Parameters</span>       
+        </div>
+        <div class="card-action">
+          <span class="action-text">Available ✅</span>
+        </div>
       </div>
-      <div class="card-action">
-        <span class="action-text">Available ✅</span>
-      </div>
-    </div>
+    }
 
     <!-- Order Management Section -->
-    <div class="dashboard-card active" (click)="navigateToOrderManagement()">
-      <div class="card-icon">📋</div>
-      <h3>Order Management</h3>
-      <p>Complete order processing with BRAIN2 API integration</p>
-      <div class="card-features">
-        <span class="feature-tag">Process Orders</span>
-        <span class="feature-tag">Monitor Status</span>
-        
+    @if (hasPermission('all-orders')) {
+      <div class="dashboard-card active" (click)="navigateToOrderManagement()">
+        <div class="card-icon">📋</div>
+        <h3>Order Management</h3>
+        <p>Complete order processing with BRAIN2 API integration</p>
+        <div class="card-features">
+          <span class="feature-tag">Process Orders</span>
+          <span class="feature-tag">Monitor Status</span>
+        </div>
+        <div class="card-action">
+          <span class="action-text">Available ✅</span>
+        </div>
       </div>
-      <div class="card-action">
-        <span class="action-text">Available ✅</span>
-      </div>
-    </div>
+    }
 
     <!-- Capture Section -->
-    <div class="dashboard-card active" (click)="navigateToCapture()">
-      <div class="card-icon">📸</div>
-      <h3>Capture</h3>
-      <p>Data capture, scanning, and input management</p>
-      <div class="card-features">
-        <span class="feature-tag">Package Records</span>
-        
-        <span class="feature-tag">Search & Filter</span>
+    @if (hasPermission('capture')) {
+      <div class="dashboard-card active" (click)="navigateToCapture()">
+        <div class="card-icon">📸</div>
+        <h3>Capture</h3>
+        <p>Result data with multi line support</p>
+        <div class="card-features">
+          <span class="feature-tag">Package Records</span>
+          <span class="feature-tag">Search & Filter</span>
+        </div>
+        <div class="card-action">
+          <span class="action-text">Available ✅</span>
+        </div>
       </div>
-      <div class="card-action">
-        <span class="action-text">Available ✅</span>
-      </div>
-    </div>
+    }
 
     <!-- Actions Section -->
-    <div class="dashboard-card" (click)="navigateToActions()">
-      <div class="card-icon">⚡</div>
-      <h3>Actions</h3>
-      <p>Automated workflows, triggers, and business logic</p>
-      <div class="card-features">
-        <span class="feature-tag">Workflows</span>
-        <span class="feature-tag">Automation</span>
-        <span class="feature-tag">Business Rules</span>
+    @if (hasPermission('actions')) {
+      <div class="dashboard-card" (click)="navigateToActions()">
+        <div class="card-icon">⚡</div>
+        <h3>Actions</h3>
+        <p>Start Brain2 actions</p>
+        <div class="card-features">
+          <span class="feature-tag">Actions</span>
+          <span class="feature-tag">Jobs</span>
+        </div>
+        <div class="card-action">
+          <span class="action-text">Available ✅</span>
+        </div>
       </div>
-      <div class="card-action">
-        <span class="action-text">Available ✅</span>
-      </div>
-    </div>
+    }
 
     <!-- Package Record Section -->
-    <div class="dashboard-card active" (click)="navigateToPackageRecord()">
-      <div class="card-icon">📦</div>
-      <h3>Package Records - Live</h3>
-      <p>Real-time weight tracking with live charts and analytics</p>
-      <div class="card-features">
-        <span class="feature-tag">Weight Charts</span>
-        <span class="feature-tag">Live Updates</span>
-        <span class="feature-tag">Analytics</span>
+    @if (hasPermission('package-record')) {
+      <div class="dashboard-card active" (click)="navigateToPackageRecord()">
+        <div class="card-icon">📦</div>
+        <h3>Package Records - Live</h3>
+        <p>Real-time weight tracking with live charts and analytics</p>
+        <div class="card-features">
+          <span class="feature-tag">Weight Charts</span>
+          <span class="feature-tag">Live Updates</span>
+          <span class="feature-tag">Multi Line</span>
+        </div>
+        <div class="card-action">
+          <span class="action-text">Available ✅</span>
+        </div>
       </div>
-      <div class="card-action">
-        <span class="action-text">Available ✅</span>
-      </div>
-    </div>
+    }
 
     <!-- Label Preview Section -->
-    <div class="dashboard-card active" (click)="navigateToLabelPreview()">
-      <div class="card-icon">🏷️</div>
-      <h3>Label Layout Preview</h3>
-      <p>Select project, layout and PLU to generate a label preview</p>
-      <div class="card-features">
-        <span class="feature-tag">Label Projects</span>
-        <span class="feature-tag">Layouts</span>
-        <span class="feature-tag">PLUs</span>
+    @if (hasPermission('label-preview')) {
+      <div class="dashboard-card active" (click)="navigateToLabelPreview()">
+        <div class="card-icon">🏷️</div>
+        <h3>Label Layout Preview</h3>
+        <p>Select project, layout and PLU to generate a label preview</p>
+        <div class="card-features">
+          <span class="feature-tag">Label Projects</span>
+          <span class="feature-tag">Layouts</span>
+          <span class="feature-tag">PLUs</span>
+        </div>
+        <div class="card-action">
+          <span class="action-text">Available ✅</span>
+        </div>
       </div>
-      <div class="card-action">
-        <span class="action-text">Available ✅</span>
-      </div>
-    </div>
+    }
   </div>
   <!-- Fixed footer info row -->
   <div class="dashboard-footer-info" role="contentinfo" aria-label="App information footer">
