@@ -114,15 +114,21 @@ export class AdminComponent implements OnInit {
   }
 
   startEditUser(user: UserEdit): void {
-    this.editingUser.set({ 
+    console.log('🔧 startEditUser - Original user:', JSON.stringify(user, null, 2));
+    const editUser = { 
       ...user,
       permissions: user.permissions ? [...user.permissions] : []
-    });
+    };
+    console.log('🔧 startEditUser - Edit user:', JSON.stringify(editUser, null, 2));
+    this.editingUser.set(editUser);
   }
 
   togglePermission(permission: PagePermission): void {
     const user = this.editingUser();
     if (!user) return;
+    
+    console.log('🔧 togglePermission - Current user:', JSON.stringify(user, null, 2));
+    console.log('🔧 togglePermission - Toggling permission:', permission);
     
     const permissions = user.permissions || [];
     const index = permissions.indexOf(permission);
@@ -131,10 +137,14 @@ export class AdminComponent implements OnInit {
     if (index > -1) {
       // Remove permission
       newPermissions = permissions.filter(p => p !== permission);
+      console.log('🔧 togglePermission - REMOVING permission');
     } else {
       // Add permission
       newPermissions = [...permissions, permission];
+      console.log('🔧 togglePermission - ADDING permission');
     }
+    
+    console.log('🔧 togglePermission - New permissions:', newPermissions);
     
     // Automatically set role to 'custom' when manually changing permissions
     // unless it's already admin and has all permissions
@@ -142,6 +152,8 @@ export class AdminComponent implements OnInit {
     const hasAllPermissions = allPermissions.every(p => newPermissions.includes(p));
     
     const newRole = !hasAllPermissions && user.role !== 'custom' ? 'custom' : user.role;
+    
+    console.log('🔧 togglePermission - New role:', newRole);
     
     this.editingUser.set({ 
       ...user, 
@@ -176,6 +188,8 @@ export class AdminComponent implements OnInit {
   async saveUser(): Promise<void> {
     const user = this.editingUser();
     if (!user) return;
+
+    console.log('🔧 saveUser - Saving user:', JSON.stringify(user, null, 2));
 
     // Validation
     if (!user.username.trim()) {

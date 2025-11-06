@@ -22,10 +22,12 @@
     "role": "custom",
     "displayName": "Actions Operator",
     "permissions": [
-      "actions"
+      "actions",
+      "dashboard",
+      "all-orders"
     ],
     "createdAt": "2025-11-06T03:01:27.231Z",
-    "updatedAt": "2025-11-06T04:29:59.650Z"
+    "updatedAt": "2025-11-06T15:12:47.291Z"
   },
   {
     "username": "viewer",
