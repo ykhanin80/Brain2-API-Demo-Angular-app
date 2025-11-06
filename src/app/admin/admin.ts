@@ -78,28 +78,14 @@ export class AdminComponent implements OnInit {
 
   // User Management Methods
   loadUsers(): void {
-    // This is a placeholder - in real implementation, you'd load from backend
-    // For now, we'll create a mock list
-    this.users.set([
-      {
-        username: 'admin',
-        password: '••••••••',
-        role: 'admin',
-        displayName: 'Administrator'
-      },
-      {
-        username: 'operator',
-        password: '••••••••',
-        role: 'operator',
-        displayName: 'Actions Operator'
-      },
-      {
-        username: 'viewer',
-        password: '••••••••',
-        role: 'viewer',
-        displayName: 'Viewer'
-      }
-    ]);
+    // Load actual users from UserService
+    const allUsers = this.userService.getAllUsers();
+    this.users.set(allUsers.map(u => ({
+      username: u.username,
+      password: '••••••••', // Mask password in UI
+      role: u.role,
+      displayName: u.displayName
+    })));
   }
 
   startAddUser(): void {
@@ -140,18 +126,45 @@ export class AdminComponent implements OnInit {
       return;
     }
 
-    // Save logic (in real app, this would call backend)
+    // Save to UserService
     if (user.isNew) {
-      this.users.update(users => [...users, { ...user, isNew: false }]);
-      this.showMessage('success', `User "${user.username}" created successfully`);
+      // Add new user
+      const result = this.userService.addUser({
+        username: user.username,
+        password: user.password,
+        role: user.role,
+        displayName: user.displayName
+      });
+      
+      if (result.success) {
+        this.loadUsers(); // Reload from service
+        this.showMessage('success', `User "${user.username}" created successfully`);
+        this.cancelEdit();
+      } else {
+        this.showMessage('error', result.message);
+      }
     } else {
-      this.users.update(users =>
-        users.map(u => u.username === user.username ? { ...user, isNew: false } : u)
-      );
-      this.showMessage('success', `User "${user.username}" updated successfully`);
+      // Update existing user
+      const updates: any = {
+        displayName: user.displayName,
+        role: user.role
+      };
+      
+      // Only update password if it was changed
+      if (user.password && user.password !== '••••••••') {
+        updates.password = user.password;
+      }
+      
+      const result = this.userService.updateUser(user.username, updates);
+      
+      if (result.success) {
+        this.loadUsers(); // Reload from service
+        this.showMessage('success', `User "${user.username}" updated successfully`);
+        this.cancelEdit();
+      } else {
+        this.showMessage('error', result.message);
+      }
     }
-
-    this.cancelEdit();
   }
 
   deleteUser(username: string): void {
@@ -161,8 +174,14 @@ export class AdminComponent implements OnInit {
     }
 
     if (confirm(`Are you sure you want to delete user "${username}"?`)) {
-      this.users.update(users => users.filter(u => u.username !== username));
-      this.showMessage('success', `User "${username}" deleted successfully`);
+      const result = this.userService.deleteUser(username);
+      
+      if (result.success) {
+        this.loadUsers(); // Reload from service
+        this.showMessage('success', `User "${username}" deleted successfully`);
+      } else {
+        this.showMessage('error', result.message);
+      }
     }
   }
 

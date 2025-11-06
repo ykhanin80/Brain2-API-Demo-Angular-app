@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 export interface ActionButtonConfig {
   id: string;
@@ -12,7 +14,8 @@ export interface ActionButtonConfig {
   providedIn: 'root'
 })
 export class ActionsConfigService {
-  private readonly STORAGE_KEY = 'actions_button_config';
+  private readonly http = inject(HttpClient);
+  private readonly API_URL = '/api/action-configurations';
   
   // Signal to hold all action button configurations
   private configSignal = signal<ActionButtonConfig[]>([]);
@@ -82,66 +85,61 @@ export class ActionsConfigService {
   }
 
   /**
-   * Load configurations from localStorage
+   * Load configurations from server
    */
-  private loadConfigs(): void {
+  private async loadConfigs(): Promise<void> {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const configs = await firstValueFrom(
+        this.http.get<ActionButtonConfig[]>(this.API_URL)
+      );
+      this.configSignal.set(configs);
+    } catch (e) {
+      console.error('Failed to load action configs from server:', e);
+      // On error, keep empty array or try to load from localStorage as fallback
+      this.loadFromLocalStorageFallback();
+    }
+  }
+
+  /**
+   * Fallback to localStorage if server is not available
+   */
+  private loadFromLocalStorageFallback(): void {
+    try {
+      const stored = localStorage.getItem('actions_button_config');
       if (stored) {
         const configs = JSON.parse(stored) as ActionButtonConfig[];
         this.configSignal.set(configs);
-      } else {
-        // Initialize with example configurations
-        this.initializeDefaultConfigs();
+        console.warn('Loaded from localStorage fallback');
       }
     } catch (e) {
-      console.error('Failed to load action configs:', e);
-      this.initializeDefaultConfigs();
+      console.error('Failed to load from localStorage fallback:', e);
     }
   }
 
   /**
-   * Save configurations to localStorage
+   * Save configurations to server
    */
-  private saveConfigs(): void {
+  private async saveConfigs(): Promise<void> {
     try {
       const configs = this.configSignal();
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(configs));
+      await firstValueFrom(
+        this.http.post(this.API_URL, configs)
+      );
+      // Also save to localStorage as backup
+      localStorage.setItem('actions_button_config', JSON.stringify(configs));
     } catch (e) {
-      console.error('Failed to save action configs:', e);
+      console.error('Failed to save action configs to server:', e);
+      // Still save to localStorage as fallback
+      try {
+        const configs = this.configSignal();
+        localStorage.setItem('actions_button_config', JSON.stringify(configs));
+      } catch (localError) {
+        console.error('Failed to save to localStorage:', localError);
+      }
     }
   }
 
-  /**
-   * Initialize with default example configurations
-   */
-  private initializeDefaultConfigs(): void {
-    const defaultConfigs: ActionButtonConfig[] = [
-      {
-        id: this.generateId(),
-        buttonLabel: 'Line 1',
-        productionLine: 'Line 1',
-        jobName: 'SendToLine1',
-        order: 0
-      },
-      {
-        id: this.generateId(),
-        buttonLabel: 'Line 2',
-        productionLine: 'Line 2',
-        jobName: 'SendToLine2',
-        order: 1
-      },
-      {
-        id: this.generateId(),
-        buttonLabel: 'Whole Birds Line1',
-        productionLine: 'Whole Birds Line1',
-        jobName: 'SendWholeBirdsLine1',
-        order: 2
-      }
-    ];
-    this.configSignal.set(defaultConfigs);
-    this.saveConfigs();
-  }
+
 
   /**
    * Generate a unique ID

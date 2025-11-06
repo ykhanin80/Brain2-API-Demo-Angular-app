@@ -7,7 +7,7 @@
   <!-- Quick Action Buttons -->
   @if (configuredActions().length > 0) {
     <section class="quick-actions">
-      <h3>Quick Actions</h3>
+      <h3>Start custom job</h3>
       <div class="action-buttons-grid">
         @for (config of configuredActions(); track config.id) {
           <button 
@@ -19,35 +19,13 @@
           </button>
         }
       </div>
-    </section>
-  }
 
-  <section class="job-form">
-    <h3>[POST] Start Action</h3>
-    <div class="field-row">
-      <label>Action Name</label>
-      <input [(ngModel)]="newJob.jobType" placeholder="e.g. ExportOrders" />
-    </div>
-
-    <div class="parameters">
-      <h4>Parameters (optional)</h4>
-      <div class="param-add">
-        <input [(ngModel)]="parameterKey" placeholder="key" />
-        <input [(ngModel)]="parameterValue" placeholder="value" />
-        <button type="button" (click)="addParameter()" [disabled]="!parameterKey.trim()">Add</button>
+      <!-- Status Messages -->
+      <div class="status-messages">
+        <div class="success" *ngIf="successMessage">{{successMessage}}</div>
+        <div class="error" *ngIf="errorMessage">{{errorMessage}}</div>
       </div>
-      <div class="param-list" *ngIf="newJob.parameters && (getObjectKeys(newJob.parameters).length > 0)">
-        <div class="param-item" *ngFor="let key of getObjectKeys(newJob.parameters)">
-          <span class="k">{{key}}</span>=<span class="v">{{newJob.parameters[key]}}</span>
-          <button type="button" (click)="removeParameter(key)">x</button>
-        </div>
-      </div>
-    </div>
 
-    <div class="form-actions">
-      <button type="button" (click)="submitJob()" [disabled]="isSubmitting">Start Action</button>
-      <button type="button" (click)="resetForm()" [disabled]="isSubmitting">Reset</button>
-      
       <!-- Progress Bar -->
       <div class="progress-container" *ngIf="jobProgress !== null">
         <div class="progress-info">
@@ -61,13 +39,8 @@
              <span class="job-state" [class]="jobStatus.state?.toLowerCase()">{{jobStatus.state || 'Unknown'}}</span>
         </div>
       </div>
-    </div>
-
-    <div class="status-messages">
-      <div class="success" *ngIf="successMessage">{{successMessage}}</div>
-      <div class="error" *ngIf="errorMessage">{{errorMessage}}</div>
-    </div>
-  </section>
+    </section>
+  }
 
   <!-- Combined Response Window -->
   <section class="response-section" *ngIf="postResponse || getResponse">

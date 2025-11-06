@@ -19,11 +19,11 @@ import { AdminComponent } from './admin/admin';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/user-login', pathMatch: 'full' },
-  { path: 'user-login', component: UserLoginComponent },
+  { path: 'user-login', component: UserLoginComponent }, // Merged login (Brain2 + Local)
   { 
     path: 'login', 
-    component: Login,
-    canActivate: [userAuthGuard] // Must pass user auth before Brain2 login
+    redirectTo: '/user-login', // Redirect old Brain2 login to merged login
+    pathMatch: 'full'
   },
   { 
     path: 'dashboard', 

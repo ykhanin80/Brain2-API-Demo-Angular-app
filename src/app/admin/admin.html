@@ -67,7 +67,7 @@
             <tbody>
               @for (user of users(); track user.username) {
                 <tr [class.editing]="editingUser()?.username === user.username">
-                  @if (editingUser()?.username === user.username || (editingUser()?.isNew && isAddingUser())) {
+                  @if (editingUser()?.username === user.username && !editingUser()?.isNew) {
                     <!-- Edit Mode -->
                     <td>
                       <input 

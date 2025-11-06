@@ -1,26 +1,26 @@
-import {
-  AngularNodeAppEngine,
-  createNodeRequestHandler,
-  isMainModule,
-  writeResponseToNodeResponse,
-} from '@angular/ssr/node';
-import express from 'express';
-import { join } from 'node:path';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+/**
+ * Simple Express server to serve the Angular app and provide API endpoints
+ * for storing action configurations
+ */
 
-const browserDistFolder = join(import.meta.dirname, '../browser');
+import express from 'express';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const PORT = process.env.PORT || 4200;
 
 // Parse JSON body
 app.use(express.json());
 
 /**
  * Action Configurations Storage
- * Store configurations in a JSON file on the server
  */
-const dataDir = join(import.meta.dirname, '../data');
+const dataDir = join(__dirname, 'data');
 const configFilePath = join(dataDir, 'action-configurations.json');
 
 // Default configurations
@@ -51,20 +51,25 @@ const defaultConfigs = [
 // Ensure data directory exists
 if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
+  console.log('Created data directory:', dataDir);
 }
 
 // Initialize config file if it doesn't exist
 if (!existsSync(configFilePath)) {
   writeFileSync(configFilePath, JSON.stringify(defaultConfigs, null, 2));
+  console.log('Initialized action-configurations.json with defaults');
 }
 
 /**
- * GET /api/action-configurations - Get all action configurations
+ * API Endpoints
  */
+
+// GET /api/action-configurations - Get all action configurations
 app.get('/api/action-configurations', (req, res) => {
   try {
     const data = readFileSync(configFilePath, 'utf-8');
     const configs = JSON.parse(data);
+    console.log('Loaded', configs.length, 'action configurations');
     res.json(configs);
   } catch (error) {
     console.error('Error reading action configurations:', error);
@@ -72,13 +77,12 @@ app.get('/api/action-configurations', (req, res) => {
   }
 });
 
-/**
- * POST /api/action-configurations - Save all action configurations
- */
+// POST /api/action-configurations - Save all action configurations
 app.post('/api/action-configurations', (req, res) => {
   try {
     const configs = req.body;
     writeFileSync(configFilePath, JSON.stringify(configs, null, 2));
+    console.log('Saved', configs.length, 'action configurations');
     res.json({ success: true, message: 'Configurations saved successfully' });
   } catch (error) {
     console.error('Error saving action configurations:', error);
@@ -87,44 +91,23 @@ app.post('/api/action-configurations', (req, res) => {
 });
 
 /**
- * Serve static files from /browser
+ * Serve static files from dist/order-app/browser
  */
-app.use(
-  express.static(browserDistFolder, {
-    maxAge: '1y',
-    index: false,
-    redirect: false,
-  }),
-);
+const distPath = join(__dirname, 'dist', 'order-app', 'browser');
+app.use(express.static(distPath));
 
 /**
- * Handle all other requests by rendering the Angular application.
+ * Serve index.html for all other routes (Angular routing)
  */
-app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
-    .catch(next);
+app.use((req, res) => {
+  res.sendFile(join(distPath, 'index.html'));
 });
 
 /**
- * Start the server if this module is the main entry point.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
+ * Start server
  */
-if (isMainModule(import.meta.url)) {
-  const port = process.env['PORT'] || 4000;
-  app.listen(port, (error) => {
-    if (error) {
-      throw error;
-    }
-
-    console.log(`Node Express server listening on http://localhost:${port}`);
-  });
-}
-
-/**
- * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
- */
-export const reqHandler = createNodeRequestHandler(app);
+app.listen(PORT, () => {
+  console.log(`\n✅ Server running on http://localhost:${PORT}`);
+  console.log(`📁 Serving files from: ${distPath}`);
+  console.log(`💾 Config file: ${configFilePath}\n`);
+});

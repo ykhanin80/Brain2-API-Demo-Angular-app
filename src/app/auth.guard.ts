@@ -13,8 +13,8 @@ export const authGuard: CanActivateFn = (route, state) => {
       if (isAuthenticated) {
         return true;
       } else {
-        // Redirect to login page with return URL
-        router.navigate(['/login'], { 
+        // Redirect to merged login page with return URL
+        router.navigate(['/user-login'], { 
           queryParams: { returnUrl: state.url }
         });
         return false;

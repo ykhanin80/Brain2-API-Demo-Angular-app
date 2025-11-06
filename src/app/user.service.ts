@@ -66,6 +66,9 @@ export class UserService {
   private currentUserSignal = signal<AuthSession | null>(null);
   
   constructor() {
+    // Load users from localStorage (if any were saved)
+    this.loadUsersFromStorage();
+    
     // Try to restore session from localStorage
     this.restoreSession();
   }
@@ -213,5 +216,88 @@ export class UserService {
 
     const accessiblePages = this.getAccessiblePages();
     return accessiblePages.some(page => route.includes(page));
+  }
+
+  /**
+   * Get all users (for admin management)
+   */
+  getAllUsers(): User[] {
+    return [...this.users];
+  }
+
+  /**
+   * Add a new user
+   */
+  addUser(user: User): { success: boolean; message: string } {
+    // Check if username already exists
+    if (this.users.some(u => u.username === user.username)) {
+      return { success: false, message: 'Username already exists' };
+    }
+
+    this.users.push({ ...user });
+    this.saveUsersToStorage();
+    return { success: true, message: 'User created successfully' };
+  }
+
+  /**
+   * Update an existing user
+   */
+  updateUser(username: string, updates: Partial<User>): { success: boolean; message: string } {
+    const index = this.users.findIndex(u => u.username === username);
+    if (index === -1) {
+      return { success: false, message: 'User not found' };
+    }
+
+    // Don't allow changing username
+    if (updates.username && updates.username !== username) {
+      return { success: false, message: 'Cannot change username' };
+    }
+
+    this.users[index] = { ...this.users[index], ...updates };
+    this.saveUsersToStorage();
+    return { success: true, message: 'User updated successfully' };
+  }
+
+  /**
+   * Delete a user
+   */
+  deleteUser(username: string): { success: boolean; message: string } {
+    if (username === 'admin') {
+      return { success: false, message: 'Cannot delete admin user' };
+    }
+
+    const index = this.users.findIndex(u => u.username === username);
+    if (index === -1) {
+      return { success: false, message: 'User not found' };
+    }
+
+    this.users.splice(index, 1);
+    this.saveUsersToStorage();
+    return { success: true, message: 'User deleted successfully' };
+  }
+
+  /**
+   * Save users to localStorage
+   */
+  private saveUsersToStorage(): void {
+    try {
+      localStorage.setItem('localUsers', JSON.stringify(this.users));
+    } catch (e) {
+      console.error('Failed to save users to storage:', e);
+    }
+  }
+
+  /**
+   * Load users from localStorage
+   */
+  private loadUsersFromStorage(): void {
+    try {
+      const stored = localStorage.getItem('localUsers');
+      if (stored) {
+        this.users = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Failed to load users from storage:', e);
+    }
   }
 }

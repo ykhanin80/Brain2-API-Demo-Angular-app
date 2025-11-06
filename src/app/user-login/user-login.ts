@@ -1,7 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../user.service';
+import { Auth } from '../auth';
+import { ApiConfig } from '../api-config';
 
 @Component({
   selector: 'app-user-login',
@@ -16,13 +18,15 @@ export class UserLoginComponent {
   errorMessage = signal('');
   isLoading = signal(false);
 
-  constructor(
-    private userService: UserService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
+  private readonly userService = inject(UserService);
+  private readonly auth = inject(Auth);
+  private readonly apiConfig = inject(ApiConfig);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  constructor() {
     // If already logged in, redirect
-    if (this.userService.isAuthenticated()) {
+    if (this.userService.isAuthenticated() && this.auth.isAuthenticated()) {
       this.redirectAfterLogin();
     }
   }
@@ -51,18 +55,54 @@ export class UserLoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    // Simulate slight delay for better UX
-    setTimeout(() => {
-      const result = this.userService.login(username, password);
-      this.isLoading.set(false);
+    // Step 1: Authenticate with Brain2 first
+    const credentials = {
+      authenticationMode: 'credentials' as const,
+      userName: username,
+      password: password
+    };
 
-      if (result.success) {
-        this.redirectAfterLogin();
-      } else {
-        this.errorMessage.set(result.message);
+    this.auth.login(credentials).subscribe({
+      next: (response) => {
+        // Brain2 authentication successful
+        console.log('Brain2 authentication successful');
+
+        // Step 2: Automatically login locally with same credentials
+        const localResult = this.userService.login(username, password);
+        
+        if (localResult.success) {
+          // Both logins successful
+          this.isLoading.set(false);
+          this.redirectAfterLogin();
+        } else {
+          // Brain2 worked but local user not found - show helpful message
+          this.isLoading.set(false);
+          this.errorMessage.set(
+            `Brain2 authentication successful, but local user "${username}" not found. ` +
+            `Please contact admin to create local user account.`
+          );
+        }
+      },
+      error: (error) => {
+        // Brain2 authentication failed
+        this.isLoading.set(false);
+        
+        if (error.status === 401) {
+          this.errorMessage.set('Invalid username or password for Brain2');
+        } else if (error.status === 0) {
+          this.errorMessage.set(
+            `Cannot connect to Brain2 server at ${this.apiConfig.getBaseUrl()}. ` +
+            `Please check server configuration.`
+          );
+        } else {
+          this.errorMessage.set(
+            `Brain2 login failed: ${error.statusText || error.message || 'Unknown error'}`
+          );
+        }
+        
         this.password.set(''); // Clear password on failed login
       }
-    }, 300);
+    });
   }
 
   onKeyPress(event: KeyboardEvent): void {
