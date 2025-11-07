@@ -25,21 +25,6 @@
             <span *ngSwitchDefault class="status-value" [style.color]="darkMode() ? '#eab308' : '#ffc107'">Checking…</span>
           </ng-container>
         </span>
-        <span class="status-item">
-          <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">Auth:</span>
-          <ng-container *ngIf="(isAuthenticated$ | async); else notAuth">
-            <span class="status-value" [style.color]="darkMode() ? '#38bdf8' : '#17a2b8'">Active</span>
-          </ng-container>
-          <ng-template #notAuth>
-            <span class="status-value" [style.color]="darkMode() ? '#f87171' : '#dc3545'">Not authenticated</span>
-          </ng-template>
-        </span>
-        <span class="status-item" *ngIf="(isAuthenticated$ | async)">
-          <span class="status-label" [style.color]="darkMode() ? '#ffffff' : '#6c757d'">Token expires in:</span>
-          <span class="status-value" [style.color]="darkMode() ? '#ffffff' : '#212529'">
-            {{ tokenSecondsLeft() === null ? '—' : formatSeconds(tokenSecondsLeft()!) }}
-          </span>
-        </span>
       </div>
       <button mat-button type="button" (click)="toggleDarkMode()" class="mode-toggle-btn">
         {{ darkMode() ? 'Light Mode' : 'Dark Mode' }}
@@ -49,21 +34,13 @@
       <div class="user-info" *ngIf="localUser()">
         <span class="user-name">{{ localUser()!.displayName }}</span>
         <span class="user-role" 
-              [style.background]="localUser()!.role === 'admin' ? '#dc3545' : localUser()!.role === 'operator' ? '#007bff' : '#6c757d'">
-          {{ localUser()!.role }}
+              [style.background]="localUser()!.permissionLevel === 'power-user' ? '#28a745' : '#6c757d'">
+          {{ localUser()!.permissionLevel === 'power-user' ? 'Power' : 'View' }}
         </span>
       </div>
       
-      <!-- Brain2 Auth Status -->
-      <span *ngIf="(isAuthenticated$ | async); else pleaseLogin">
-        Brain2: {{ (currentUser$ | async)?.name }}
-      </span>
-      <ng-template #pleaseLogin>
-        <button mat-button color="primary" [routerLink]="['/login']" *ngIf="localUser()">Connect Brain2</button>
-      </ng-template>
-      
-      <!-- Logout Buttons -->
-      <button *ngIf="(isAuthenticated$ | async)" (click)="logout()" class="logout-btn secondary">Disconnect Brain2</button>
+      <!-- Login/Logout -->
+      <button *ngIf="!localUser()" mat-button color="primary" [routerLink]="['/user-login']">Login</button>
       <button *ngIf="localUser()" (click)="logoutUser()" class="logout-btn">Logout</button>
     </div>
   </nav>
@@ -78,15 +55,13 @@
         <button class="close-btn" (click)="closeMenu()" [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">×</button>
       </div>
       <ul class="menu-items">
-        @if (hasPermission('dashboard')) {
-          <li>
-            <a [routerLink]="['/dashboard']" (click)="closeMenu()" 
-               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
-              <i>🏠</i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-        }
+        <li>
+          <a [routerLink]="['/dashboard']" (click)="closeMenu()" 
+             [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+            <i>🏠</i>
+            <span>Dashboard</span>
+          </a>
+        </li>
         @if (hasPermission('data-maintenance')) {
           <li>
             <a [routerLink]="['/data-maintenance']" (click)="closeMenu()" 
@@ -141,7 +116,7 @@
             </a>
           </li>
         }
-        @if (localUser()?.role === 'admin') {
+        @if (localUser()?.permissionLevel === 'power-user') {
           <li class="menu-divider"></li>
           <li>
             <a [routerLink]="['/admin']" (click)="closeMenu()" 

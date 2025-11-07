@@ -8,6 +8,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createHash } from 'crypto';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,6 +30,76 @@ app.use((req, res, next) => {
 
 // Parse JSON body
 app.use(express.json());
+
+// Swagger configuration
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Order App API',
+      version: '1.0.0',
+      description: 'API documentation for Order App backend server',
+      contact: {
+        name: 'API Support'
+      }
+    },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'Development server'
+      }
+    ],
+    components: {
+      schemas: {
+        User: {
+          type: 'object',
+          properties: {
+            username: { type: 'string', example: 'admin' },
+            displayName: { type: 'string', example: 'Administrator' },
+            role: { 
+              type: 'string', 
+              enum: ['admin', 'operator', 'viewer', 'custom'],
+              example: 'admin'
+            },
+            permissionLevel: {
+              type: 'string',
+              enum: ['power-user', 'basic-user'],
+              example: 'power-user',
+              description: 'Power User can edit/create/delete, Basic User can only view'
+            },
+            permissions: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['create-order', 'all-orders', 'capture', 'actions', 'data-maintenance', 'package-record', 'label-preview', 'settings']
+              },
+              example: ['actions', 'capture']
+            }
+          }
+        },
+        ActionConfiguration: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', example: 'action-1' },
+            name: { type: 'string', example: 'Action 1' },
+            productionLine: { type: 'string', example: 'Line 1' },
+            brain2Job: { type: 'string', example: 'Job123' },
+            order: { type: 'number', example: 1 }
+          }
+        }
+      }
+    }
+  },
+  apis: ['./api-server.mjs']
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+console.log('📚 Swagger documentation available at http://localhost:3000/api-docs');
+
 
 /**
  * Action Configurations Storage
@@ -120,6 +192,25 @@ if (!existsSync(usersFilePath)) {
  * API Endpoints
  */
 
+/**
+ * @swagger
+ * /api/action-configurations:
+ *   get:
+ *     summary: Get all action configurations
+ *     description: Returns a list of all action configurations
+ *     tags: [Action Configurations]
+ *     responses:
+ *       200:
+ *         description: List of action configurations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ActionConfiguration'
+ *       500:
+ *         description: Server error
+ */
 // GET /api/action-configurations - Get all action configurations
 app.get('/api/action-configurations', (req, res) => {
   try {
@@ -133,7 +224,28 @@ app.get('/api/action-configurations', (req, res) => {
   }
 });
 
-// POST /api/action-configurations - Save all action configurations
+/**
+ * @swagger
+ * /api/action-configurations:
+ *   post:
+ *     summary: Update action configurations
+ *     description: Saves the entire action configurations array
+ *     tags: [Action Configurations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               $ref: '#/components/schemas/ActionConfiguration'
+ *     responses:
+ *       200:
+ *         description: Configurations saved successfully
+ *       500:
+ *         description: Server error
+ */
+// POST /api/action-configurations - Save action configurations
 app.post('/api/action-configurations', (req, res) => {
   try {
     const configs = req.body;
@@ -150,6 +262,25 @@ app.post('/api/action-configurations', (req, res) => {
  * User Management Endpoints
  */
 
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     description: Returns a list of all users (without password hashes)
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: List of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       500:
+ *         description: Server error
+ */
 // GET /api/users - Get all users (without password hashes)
 app.get('/api/users', (req, res) => {
   try {
@@ -165,6 +296,44 @@ app.get('/api/users', (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/validate:
+ *   post:
+ *     summary: Validate user credentials
+ *     description: Authenticates a user with username and password
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: admin
+ *               password:
+ *                 type: string
+ *                 example: admin123
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Invalid credentials
+ */
 // POST /api/users/validate - Validate user credentials
 app.post('/api/users/validate', (req, res) => {
   try {
@@ -191,10 +360,48 @@ app.post('/api/users/validate', (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users:
+ *   post:
+ *     summary: Create a new user
+ *     description: Creates a new user with the provided credentials
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - role
+ *               - displayName
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, operator, viewer, custom]
+ *               displayName:
+ *                 type: string
+ *               permissions:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: User created successfully
+ *       400:
+ *         description: Invalid input or username already exists
+ */
 // POST /api/users - Create new user
 app.post('/api/users', (req, res) => {
   try {
-    const { username, password, role, displayName, permissions } = req.body;
+    const { username, password, role, displayName, permissions, permissionLevel } = req.body;
     
     // Validation
     if (!username || !password || !role || !displayName) {
@@ -216,6 +423,7 @@ app.post('/api/users', (req, res) => {
       role,
       displayName,
       permissions: permissions || [],
+      permissionLevel: permissionLevel || 'basic-user', // Default to basic-user if not specified
       createdAt: new Date().toISOString()
     };
     
@@ -230,11 +438,49 @@ app.post('/api/users', (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/{username}:
+ *   put:
+ *     summary: Update an existing user
+ *     description: Updates user information including role, displayName, password, and permissions
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Username of the user to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               displayName:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 enum: [admin, operator, viewer, custom]
+ *               password:
+ *                 type: string
+ *               permissions:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       404:
+ *         description: User not found
+ */
 // PUT /api/users/:username - Update existing user
 app.put('/api/users/:username', (req, res) => {
   try {
     const { username } = req.params;
-    const { password, role, displayName, permissions } = req.body;
+    const { password, role, displayName, permissions, permissionLevel } = req.body;
     
     console.log('🔧 PUT /api/users/:username - Request body:', JSON.stringify(req.body, null, 2));
     
@@ -253,6 +499,7 @@ app.put('/api/users/:username', (req, res) => {
     if (role) users[userIndex].role = role;
     if (password) users[userIndex].passwordHash = hashPassword(password);
     if (permissions !== undefined) users[userIndex].permissions = permissions;
+    if (permissionLevel !== undefined) users[userIndex].permissionLevel = permissionLevel;
     users[userIndex].updatedAt = new Date().toISOString();
     
     console.log('📝 After update:', JSON.stringify(users[userIndex], null, 2));
@@ -267,6 +514,28 @@ app.put('/api/users/:username', (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/{username}:
+ *   delete:
+ *     summary: Delete a user
+ *     description: Deletes a user (cannot delete admin user)
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Username of the user to delete
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       400:
+ *         description: Cannot delete admin user
+ *       404:
+ *         description: User not found
+ */
 // DELETE /api/users/:username - Delete user
 app.delete('/api/users/:username', (req, res) => {
   try {

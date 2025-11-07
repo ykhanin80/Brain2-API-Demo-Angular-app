@@ -3,16 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { UserService, UserRole, PagePermission } from '../user.service';
+import { UserService, PagePermission, PermissionLevel } from '../user.service';
 import { ActionsConfigService, ActionButtonConfig } from '../actions-config.service';
 import { ApiConfig } from '../api-config';
 
 interface UserEdit {
   username: string;
   password: string;
-  role: UserRole;
   displayName: string;
   permissions?: PagePermission[];
+  permissionLevel?: PermissionLevel;
   isNew?: boolean;
 }
 
@@ -33,13 +33,13 @@ export class AdminComponent implements OnInit {
   
   // Available pages for permission checkboxes
   readonly availablePages: { key: PagePermission; label: string; icon: string }[] = [
-    { key: 'dashboard', label: 'Dashboard', icon: '🏠' },
     { key: 'data-maintenance', label: 'Data Maintenance', icon: '🗄️' },
     { key: 'all-orders', label: 'Order Management', icon: '📋' },
     { key: 'capture', label: 'Capture', icon: '📸' },
     { key: 'actions', label: 'Actions', icon: '⚡' },
     { key: 'package-record', label: 'Package Records', icon: '📦' },
-    { key: 'label-preview', label: 'Label Preview', icon: '🏷️' }
+    { key: 'label-preview', label: 'Label Preview', icon: '🏷️' },
+    { key: 'settings', label: 'Settings', icon: '⚙️' }
   ];
   
   // User Management
@@ -64,6 +64,9 @@ export class AdminComponent implements OnInit {
     private http: HttpClient,
     private apiConfig: ApiConfig
   ) {}
+
+  // Check if current user can edit
+  canEdit = () => this.userService.canEdit();
 
   ngOnInit(): void {
     // Check for tab query param
@@ -95,9 +98,9 @@ export class AdminComponent implements OnInit {
     this.users.set(allUsers.map(u => ({
       username: u.username,
       password: '••••••••', // Mask password in UI
-      role: u.role,
       displayName: u.displayName,
-      permissions: u.permissions || this.userService.getDefaultPermissions(u.role)
+      permissions: u.permissions || [],
+      permissionLevel: u.permissionLevel || 'basic-user'
     })));
   }
 
@@ -106,9 +109,9 @@ export class AdminComponent implements OnInit {
     this.editingUser.set({
       username: '',
       password: '',
-      role: 'viewer',
       displayName: '',
       permissions: [],
+      permissionLevel: 'basic-user',
       isNew: true
     });
   }
@@ -146,19 +149,9 @@ export class AdminComponent implements OnInit {
     
     console.log('🔧 togglePermission - New permissions:', newPermissions);
     
-    // Automatically set role to 'custom' when manually changing permissions
-    // unless it's already admin and has all permissions
-    const allPermissions = this.availablePages.map(p => p.key);
-    const hasAllPermissions = allPermissions.every(p => newPermissions.includes(p));
-    
-    const newRole = !hasAllPermissions && user.role !== 'custom' ? 'custom' : user.role;
-    
-    console.log('🔧 togglePermission - New role:', newRole);
-    
     this.editingUser.set({ 
       ...user, 
-      permissions: newPermissions,
-      role: newRole
+      permissions: newPermissions
     });
   }
 
@@ -211,9 +204,9 @@ export class AdminComponent implements OnInit {
       const result = await this.userService.addUser({
         username: user.username,
         password: user.password,
-        role: user.role,
         displayName: user.displayName,
-        permissions: user.permissions
+        permissions: user.permissions,
+        permissionLevel: user.permissionLevel || 'basic-user'
       });
       
       if (result.success) {
@@ -227,14 +220,16 @@ export class AdminComponent implements OnInit {
       // Update existing user
       const updates: any = {
         displayName: user.displayName,
-        role: user.role,
-        permissions: user.permissions
+        permissions: user.permissions,
+        permissionLevel: user.permissionLevel
       };
       
       // Only update password if it was changed
       if (user.password && user.password !== '••••••••') {
         updates.password = user.password;
       }
+      
+      console.log('🔧 saveUser - Sending updates:', JSON.stringify(updates, null, 2));
       
       const result = await this.userService.updateUser(user.username, updates);
       
@@ -277,14 +272,7 @@ export class AdminComponent implements OnInit {
     const value = input.value;
     this.editingUser.update(user => {
       if (!user) return null;
-      const updated = { ...user, [field]: value };
-      
-      // If role changed, update permissions to defaults for that role
-      if (field === 'role' && value !== 'custom') {
-        updated.permissions = this.userService.getDefaultPermissions(value as UserRole);
-      }
-      
-      return updated;
+      return { ...user, [field]: value };
     });
   }
 

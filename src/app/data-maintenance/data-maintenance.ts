@@ -13,6 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../auth';
 import { ApiConfig } from '../api-config';
+import { UserService } from '../user.service';
 // PapaParse will be lazy-loaded only when an import file is selected to avoid SSR/runtime issues.
 let PapaRef: any = null;
 import { parseCsvFile, autoMapHeaders, enforceUniqueMapping, downloadCsv, trimValue, parseNumberValue, parseBoolValue, runConcurrentQueue } from '../shared/csv-import.util';
@@ -401,6 +402,10 @@ export class DataMaintenanceComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly auth = inject(Auth);
   private readonly apiConfig = inject(ApiConfig);
+  private readonly userService = inject(UserService);
+
+  // Check if current user can edit
+  canEdit = () => this.userService.canEdit();
 
   // Dark mode detection
   readonly isDarkMode = signal(false);

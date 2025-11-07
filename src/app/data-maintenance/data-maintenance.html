@@ -70,7 +70,7 @@
   <ng-container *ngIf="currentSubPage()==='articles'">
   <!-- Create Article Button -->
   <div class="top-action-bar">
-    <button class="btn btn-primary" (click)="goToCreatePage()">
+    <button class="btn btn-primary" (click)="goToCreatePage()" [disabled]="!canEdit()">
       <i class="icon-plus"></i>
       Create Article
     </button>
@@ -1508,7 +1508,7 @@
           <button 
             class="btn btn-primary" 
             (click)="createArticle()"
-            [disabled]="!newArticle().number || !newArticle().name"
+            [disabled]="!newArticle().number || !newArticle().name || !canEdit()"
           >
             Create Article
           </button>

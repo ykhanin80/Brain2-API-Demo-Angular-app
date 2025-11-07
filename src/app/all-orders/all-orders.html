@@ -4,6 +4,22 @@
     <div class="header-actions">
       <button 
         type="button" 
+        class="btn btn-primary"
+        (click)="navigateToCreateOrder()"
+        [disabled]="!canCreateOrder()"
+      >
+        ➕ Create New Order
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-warning"
+        (click)="openOrdersCleanupDialog()"
+        [disabled]="!canEdit()"
+      >
+        🗑️ Orders Cleanup
+      </button>
+      <button 
+        type="button" 
         class="btn btn-secondary"
         (click)="refreshOrders()"
         [disabled]="isLoading"
@@ -16,13 +32,6 @@
         (click)="goToDashboard()"
       >
         🏠 Back to Dashboard
-      </button>
-      <button 
-        type="button" 
-        class="btn-back" 
-        (click)="goBack()"
-      >
-        ← Back to Orders
       </button>
     </div>
   </div>
@@ -89,10 +98,6 @@
           }
         </div>
         <div style="flex:1"></div>
-  <button class="btn btn-sm btn-outline" (click)="runGetDetails()" [disabled]="!selectedOrder || actionLoading">📄 Get Order Details</button>
-  <button class="btn btn-sm btn-outline" (click)="runGetResults()" [disabled]="!selectedOrder || actionLoading">📊 Get Order Results</button>
-  <button class="btn btn-sm btn-outline" (click)="runGetTransferValues()" [disabled]="!selectedOrder || actionLoading">🔄 Get Transfer Values</button>
-        <span style="width:8px"></span>
   <button class="btn btn-sm btn-success" (click)="runStartOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">▶️ Start Order</button>
   <button class="btn btn-sm btn-warning" (click)="runInterruptOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">⏸️ Interrupt Order</button>
   <button class="btn btn-sm btn-primary" (click)="runFinishOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">✅ Finish Order</button>
@@ -148,9 +153,10 @@
                 <td>
                   <div class="action-buttons" style="display:flex; gap:6px; flex-wrap:wrap;">
                     <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); viewOrder(order)">📄 Details</button>
-                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); runGetResults()" [disabled]="!isSelected(order) || actionLoading">📊 Results</button>
-                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); runGetTransferValues()" [disabled]="!isSelected(order) || actionLoading">🔄 Transfer Values</button>
-                    <button type="button" class="btn btn-sm btn-secondary" (click)="$event.stopPropagation(); editOrder(order)">✏️ Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); selectOrder(order); showOrderResults(order)">📊 Results</button>
+                    <button type="button" class="btn btn-sm btn-outline" (click)="$event.stopPropagation(); selectOrder(order); showOrderLog(order)">📋 Order Log</button>
+                    <button type="button" class="btn btn-sm btn-secondary" (click)="$event.stopPropagation(); editOrder(order)" [disabled]="!canEdit()">✏️ Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger" (click)="$event.stopPropagation(); deleteOrder(order)" [disabled]="!canEdit()">🗑️ Delete</button>
                   </div>
                 </td>
               </tr>
@@ -191,6 +197,94 @@
       >
         🔄 Refresh
       </button>
+    </div>
+  }
+
+  <!-- Orders Cleanup Dialog -->
+  @if (showCleanupDialog) {
+    <div class="cleanup-dialog-overlay" (click)="closeCleanupDialog()">
+      <div class="cleanup-dialog" (click)="$event.stopPropagation()">
+        <div class="cleanup-header">
+          <h3>🗑️ Orders Cleanup</h3>
+          <button class="btn-close" (click)="closeCleanupDialog()">✕</button>
+        </div>
+        
+        <div class="cleanup-body">
+          <p>Delete orders within a date range and by status.</p>
+          
+          <div class="cleanup-form">
+            <div class="form-group">
+              <label for="cleanupDateFrom">Creation Date From *</label>
+              <input 
+                type="datetime-local" 
+                id="cleanupDateFrom" 
+                [(ngModel)]="cleanupDateFrom"
+                [disabled]="isCleanupLoading"
+                class="form-input"
+              >
+              <small class="date-example">Start of range (seconds will be :00)</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="cleanupDateTo">Creation Date To *</label>
+              <input 
+                type="datetime-local" 
+                id="cleanupDateTo" 
+                [(ngModel)]="cleanupDateTo"
+                [disabled]="isCleanupLoading"
+                class="form-input"
+              >
+              <small class="date-example">End of range (seconds will be :59)</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="cleanupStatus">Status (optional)</label>
+              <select 
+                id="cleanupStatus" 
+                [(ngModel)]="cleanupStatus"
+                [disabled]="isCleanupLoading"
+                class="form-input"
+              >
+                <option [ngValue]="null">All Statuses</option>
+                <option [ngValue]="0">Proposed (0)</option>
+                <option [ngValue]="1">Active (1)</option>
+                <option [ngValue]="2">Finished (2)</option>
+                <option [ngValue]="3">Finished Manually (3)</option>
+                <option [ngValue]="4">Interrupted (4)</option>
+                <option [ngValue]="5">Canceled (5)</option>
+              </select>
+            </div>
+          </div>
+          
+          @if (cleanupResult) {
+            <div [class]="cleanupResult.success ? 'alert alert-success' : 'alert alert-error'">
+              <p>{{ cleanupResult.message }}</p>
+              @if (cleanupResult.deletedCount !== undefined) {
+                <p><strong>Deleted Count:</strong> {{ cleanupResult.deletedCount }}</p>
+              }
+            </div>
+          }
+        </div>
+        
+        <div class="cleanup-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeCleanupDialog()"
+            [disabled]="isCleanupLoading"
+          >
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-danger"
+            (click)="deleteOrdersInRange()"
+            [disabled]="isCleanupLoading || !cleanupDateFrom || !cleanupDateTo"
+          >
+            {{ isCleanupLoading ? '⏳ Deleting...' : '🗑️ Delete Orders' }}
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>

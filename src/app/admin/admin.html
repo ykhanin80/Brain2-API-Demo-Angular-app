@@ -46,7 +46,7 @@
       <div class="users-section">
         <div class="section-header">
           <h2>User Management</h2>
-          <button class="btn btn-primary" (click)="startAddUser()" [disabled]="editingUser() !== null">
+          <button class="btn btn-primary" (click)="startAddUser()" [disabled]="editingUser() !== null || !canEdit()">
             <i>+</i>
             Add User
           </button>
@@ -59,7 +59,7 @@
               <tr>
                 <th>Username</th>
                 <th>Display Name</th>
-                <th>Role</th>
+                <th>Access Level</th>
                 <th>Permissions</th>
                 <th>Password</th>
                 <th>Actions</th>
@@ -89,12 +89,10 @@
                     </td>
                     <td>
                       <select 
-                        [value]="editingUser()!.role"
-                        (change)="updateField('role', $event)">
-                        <option value="admin">Admin</option>
-                        <option value="operator">Operator</option>
-                        <option value="viewer">Viewer</option>
-                        <option value="custom">Custom</option>
+                        [value]="editingUser()!.permissionLevel || 'basic-user'"
+                        (change)="updateField('permissionLevel', $event)">
+                        <option value="power-user">Power User (Edit)</option>
+                        <option value="basic-user">Basic User (View Only)</option>
                       </select>
                     </td>
                     <td>
@@ -130,8 +128,9 @@
                     <td>{{ user.username }}</td>
                     <td>{{ user.displayName }}</td>
                     <td>
-                      <span class="role-badge" [class]="'role-' + user.role">
-                        {{ user.role }}
+                      <span class="permission-level-badge" 
+                            [class]="user.permissionLevel === 'power-user' ? 'power-user' : 'basic-user'">
+                        {{ user.permissionLevel === 'power-user' ? 'Power User (Edit)' : 'Basic User (View)' }}
                       </span>
                     </td>
                     <td class="permissions-display">
@@ -142,13 +141,13 @@
                     </td>
                     <td>{{ user.password }}</td>
                     <td class="actions-cell">
-                      <button class="btn btn-small btn-edit" (click)="startEditUser(user)" [disabled]="editingUser() !== null">
+                      <button class="btn btn-small btn-edit" (click)="startEditUser(user)" [disabled]="editingUser() !== null || !canEdit()">
                         Edit
                       </button>
                       <button 
                         class="btn btn-small btn-delete" 
                         (click)="deleteUser(user.username)"
-                        [disabled]="user.username === 'admin' || editingUser() !== null">
+                        [disabled]="user.username === 'admin' || editingUser() !== null || !canEdit()">
                         Delete
                       </button>
                     </td>
@@ -177,12 +176,10 @@
                   </td>
                   <td>
                     <select 
-                      [value]="editingUser()!.role"
-                      (change)="updateField('role', $event)">
-                      <option value="admin">Admin</option>
-                      <option value="operator">Operator</option>
-                      <option value="viewer">Viewer</option>
-                      <option value="custom">Custom</option>
+                      [value]="editingUser()!.permissionLevel || 'basic-user'"
+                      (change)="updateField('permissionLevel', $event)">
+                      <option value="power-user">Power User (Edit)</option>
+                      <option value="basic-user">Basic User (View Only)</option>
                     </select>
                   </td>
                   <td>
@@ -218,14 +215,12 @@
         </div>
 
         <div class="help-text">
-          <p><strong>Role Permissions:</strong></p>
+          <p><strong>User Management:</strong></p>
           <ul>
-            <li><strong>Admin:</strong> Full access to all pages and settings</li>
-            <li><strong>Operator:</strong> Access to Actions page only</li>
-            <li><strong>Viewer:</strong> Read-only access to Dashboard and All Orders</li>
-            <li><strong>Custom:</strong> Manually select pages using the checkboxes (role auto-switches to Custom when changing permissions)</li>
+            <li><strong>Access Level:</strong> Power User (can edit/create/delete) or Basic User (view only)</li>
+            <li><strong>Permissions:</strong> Check/uncheck page icons to grant or revoke access to specific pages</li>
+            <li>Hover over permission icons to see full page names</li>
           </ul>
-          <p><strong>Permissions:</strong> Check/uncheck page icons to grant or revoke access. Hover over icons to see page names.</p>
         </div>
       </div>
     }
@@ -270,7 +265,7 @@
                 <i>🔄</i>
                 Refresh
               </button>
-              <button class="btn btn-primary" (click)="startAddAction()" [disabled]="editingAction() !== null">
+              <button class="btn btn-primary" (click)="startAddAction()" [disabled]="editingAction() !== null || !canEdit()">
                 <i>+</i>
                 Add Action Button
               </button>
@@ -374,13 +369,13 @@
                           <button 
                             class="btn btn-small btn-edit" 
                             (click)="startEditAction(action)"
-                            [disabled]="editingAction() !== null">
+                            [disabled]="editingAction() !== null || !canEdit()">
                             Edit
                           </button>
                           <button 
                             class="btn btn-small btn-delete" 
                             (click)="deleteAction(action.id)"
-                            [disabled]="editingAction() !== null">
+                            [disabled]="editingAction() !== null || !canEdit()">
                             Delete
                           </button>
                         </td>

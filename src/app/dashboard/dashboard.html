@@ -22,7 +22,7 @@
 
     <!-- Order Management Section -->
     @if (hasPermission('all-orders')) {
-      <div class="dashboard-card active" (click)="navigateToOrderManagement()">
+      <div class="dashboard-card active" (click)="navigateToAllOrders()">
         <div class="card-icon">📋</div>
         <h3>Order Management</h3>
         <p>Complete order processing with BRAIN2 API integration</p>
@@ -54,7 +54,7 @@
 
     <!-- Actions Section -->
     @if (hasPermission('actions')) {
-      <div class="dashboard-card" (click)="navigateToActions()">
+      <div class="dashboard-card active" (click)="navigateToActions()">
         <div class="card-icon">⚡</div>
         <h3>Actions</h3>
         <p>Start Brain2 actions</p>

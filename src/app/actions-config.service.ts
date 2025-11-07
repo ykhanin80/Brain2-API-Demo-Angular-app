@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../environments/environment';
 
 export interface ActionButtonConfig {
   id: string;
@@ -15,7 +16,7 @@ export interface ActionButtonConfig {
 })
 export class ActionsConfigService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = '/api/action-configurations';
+  private readonly API_URL = `${environment.apiUrl}/action-configurations`;
   
   // Signal to hold all action button configurations
   private configSignal = signal<ActionButtonConfig[]>([]);

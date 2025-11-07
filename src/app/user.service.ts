@@ -1,11 +1,11 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../environments/environment';
 
-export type UserRole = 'admin' | 'operator' | 'viewer' | 'custom';
+export type PermissionLevel = 'power-user' | 'basic-user';
 
 export type PagePermission = 
-  | 'dashboard' 
   | 'create-order' 
   | 'all-orders' 
   | 'capture' 
@@ -18,18 +18,18 @@ export type PagePermission =
 export interface User {
   username: string;
   password?: string; // Only used when creating/updating
-  role: UserRole;
   displayName: string;
   permissions?: PagePermission[]; // Custom permissions for each user
+  permissionLevel?: PermissionLevel; // Power user (edit) vs Basic user (view only)
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface AuthSession {
   username: string;
-  role: UserRole;
   displayName: string;
   permissions: PagePermission[];
+  permissionLevel?: PermissionLevel;
   loginTime: number;
 }
 
@@ -62,6 +62,7 @@ export class UserService {
    * Passwords are stored as SHA-256 hashes on the server.
    */
   private http = inject(HttpClient);
+  private apiUrl = environment.apiUrl;
   private currentUserSignal = signal<AuthSession | null>(null);
   
   constructor() {
@@ -82,39 +83,13 @@ export class UserService {
   }
 
   /**
-   * Check if current user has a specific role
-   */
-  hasRole(role: UserRole): boolean {
-    const user = this.currentUserSignal();
-    return user?.role === role;
-  }
-
-  /**
-   * Check if current user has at least the specified role level
-   * admin > operator > viewer > custom (custom is checked by permissions)
-   */
-  hasMinimumRole(minimumRole: UserRole): boolean {
-    const user = this.currentUserSignal();
-    if (!user) return false;
-
-    const roleHierarchy: Record<UserRole, number> = {
-      'admin': 4,
-      'operator': 3,
-      'viewer': 2,
-      'custom': 1
-    };
-
-    return roleHierarchy[user.role] >= roleHierarchy[minimumRole];
-  }
-
-  /**
    * Attempt to login with username and password
    */
   async login(username: string, password: string): Promise<{ success: boolean; message: string }> {
     try {
       const response = await firstValueFrom(
         this.http.post<{ success: boolean; message?: string; user?: Omit<User, 'password'> }>(
-          '/api/users/validate',
+          `${this.apiUrl}/users/validate`,
           { username, password }
         )
       );
@@ -122,9 +97,9 @@ export class UserService {
       if (response.success && response.user) {
         const session: AuthSession = {
           username: response.user.username,
-          role: response.user.role,
           displayName: response.user.displayName,
-          permissions: response.user.permissions || this.getDefaultPermissions(response.user.role),
+          permissions: response.user.permissions || [],
+          permissionLevel: response.user.permissionLevel || 'basic-user', // Default to basic-user if not set
           loginTime: Date.now()
         };
 
@@ -186,58 +161,47 @@ export class UserService {
   }
 
   /**
-   * Get role display name
-   */
-  getRoleDisplayName(role: UserRole): string {
-    const names: Record<UserRole, string> = {
-      'admin': 'Administrator',
-      'operator': 'Operator',
-      'viewer': 'Viewer',
-      'custom': 'Custom'
-    };
-    return names[role];
-  }
-
-  /**
-   * Get default permissions based on role
-   */
-  getDefaultPermissions(role: UserRole): PagePermission[] {
-    switch (role) {
-      case 'admin':
-        return ['dashboard', 'create-order', 'all-orders', 'capture', 'actions', 'data-maintenance', 'package-record', 'label-preview', 'settings'];
-      case 'operator':
-        return ['actions'];
-      case 'viewer':
-        return ['dashboard', 'all-orders'];
-      case 'custom':
-        return [];
-      default:
-        return [];
-    }
-  }
-
-  /**
    * Get list of pages accessible to current user
    */
   getAccessiblePages(): PagePermission[] {
     const user = this.currentUserSignal();
     if (!user) return [];
 
-    // If user has custom permissions, use those
-    if (user.permissions && user.permissions.length > 0) {
-      return user.permissions;
-    }
-
-    // Otherwise use role-based defaults
-    return this.getDefaultPermissions(user.role);
+    // Return user's custom permissions
+    return user.permissions || [];
   }
 
   /**
    * Check if user has permission to access a specific page
    */
-  hasPermission(page: PagePermission): boolean {
+  hasPermission(page: PagePermission | 'dashboard'): boolean {
+    // Dashboard is always accessible to all authenticated users
+    if (page === 'dashboard') return true;
+    
     const permissions = this.getAccessiblePages();
-    return permissions.includes(page);
+    return permissions.includes(page as PagePermission);
+  }
+
+  /**
+   * Check if user can edit/modify data (Power User)
+   */
+  canEdit(): boolean {
+    const user = this.currentUserSignal();
+    if (!user) return false;
+    
+    // Check permission level only - any role can be power-user or basic-user
+    return user.permissionLevel === 'power-user';
+  }
+
+  /**
+   * Check if user can only view data (Basic User)
+   */
+  isViewOnly(): boolean {
+    const user = this.currentUserSignal();
+    if (!user) return true;
+    
+    // Check permission level - any role can be view-only
+    return user.permissionLevel !== 'power-user';
   }
 
   /**
@@ -257,7 +221,7 @@ export class UserService {
   async getAllUsers(): Promise<User[]> {
     try {
       return await firstValueFrom(
-        this.http.get<User[]>('/api/users')
+        this.http.get<User[]>(`${this.apiUrl}/users`)
       );
     } catch (error) {
       console.error('Error loading users:', error);
@@ -272,7 +236,7 @@ export class UserService {
     try {
       const response = await firstValueFrom(
         this.http.post<{ success: boolean; message: string }>(
-          '/api/users',
+          `${this.apiUrl}/users`,
           user
         )
       );
@@ -293,7 +257,7 @@ export class UserService {
     try {
       const response = await firstValueFrom(
         this.http.put<{ success: boolean; message: string }>(
-          `/api/users/${username}`,
+          `${this.apiUrl}/users/${username}`,
           updates
         )
       );
@@ -314,7 +278,7 @@ export class UserService {
     try {
       const response = await firstValueFrom(
         this.http.delete<{ success: boolean; message: string }>(
-          `/api/users/${username}`
+          `${this.apiUrl}/users/${username}`
         )
       );
       return response;

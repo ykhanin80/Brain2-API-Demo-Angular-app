@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './login/login';
 import { Dashboard } from './dashboard/dashboard';
-import { Order } from './order/order';
 import { Capture } from './capture/capture';
 import { ViewOrder } from './view-order/view-order';
 import { CreateOrder } from './create-order/create-order';
@@ -9,7 +8,7 @@ import { EditOrder } from './edit-order/edit-order';
 import { Settings } from './settings/settings';
 import { AllOrders } from './all-orders/all-orders';
 import { authGuard } from './auth.guard';
-import { userAuthGuard, userRoleGuard } from './user-auth.guard';
+import { userAuthGuard, userPermissionGuard } from './user-auth.guard';
 import { ActionsComponent } from './actions/actions';
 import { PackageRecordComponent } from './package-record/package-record';
 import { DataMaintenanceComponent } from './data-maintenance/data-maintenance';
@@ -28,17 +27,12 @@ export const routes: Routes = [
   { 
     path: 'dashboard', 
     component: Dashboard,
-    canActivate: [userAuthGuard, authGuard] // All authenticated users
-  },
-  { 
-    path: 'order-management', 
-    component: Order,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userAuthGuard, authGuard]
   },
   { 
     path: 'capture', 
     component: Capture,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userPermissionGuard('capture'), userAuthGuard, authGuard]
   },
   { 
     path: 'view-order', 
@@ -48,52 +42,52 @@ export const routes: Routes = [
   { 
     path: 'create-order', 
     component: CreateOrder,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userPermissionGuard('create-order'), userAuthGuard, authGuard]
   },
   { 
     path: 'edit-order', 
     component: EditOrder,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userAuthGuard, authGuard]
   },
   { 
     path: 'edit-order/:orderNumber', 
     component: EditOrder,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userAuthGuard, authGuard]
   },
   { 
     path: 'all-orders', 
     component: AllOrders,
-    canActivate: [userAuthGuard, authGuard] // All authenticated users (viewer can see)
+    canActivate: [userPermissionGuard('all-orders'), userAuthGuard, authGuard]
   },
   { 
     path: 'settings', 
     component: Settings,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userPermissionGuard('settings'), userAuthGuard, authGuard]
   },
   { 
     path: 'actions', 
     component: ActionsComponent,
-    canActivate: [userRoleGuard('operator'), authGuard] // Operator or Admin only
+    canActivate: [userPermissionGuard('actions'), userAuthGuard, authGuard]
   },
   { 
     path: 'package-record', 
     component: PackageRecordComponent,
-    canActivate: [userAuthGuard, authGuard]
+    canActivate: [userPermissionGuard('package-record'), userAuthGuard, authGuard]
   },
   { 
     path: 'data-maintenance', 
     component: DataMaintenanceComponent,
-    canActivate: [userRoleGuard('admin'), authGuard] // Admin only
+    canActivate: [userPermissionGuard('data-maintenance'), userAuthGuard, authGuard]
   },
   { 
     path: 'label-preview', 
     component: LabelPreviewPage,
-    canActivate: [userAuthGuard, authGuard]
+    canActivate: [userPermissionGuard('label-preview'), userAuthGuard, authGuard]
   },
   { 
     path: 'admin', 
     component: AdminComponent,
-    canActivate: [userRoleGuard('admin')] // Admin only - no Brain2 auth needed for this page
+    canActivate: [userAuthGuard]
   },
   { path: '**', redirectTo: '/dashboard' }
 ];

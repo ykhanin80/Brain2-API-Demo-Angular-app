@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ApiConfig } from '../api-config';
 import { DebugPanelComponent } from '../data-maintenance/debug/debug-panel';
+import { UserService } from '../user.service';
 
 export interface ApiOrder {
   key: string;
@@ -32,6 +33,13 @@ export class AllOrders implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly apiConfig = inject(ApiConfig);
+  private readonly userService = inject(UserService);
+  
+  // Check if current user can edit
+  canEdit = () => this.userService.canEdit();
+  
+  // Check if user can create orders
+  canCreateOrder = () => this.userService.hasPermission('create-order');
   
   // Current page items and filtered view
   orders: ApiOrder[] = [];
@@ -66,6 +74,14 @@ export class AllOrders implements OnInit {
   creationDateTo = '';
   
   showFilters = false;
+
+  // Cleanup dialog properties
+  showCleanupDialog = false;
+  cleanupDateFrom = '';
+  cleanupDateTo = '';
+  cleanupStatus: number | null = null;
+  isCleanupLoading = false;
+  cleanupResult: { success?: boolean; message?: string; deletedCount?: number } | null = null;
 
   // Debug panel state and storage
   debugCollapsed = true;
@@ -315,6 +331,45 @@ export class AllOrders implements OnInit {
     this.doPost(`/api/v1/order-processing/lines/${encodeURIComponent(this.lineName.trim())}/orders/${encodeURIComponent(this.selectedOrder.key)}/cancel`, 'Cancel Order');
   }
 
+  deleteOrder(order: ApiOrder): void {
+    if (!order?.key) return;
+    
+    if (!confirm(`Are you sure you want to delete order "${order.key}"?\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    this.actionLoading = true;
+    const baseUrl = this.apiConfig.getBaseUrl();
+    const url = `${baseUrl}/extensions/api/Order-Processing/DeleteOrderByNumber/${encodeURIComponent(order.key)}`;
+    
+    this.http.delete(url).subscribe({
+      next: (res) => {
+        this.recordAction(`Delete Order ${order.key}`, false, res, undefined, 200);
+        this.actionLoading = false;
+        // Refresh the orders list
+        this.loadAllOrders(this.page);
+        // Clear selection if deleted order was selected
+        if (this.selectedOrder?.key === order.key) {
+          this.selectedOrder = null;
+        }
+      },
+      error: (err) => {
+        this.recordAction(`Delete Order ${order.key}`, true, undefined, err, err?.status);
+        this.actionLoading = false;
+      }
+    });
+  }
+
+  showOrderResults(order: ApiOrder): void {
+    if (!order?.key) return;
+    this.doGet(`/api/v1/order-processing/orders/${encodeURIComponent(order.key)}/results`, `Get Order Results: ${order.key}`);
+  }
+
+  showOrderLog(order: ApiOrder): void {
+    if (!order?.key) return;
+    this.doGet(`/api/v1/order-processing/orders/${encodeURIComponent(order.key)}/status`, `Get Order Log: ${order.key}`);
+  }
+
   // Navigation
   goToDashboard(): void {
     this.router.navigate(['/dashboard']);
@@ -424,4 +479,65 @@ export class AllOrders implements OnInit {
     }
   }
 
+  // Navigation methods
+  navigateToCreateOrder(): void {
+    this.router.navigate(['/create-order']);
+  }
+
+  openOrdersCleanupDialog(): void {
+    this.showCleanupDialog = true;
+    this.cleanupResult = null;
+  }
+
+  closeCleanupDialog(): void {
+    this.showCleanupDialog = false;
+    this.cleanupDateFrom = '';
+    this.cleanupDateTo = '';
+    this.cleanupStatus = null;
+    this.cleanupResult = null;
+  }
+
+  async deleteOrdersInRange(): Promise<void> {
+    if (!this.cleanupDateFrom || !this.cleanupDateTo) {
+      this.cleanupResult = { success: false, message: 'Please provide both date fields' };
+      return;
+    }
+
+    this.isCleanupLoading = true;
+    this.cleanupResult = null;
+
+    try {
+      const baseUrl = this.apiConfig.getBaseUrl();
+      const url = `${baseUrl}/api/v1/orders`;
+      
+      const params: any = {
+        creationDateFrom: this.cleanupDateFrom,
+        creationDateTo: this.cleanupDateTo
+      };
+      
+      if (this.cleanupStatus !== null) {
+        params.status = this.cleanupStatus;
+      }
+
+      const response = await this.http.delete(url, { params }).toPromise();
+      this.cleanupResult = { 
+        success: true, 
+        message: 'Orders deleted successfully',
+        deletedCount: (response as any)?.deletedCount || 0
+      };
+      
+      // Refresh the orders list
+      this.loadAllOrders(this.page);
+    } catch (error: any) {
+      console.error('Error deleting orders:', error);
+      this.cleanupResult = { 
+        success: false, 
+        message: error?.error?.message || error?.message || 'Failed to delete orders'
+      };
+    } finally {
+      this.isCleanupLoading = false;
+    }
+  }
+
 }
+
