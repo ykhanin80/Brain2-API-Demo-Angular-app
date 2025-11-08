@@ -404,8 +404,8 @@ export class DataMaintenanceComponent implements OnInit {
   private readonly apiConfig = inject(ApiConfig);
   private readonly userService = inject(UserService);
 
-  // Check if current user can edit
-  canEdit = () => this.userService.canEdit();
+  // Check if current user can edit master data
+  canEdit = () => this.userService.canEditMasterData();
 
   // Dark mode detection
   readonly isDarkMode = signal(false);

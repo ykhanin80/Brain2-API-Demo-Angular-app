@@ -55,7 +55,7 @@ export class UserLoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    // Step 1: Authenticate with Brain2 first
+    // Step 1: Authenticate with Brain2 to get token
     const credentials = {
       authenticationMode: 'credentials' as const,
       userName: username,
@@ -64,22 +64,22 @@ export class UserLoginComponent {
 
     this.auth.login(credentials).subscribe({
       next: async (response) => {
-        // Brain2 authentication successful
-        console.log('Brain2 authentication successful');
+        // Brain2 authentication successful - token is now stored in auth service
+        console.log('✅ Brain2 authentication successful, token obtained');
 
-        // Step 2: Automatically login locally with same credentials
-        const localResult = await this.userService.login(username, password);
+        // Step 2: Fetch user rights from Brain2 using the token
+        const rightsResult = await this.userService.login(username, username);
         
-        if (localResult.success) {
-          // Both logins successful
+        if (rightsResult.success) {
+          // Rights fetched successfully
+          console.log('✅ User rights fetched from Brain2');
           this.isLoading.set(false);
           this.redirectAfterLogin();
         } else {
-          // Brain2 worked but local user not found - show helpful message
+          // Rights fetch failed
           this.isLoading.set(false);
           this.errorMessage.set(
-            `Brain2 authentication successful, but local user "${username}" not found. ` +
-            `Please contact admin to create local user account.`
+            `Authenticated but failed to fetch user rights: ${rightsResult.message}`
           );
         }
       },
@@ -88,7 +88,7 @@ export class UserLoginComponent {
         this.isLoading.set(false);
         
         if (error.status === 401) {
-          this.errorMessage.set('Invalid username or password for Brain2');
+          this.errorMessage.set('Invalid username or password');
         } else if (error.status === 0) {
           this.errorMessage.set(
             `Cannot connect to Brain2 server at ${this.apiConfig.getBaseUrl()}. ` +
@@ -118,10 +118,8 @@ export class UserLoginComponent {
     if (returnUrl) {
       this.router.navigateByUrl(returnUrl);
     } else {
-      // Redirect to first accessible page
-      const pages = this.userService.getAccessiblePages();
-      const redirectTo = pages.length > 0 ? `/${pages[0]}` : '/dashboard';
-      this.router.navigate([redirectTo]);
+      // Always redirect to dashboard (accessible to all authenticated users)
+      this.router.navigate(['/dashboard']);
     }
   }
 }

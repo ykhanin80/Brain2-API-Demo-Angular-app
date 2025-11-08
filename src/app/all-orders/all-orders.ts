@@ -35,11 +35,11 @@ export class AllOrders implements OnInit {
   private readonly apiConfig = inject(ApiConfig);
   private readonly userService = inject(UserService);
   
-  // Check if current user can edit
-  canEdit = () => this.userService.canEdit();
+  // Check if current user can edit orders
+  canEdit = () => this.userService.canEditOrders();
   
   // Check if user can create orders
-  canCreateOrder = () => this.userService.hasPermission('create-order');
+  canCreateOrder = () => this.userService.canEditOrders();
   
   // Current page items and filtered view
   orders: ApiOrder[] = [];

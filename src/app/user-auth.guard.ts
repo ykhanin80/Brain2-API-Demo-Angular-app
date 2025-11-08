@@ -1,6 +1,20 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { UserService, PagePermission } from './user.service';
+import { UserService, Brain2Right } from './user.service';
+
+/**
+ * Mapping of page routes to required Brain2 rights
+ */
+const PAGE_TO_RIGHT_MAP: Record<string, Brain2Right> = {
+  'capture': 'CaptureDisplay',
+  'data-maintenance': 'MasterDataDisplay',
+  'create-order': 'OrderEdit',
+  'all-orders': 'OrderDisplay',
+  'actions': 'MasterDataDisplay',
+  'package-record': 'OrderDisplay',
+  'label-preview': 'LabelDesignerDisplay',
+  'settings': 'SystemConfigurationDisplay'
+};
 
 /**
  * Local user auth guard to protect routes based on local user authentication
@@ -24,9 +38,9 @@ export const userAuthGuard: CanActivateFn = (
 };
 
 /**
- * Permission-based guard - checks if user has specific page permission
+ * Permission-based guard - checks if user has specific Brain2 right
  */
-export const userPermissionGuard = (requiredPermission: PagePermission): CanActivateFn => {
+export const userPermissionGuard = (page: string): CanActivateFn => {
   return (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
     const userService = inject(UserService);
     const router = inject(Router);
@@ -37,11 +51,12 @@ export const userPermissionGuard = (requiredPermission: PagePermission): CanActi
       });
     }
 
-    if (!userService.hasPermission(requiredPermission)) {
-      // User doesn't have permission, redirect to their first accessible page
-      const pages = userService.getAccessiblePages();
-      const redirectTo = pages.length > 0 ? `/${pages[0]}` : '/user-login';
-      return router.createUrlTree([redirectTo]);
+    // Map page to Brain2 right
+    const requiredRight = PAGE_TO_RIGHT_MAP[page];
+    
+    if (!requiredRight || !userService.hasRight(requiredRight)) {
+      // User doesn't have permission, redirect to dashboard (always accessible)
+      return router.createUrlTree(['/dashboard']);
     }
 
     return true;

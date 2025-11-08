@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { APP_VERSION } from '../../version';
-import { UserService, PagePermission } from '../user.service';
+import { UserService } from '../user.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,9 +16,24 @@ export class Dashboard {
   private readonly userService = inject(UserService);
   readonly version = APP_VERSION;
 
-  // Check if user has permission for a specific page
-  hasPermission(page: PagePermission): boolean {
-    return this.userService.hasPermission(page);
+  // Check if user can view master data (for Data Maintenance)
+  canViewMasterData(): boolean {
+    return this.userService.canViewMasterData();
+  }
+  
+  // Check if user can view orders
+  canViewOrders(): boolean {
+    return this.userService.canViewOrders();
+  }
+  
+  // Check if user can view capture
+  canViewCapture(): boolean {
+    return this.userService.canViewCapture();
+  }
+  
+  // Check if user can view label designer
+  canViewLabelDesigner(): boolean {
+    return this.userService.canViewLabelDesigner();
   }
 
   // Navigation methods for each section

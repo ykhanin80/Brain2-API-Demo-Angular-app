@@ -34,8 +34,8 @@
       <div class="user-info" *ngIf="localUser()">
         <span class="user-name">{{ localUser()!.displayName }}</span>
         <span class="user-role" 
-              [style.background]="localUser()!.permissionLevel === 'power-user' ? '#28a745' : '#6c757d'">
-          {{ localUser()!.permissionLevel === 'power-user' ? 'Power' : 'View' }}
+              [style.background]="(canEditMasterData() || canEditOrders()) ? '#28a745' : '#6c757d'">
+          {{ (canEditMasterData() || canEditOrders()) ? 'Editor' : 'Viewer' }}
         </span>
       </div>
       
@@ -62,7 +62,7 @@
             <span>Dashboard</span>
           </a>
         </li>
-        @if (hasPermission('data-maintenance')) {
+        @if (canViewMasterData()) {
           <li>
             <a [routerLink]="['/data-maintenance']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
@@ -71,7 +71,7 @@
             </a>
           </li>
         }
-        @if (hasPermission('all-orders')) {
+        @if (canViewOrders()) {
           <li>
             <a [routerLink]="['/all-orders']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
@@ -80,7 +80,7 @@
             </a>
           </li>
         }
-        @if (hasPermission('capture')) {
+        @if (canViewCapture()) {
           <li>
             <a [routerLink]="['/capture']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
@@ -89,7 +89,7 @@
             </a>
           </li>
         }
-        @if (hasPermission('actions')) {
+        @if (canViewMasterData()) {
           <li>
             <a [routerLink]="['/actions']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
@@ -98,7 +98,7 @@
             </a>
           </li>
         }
-        @if (hasPermission('package-record')) {
+        @if (canViewOrders()) {
           <li>
             <a [routerLink]="['/package-record']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
@@ -107,29 +107,12 @@
             </a>
           </li>
         }
-        @if (hasPermission('label-preview')) {
+        @if (canViewLabelDesigner()) {
           <li>
             <a [routerLink]="['/label-preview']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
               <i>🏷️</i>
               <span>Label Preview</span>
-            </a>
-          </li>
-        }
-        @if (localUser()?.permissionLevel === 'power-user') {
-          <li class="menu-divider"></li>
-          <li>
-            <a [routerLink]="['/admin']" (click)="closeMenu()" 
-               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
-              <i>👤</i>
-              <span>User Management</span>
-            </a>
-          </li>
-          <li>
-            <a [routerLink]="['/admin']" [queryParams]="{tab: 'actions'}" (click)="closeMenu()"
-               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
-              <i>⚙️</i>
-              <span>Actions Configuration</span>
             </a>
           </li>
         }

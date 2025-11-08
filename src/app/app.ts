@@ -7,7 +7,7 @@ import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth } from './auth';
 import { ApiConfig } from './api-config';
-import { UserService, PagePermission } from './user.service';
+import { UserService, Brain2Right } from './user.service';
 
 @Component({
   selector: 'app-root',
@@ -26,13 +26,30 @@ export class App implements OnInit, OnDestroy {
   readonly apiConnected = signal<boolean | null>(null);
   readonly menuOpen = signal(false);
   private connSub?: Subscription;
-  // Token countdown
-  readonly tokenSecondsLeft = signal<number | null>(null);
-  private tokenTimer?: any;
 
-  // Check if user has permission for a specific page
-  hasPermission(page: PagePermission): boolean {
-    return this.userService.hasPermission(page);
+  // Check if user has specific rights for menu visibility
+  canViewMasterData(): boolean {
+    return this.userService.canViewMasterData();
+  }
+  
+  canViewOrders(): boolean {
+    return this.userService.canViewOrders();
+  }
+  
+  canViewCapture(): boolean {
+    return this.userService.canViewCapture();
+  }
+  
+  canViewLabelDesigner(): boolean {
+    return this.userService.canViewLabelDesigner();
+  }
+  
+  canEditMasterData(): boolean {
+    return this.userService.canEditMasterData();
+  }
+  
+  canEditOrders(): boolean {
+    return this.userService.canEditOrders();
   }
 
   constructor(){
@@ -55,10 +72,8 @@ export class App implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Periodically check API connectivity (every 30s) and immediately on load
     this.connSub = interval(30000).pipe(startWith(0)).subscribe(() => this.checkApiConnection());
-    // Start token countdown ticker
-    this.startTokenTicker();
   }
-  ngOnDestroy(): void { this.connSub?.unsubscribe(); if (this.tokenTimer) clearInterval(this.tokenTimer); }
+  ngOnDestroy(): void { this.connSub?.unsubscribe(); }
 
   private checkApiConnection(): void {
     // Treat any HTTP response with a status code (>0) as reachable; status 0 => network error
@@ -69,26 +84,6 @@ export class App implements OnInit, OnDestroy {
         this.apiConnected.set(err.status > 0);
       }
     });
-  }
-  private startTokenTicker(){
-    if (this.tokenTimer) clearInterval(this.tokenTimer);
-    const update = () => {
-      const expiry = this.authService.getTokenExpiryMs();
-      if (!expiry) { this.tokenSecondsLeft.set(null); return; }
-      const s = Math.max(0, Math.floor((expiry - Date.now())/1000));
-      this.tokenSecondsLeft.set(s);
-    };
-    update();
-    this.tokenTimer = setInterval(update, 1000);
-  }
-  
-  // Format seconds as HH:MM:SS
-  formatSeconds(total: number): string {
-    const s = Math.max(0, Math.floor(total));
-    const hh = Math.floor(s / 3600).toString().padStart(2, '0');
-    const mm = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
-    const ss = Math.floor(s % 60).toString().padStart(2, '0');
-    return `${hh}:${mm}:${ss}`;
   }
   
   logout(): void {

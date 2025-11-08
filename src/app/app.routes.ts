@@ -14,7 +14,6 @@ import { PackageRecordComponent } from './package-record/package-record';
 import { DataMaintenanceComponent } from './data-maintenance/data-maintenance';
 import { LabelPreviewPage } from './label-preview/label-preview-page';
 import { UserLoginComponent } from './user-login/user-login';
-import { AdminComponent } from './admin/admin';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/user-login', pathMatch: 'full' },
@@ -83,11 +82,6 @@ export const routes: Routes = [
     path: 'label-preview', 
     component: LabelPreviewPage,
     canActivate: [userPermissionGuard('label-preview'), userAuthGuard, authGuard]
-  },
-  { 
-    path: 'admin', 
-    component: AdminComponent,
-    canActivate: [userAuthGuard]
   },
   { path: '**', redirectTo: '/dashboard' }
 ];
