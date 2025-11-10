@@ -126,7 +126,7 @@
       <div class="dm-placeholder">
         <h2>👥 Customers</h2>
         <p>Use the Add Customer button to open the dialog, edit values, then POST to API.</p>
-        <button class="btn btn-primary" [disabled]="isLoading()" (click)="openAddCustomerModal()">
+        <button class="btn btn-primary" [disabled]="!canEdit() || isLoading()" (click)="openAddCustomerModal()">
           <i class="icon-plus"></i>
           Add Customer
         </button>
@@ -256,7 +256,7 @@
 
               <div class="preview-actions mt">
                 <button type="button" class="btn" (click)="closeAddCustomerModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary" [disabled]="isLoading()">Create</button>
+                <button type="submit" class="btn btn-primary" [disabled]="!canEdit() || isLoading()">Create</button>
               </div>
             </form>
           </div>
@@ -473,6 +473,7 @@
               [loading]="exceptions.loading"
               [error]="exceptions.error"
               [response]="exceptions.response"
+              [canEdit]="canEdit()"
             ></dm-exceptions>
           </div>
         </div>
@@ -481,12 +482,12 @@
 
   <!-- Device Parameters Section -->
     <ng-container *ngIf="currentSubPage()==='device-parameters'">
-      <dm-device-parameters (debug)="debugApiResponses.amparImport = $event; activeDebugTab = 'amparImport'"></dm-device-parameters>
+      <dm-device-parameters [canEdit]="canEditDeviceParameters()" (debug)="debugApiResponses.amparImport = $event; activeDebugTab = 'amparImport'"></dm-device-parameters>
     </ng-container>
 
   <!-- Labeler Parameters Section -->
     <ng-container *ngIf="currentSubPage()==='label-parameters'">
-      <dm-label-parameters (debug)="debugApiResponses.lparImport = $event; activeDebugTab = 'lparImport'"></dm-label-parameters>
+      <dm-label-parameters [canEdit]="canEditDeviceParameters()" (debug)="debugApiResponses.lparImport = $event; activeDebugTab = 'lparImport'"></dm-label-parameters>
     </ng-container>
 
   <!-- Static Texts Section -->
@@ -570,7 +571,7 @@
       
       <!-- Static Text Action Buttons -->
       <div class="st-actions">
-        <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!isStaticTextDirty() || isLoading()">Save Static Text</button>
+        <button class="btn btn-primary" (click)="createStaticText()" [disabled]="!canEdit() || !isStaticTextDirty() || isLoading()">Save Static Text</button>
         <button class="btn btn-secondary" (click)="resetStaticTextForm()">Reset</button>
       </div>
       
@@ -624,6 +625,7 @@
       [sortDir]="stSortDir()"
       [viewItems]="stViewItems()"
       [getItemText]="stGetItemText.bind(this)"
+      [canEdit]="canEdit()"
       (setFilterNumber)="stSetFilterNumber($event)"
       (changePageSize)="stChangePageSize($event)"
       (reload)="loadStaticTextsList(stListPage())"
@@ -774,6 +776,7 @@
       <dm-articles-table 
         [isDarkMode]="isDarkMode()"
         [articles]="articles()"
+        [canEdit]="canEdit()"
         (edit)="openEditModal($event)"
         (copy)="openCopyModal($event)"
         (delete)="openDeleteConfirm($event)"

@@ -60,7 +60,7 @@ import { FormsModule } from '@angular/forms';
     </div>
 
     <div style="display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap;">
-      <button class="btn btn-primary" (click)="onPutExceptions()" [disabled]="loading || !articleNumber">Add Exception</button>
+      <button class="btn btn-primary" (click)="onPutExceptions()" [disabled]="!canEdit || loading || !articleNumber">Add Exception</button>
       <span class="err" *ngIf="error">{{error}}</span>
     </div>
 
@@ -110,6 +110,7 @@ export class ExceptionsComponent {
   @Input() loading = false;
   @Input() error: string | null = null;
   @Input() response: any = null;
+  @Input() canEdit = true;
 
   // Pagination (provided by container)
   @Input() onPrevPage: () => void = () => {};

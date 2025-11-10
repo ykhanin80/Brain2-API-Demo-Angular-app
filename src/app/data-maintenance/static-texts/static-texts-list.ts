@@ -59,7 +59,7 @@ import { CommonModule } from '@angular/common';
             <td>{{ (it.items?.length || 0) }}</td>
             <td *ngFor="let i of [1,2,3,4,5,6,7,8,9,10]">{{ getItemText(it, i) }}</td>
             <td class="actions">
-              <button class="btn btn-small btn-icon btn-edit" (click)="editRow.emit(it)" title="Edit Static Text">
+              <button class="btn btn-small btn-icon btn-edit" (click)="editRow.emit(it)" [disabled]="!canEdit" title="Edit Static Text">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               </button>
             </td>
@@ -111,6 +111,7 @@ export class StaticTextsListComponent {
   @Input() totalPages?: number;
   @Input() hasPrev = false;
   @Input() hasNext = false;
+  @Input() canEdit = true;
   @Input() sortDir: 'asc'|'desc' = 'asc';
   @Input() viewItems: any[] = [];
   @Input() getItemText: (row:any, n:number)=>string = () => '';

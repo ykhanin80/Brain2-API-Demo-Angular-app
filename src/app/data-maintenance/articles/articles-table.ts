@@ -32,13 +32,13 @@ import { CommonModule } from '@angular/common';
         <td class="label-param" [style.color]="!article.active && isDarkMode ? '#b8c2cc' : null">{{ article.articlePLU.labelParameter }}</td>
         <td class="shelf-life" [style.color]="!article.active && isDarkMode ? '#b8c2cc' : null">{{ article.articlePLU.shelfLifeDays1 }}</td>
         <td class="actions">
-          <button class="btn btn-small btn-icon btn-edit" (click)="edit.emit(article)" title="Edit Article" aria-label="Edit Article">
+          <button class="btn btn-small btn-icon btn-edit" (click)="edit.emit(article)" [disabled]="!canEdit" title="Edit Article" aria-label="Edit Article">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
           </button>
-          <button class="btn btn-small btn-icon btn-copy" (click)="copy.emit(article)" title="Copy Article" aria-label="Copy Article">
+          <button class="btn btn-small btn-icon btn-copy" (click)="copy.emit(article)" [disabled]="!canEdit" title="Copy Article" aria-label="Copy Article">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
           </button>
-          <button class="btn btn-small btn-icon btn-delete" (click)="delete.emit(article)" title="Delete Article" aria-label="Delete Article">
+          <button class="btn btn-small btn-icon btn-delete" (click)="delete.emit(article)" [disabled]="!canEdit" title="Delete Article" aria-label="Delete Article">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
           </button>
         </td>
@@ -99,6 +99,7 @@ import { CommonModule } from '@angular/common';
 export class ArticlesTableComponent {
   @Input() isDarkMode = false;
   @Input() articles: any[] = [];
+  @Input() canEdit = true;
   @Output() edit = new EventEmitter<any>();
   @Output() copy = new EventEmitter<any>();
   @Output() delete = new EventEmitter<any>();

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -14,6 +14,7 @@ import { parseCsvFile, autoMapHeaders, enforceUniqueMapping, downloadCsv, runCon
 })
 export class LabelParametersComponent {
   @Output() debug = new EventEmitter<any>();
+  @Input() canEdit: boolean = true; // Permission to edit device parameters
 
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);

@@ -407,6 +407,9 @@ export class DataMaintenanceComponent implements OnInit {
   // Check if current user can edit master data
   canEdit = () => this.userService.canEditMasterData();
 
+  // Check if current user can edit device parameters (for Label/Auto-labeler params)
+  canEditDeviceParameters = () => this.userService.hasRight('DeviceParametersEdit');
+
   // Dark mode detection
   readonly isDarkMode = signal(false);
 

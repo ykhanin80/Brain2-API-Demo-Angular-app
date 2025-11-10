@@ -41,6 +41,10 @@ export class AllOrders implements OnInit {
   // Check if user can create orders
   canCreateOrder = () => this.userService.canEditOrders();
   
+  // Check if user can perform workflow actions (Start, Interrupt, Finish, Cancel)
+  // These require OrderDisplay permission (viewing) but not necessarily OrderEdit
+  canPerformWorkflowActions = () => this.userService.canViewOrders();
+  
   // Current page items and filtered view
   orders: ApiOrder[] = [];
   filteredOrders: ApiOrder[] = [];

@@ -29,9 +29,9 @@
     
   </div>
   <div style="margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-    <button class="btn btn-primary" (click)="openImportDialog()">Import AMPAR from CSV</button>
-    <button class="btn btn-secondary" (click)="downloadAllAmparsCsv()" title="Export all AMPARs to CSV">Download all AMPARs to CSV</button>
-    <button class="btn btn-secondary" (click)="loadAutoParams()" [disabled]="autoParamsLoading" title="Reload AMPAR list">Reload</button>
+    <button class="btn btn-primary" (click)="openImportDialog()" [disabled]="!canEdit">Import AMPAR from CSV</button>
+    <button class="btn btn-secondary" (click)="downloadAllAmparsCsv()" title="Export all AMPARs to CSV" [disabled]="!canEdit">Download all AMPARs to CSV</button>
+    <button class="btn btn-secondary" (click)="loadAutoParams()" [disabled]="!canEdit || autoParamsLoading" title="Reload AMPAR list">Reload</button>
   </div>
 
   <!-- Current AMPARs list, similar to Labeler Parameters table -->
@@ -114,8 +114,8 @@
         <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
           <button class="btn btn-secondary" (click)="backToMapping()">Back</button>
           <span>Preview first {{ importRows.length }} rows</span>
-          <button class="btn btn-small" (click)="resolveGroupIdsFromDevices()" [disabled]="resolvingGroups">Resolve missing Device Group IDs via /api/v1/devices</button>
-          <button class="btn btn-primary" (click)="startImport()" [disabled]="importing || !importRows.length">Import</button>
+          <button class="btn btn-small" (click)="resolveGroupIdsFromDevices()" [disabled]="!canEdit || resolvingGroups">Resolve missing Device Group IDs via /api/v1/devices</button>
+          <button class="btn btn-primary" (click)="startImport()" [disabled]="!canEdit || importing || !importRows.length">Import</button>
           <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="!hasImportErrors()">Errors CSV</button>
         </div>
         <div *ngIf="importing || importProgress.processed>0" style="margin-bottom:8px;">

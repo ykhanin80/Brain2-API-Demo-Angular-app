@@ -98,10 +98,10 @@
           }
         </div>
         <div style="flex:1"></div>
-  <button class="btn btn-sm btn-success" (click)="runStartOrder()" [disabled]="!selectedOrder || !lineName.trim() || actionLoading">▶️ Start Order</button>
-  <button class="btn btn-sm btn-warning" (click)="runInterruptOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">⏸️ Interrupt Order</button>
-  <button class="btn btn-sm btn-primary" (click)="runFinishOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">✅ Finish Order</button>
-  <button class="btn btn-sm btn-danger" (click)="runCancelOrder()" [disabled]="!selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">❌ Cancel Order</button>
+  <button class="btn btn-sm btn-success" (click)="runStartOrder()" [disabled]="!canPerformWorkflowActions() || !selectedOrder || !lineName.trim() || actionLoading">▶️ Start Order</button>
+  <button class="btn btn-sm btn-warning" (click)="runInterruptOrder()" [disabled]="!canPerformWorkflowActions() || !selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">⏸️ Interrupt Order</button>
+  <button class="btn btn-sm btn-primary" (click)="runFinishOrder()" [disabled]="!canPerformWorkflowActions() || !selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">✅ Finish Order</button>
+  <button class="btn btn-sm btn-danger" (click)="runCancelOrder()" [disabled]="!canPerformWorkflowActions() || !selectedOrder || !lineName.trim() || !isOrderRunning() || actionLoading" [title]="!isOrderRunning() ? 'Order must be Running/Active' : ''">❌ Cancel Order</button>
       </div>
       
       <div class="orders-table-container">

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +14,7 @@ import { ApiConfig } from '../../api-config';
 })
 export class DeviceParametersComponent {
   @Output() debug = new EventEmitter<any>();
+  @Input() canEdit: boolean = true; // Permission to edit device parameters
   // API services
   private readonly http = inject(HttpClient);
   private readonly apiConfig = inject(ApiConfig);

@@ -1,10 +1,10 @@
 <div class="dm-card">
   <h2>Data Maintenance | Labeler Parameters</h2>
   <div style="margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-    <button class="btn btn-primary" (click)="openImportDialog()">Import LPAR from CSV</button>
+    <button class="btn btn-primary" (click)="openImportDialog()" [disabled]="!canEdit">Import LPAR from CSV</button>
     <button class="btn btn-secondary" (click)="downloadImportTemplate()" title="Download template for LPAR import">Download LPAR Import Template</button>
-    <button class="btn btn-secondary" (click)="downloadAllLparsCsv()" [disabled]="labelParamsLoading">Download all as CSV</button>
-    <button class="btn" (click)="loadLabelParams()" [disabled]="labelParamsLoading">Refresh</button>
+    <button class="btn btn-secondary" (click)="downloadAllLparsCsv()" [disabled]="!canEdit || labelParamsLoading">Download all as CSV</button>
+    <button class="btn" (click)="loadLabelParams()" [disabled]="!canEdit || labelParamsLoading">Refresh</button>
   </div>
 
   <!-- Current Label PARs list -->
@@ -81,7 +81,7 @@
       <div *ngIf="importState.step==='preview' || importState.step==='running' || importState.step==='done'" style="margin-top:12px;">
         <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap;">
           <button class="btn btn-secondary" (click)="backToMapping()" [disabled]="importState.step==='running'">Back</button>
-          <button class="btn btn-primary" (click)="startImport()" [disabled]="importing || !importRows.length || importState.step==='done'">Import</button>
+          <button class="btn btn-primary" (click)="startImport()" [disabled]="!canEdit || importing || !importRows.length || importState.step==='done'">Import</button>
           <button class="btn btn-small" (click)="downloadImportErrors()" [disabled]="!hasImportFailures()">Errors CSV</button>
           <span *ngIf="importing || importProgress.processed>0">Processed {{ importProgress.processed }}/{{ importRows.length }} • Success {{ importProgress.success }} • Failed {{ importProgress.failed }} ({{ importProgress.percent }}%)</span>
         </div>
