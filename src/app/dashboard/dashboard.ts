@@ -36,6 +36,16 @@ export class Dashboard {
     return this.userService.canViewLabelDesigner();
   }
 
+  // Check if user can view actions
+  canViewActions(): boolean {
+    return this.userService.canViewActions();
+  }
+
+  // Check if user can configure actions (admin)
+  canConfigureActions(): boolean {
+    return this.userService.hasRight('SystemConfigurationEdit');
+  }
+
   // Navigation methods for each section
   navigateToDataMaintenance(): void {
     this.router.navigate(['/data-maintenance']);
@@ -51,6 +61,10 @@ export class Dashboard {
 
   navigateToActions(): void {
     this.router.navigate(['/actions']);
+  }
+
+  navigateToAdmin(): void {
+    this.router.navigate(['/admin']);
   }
 
   navigateToPackageRecord(): void {

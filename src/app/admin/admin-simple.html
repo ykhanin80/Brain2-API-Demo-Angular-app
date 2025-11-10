@@ -78,18 +78,12 @@
                       />
                     </td>
                     <td>
-                      <select 
+                      <input 
+                        type="text" 
                         [value]="editingAction()!.productionLine || ''"
-                        (change)="updateActionField('productionLine', $event)">
-                        <option value="">None (optional)</option>
-                        @if (isLoadingLines()) {
-                          <option disabled>Loading...</option>
-                        } @else {
-                          @for (line of productionLines(); track line.id) {
-                            <option [value]="line.name">{{ line.name }}</option>
-                          }
-                        }
-                      </select>
+                        (input)="updateActionField('productionLine', $event)"
+                        placeholder="e.g., Line 1 (optional)"
+                      />
                     </td>
                     <td>
                       <input 
@@ -162,18 +156,12 @@
                     />
                   </td>
                   <td>
-                    <select 
+                    <input 
+                      type="text" 
                       [value]="editingAction()!.productionLine || ''"
-                      (change)="updateActionField('productionLine', $event)">
-                      <option value="">None (optional)</option>
-                      @if (isLoadingLines()) {
-                        <option disabled>Loading...</option>
-                      } @else {
-                        @for (line of productionLines(); track line.id) {
-                          <option [value]="line.name">{{ line.name }}</option>
-                        }
-                      }
-                    </select>
+                      (input)="updateActionField('productionLine', $event)"
+                      placeholder="e.g., Line 1 (optional)"
+                    />
                   </td>
                   <td>
                     <input 
@@ -207,8 +195,7 @@
         <li>Use <strong>▲ ▼</strong> arrows to reorder buttons on the Actions page</li>
       </ol>
       <p class="note">
-        <strong>Note:</strong> Users with right "Job configuration" will see "Actions - Jobs" page and can trigger the configured jobs.
-        Also these users must have relevant rights to run the configured jobs. For example: to run Order Processing relevant jobs, user must have "Order:edit" right.
+        <strong>Note:</strong> Users with <code>SchedulerConfiguration</code> right will see these buttons on the Actions page and can trigger the configured jobs.
       </p>
     </div>
   </div>

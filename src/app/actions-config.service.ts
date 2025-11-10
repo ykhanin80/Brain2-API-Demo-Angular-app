@@ -1,7 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../environments/environment';
+import { ApiConfig } from './api-config';
+import { Auth } from './auth';
 
 export interface ActionButtonConfig {
   id: string;
@@ -11,12 +12,16 @@ export interface ActionButtonConfig {
   order: number; // Display order on Actions page
 }
 
+// Brain2 GeneralTexts number for action configurations
+const BRAIN2_CONFIG_NUMBER = 999999999;
+
 @Injectable({
   providedIn: 'root'
 })
 export class ActionsConfigService {
   private readonly http = inject(HttpClient);
-  private readonly API_URL = `${environment.apiUrl}/action-configurations`;
+  private readonly apiConfig = inject(ApiConfig);
+  private readonly auth = inject(Auth);
   
   // Signal to hold all action button configurations
   private configSignal = signal<ActionButtonConfig[]>([]);
@@ -86,18 +91,55 @@ export class ActionsConfigService {
   }
 
   /**
-   * Load configurations from server
+   * Load configurations from Brain2 GeneralTexts
    */
   private async loadConfigs(): Promise<void> {
     try {
-      const configs = await firstValueFrom(
-        this.http.get<ActionButtonConfig[]>(this.API_URL)
+      const baseUrl = this.apiConfig.getBaseUrl();
+      const token = this.auth.getToken();
+      
+      if (!token) {
+        console.error('❌ No authentication token available for loading action configs');
+        this.configSignal.set([]);
+        return;
+      }
+
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+
+      // Read from Brain2 GeneralTexts API
+      console.log(`📖 Loading from Brain2 GeneralTexts number: ${BRAIN2_CONFIG_NUMBER}`);
+      
+      const response = await firstValueFrom(
+        this.http.get<any>(
+          `${baseUrl}/extensions/api/GeneralTexts/Read?textNumber=${BRAIN2_CONFIG_NUMBER}`,
+          { headers }
+        )
       );
-      this.configSignal.set(configs);
-    } catch (e) {
-      console.error('Failed to load action configs from server:', e);
-      // On error, keep empty array or try to load from localStorage as fallback
-      this.loadFromLocalStorageFallback();
+
+      console.log('✅ Loaded action configs from Brain2:', response);
+
+      // Parse the textValue which contains the JSON configuration
+      if (response && response.textValue) {
+        const configs = JSON.parse(response.textValue) as ActionButtonConfig[];
+        this.configSignal.set(configs);
+        console.log(`✅ Parsed ${configs.length} action configurations`);
+      } else {
+        // No configuration exists yet, start with empty array
+        console.log('ℹ️ No existing configuration, starting with empty array');
+        this.configSignal.set([]);
+      }
+    } catch (e: any) {
+      // If 404, it means no text exists yet - this is normal for first time
+      if (e.status === 404) {
+        console.log('ℹ️ No configuration exists yet (404), starting with empty array');
+        this.configSignal.set([]);
+      } else {
+        console.error('❌ Failed to load action configs from Brain2:', e);
+        this.configSignal.set([]);
+      }
     }
   }
 
@@ -109,41 +151,45 @@ export class ActionsConfigService {
   }
 
   /**
-   * Fallback to localStorage if server is not available
-   */
-  private loadFromLocalStorageFallback(): void {
-    try {
-      const stored = localStorage.getItem('actions_button_config');
-      if (stored) {
-        const configs = JSON.parse(stored) as ActionButtonConfig[];
-        this.configSignal.set(configs);
-        console.warn('Loaded from localStorage fallback');
-      }
-    } catch (e) {
-      console.error('Failed to load from localStorage fallback:', e);
-    }
-  }
-
-  /**
-   * Save configurations to server
+   * Save configurations to Brain2 GeneralTexts
    */
   private async saveConfigs(): Promise<void> {
     try {
-      const configs = this.configSignal();
-      await firstValueFrom(
-        this.http.post(this.API_URL, configs)
-      );
-      // Also save to localStorage as backup
-      localStorage.setItem('actions_button_config', JSON.stringify(configs));
-    } catch (e) {
-      console.error('Failed to save action configs to server:', e);
-      // Still save to localStorage as fallback
-      try {
-        const configs = this.configSignal();
-        localStorage.setItem('actions_button_config', JSON.stringify(configs));
-      } catch (localError) {
-        console.error('Failed to save to localStorage:', localError);
+      const baseUrl = this.apiConfig.getBaseUrl();
+      const token = this.auth.getToken();
+      
+      if (!token) {
+        console.error('❌ No authentication token available for saving action configs');
+        return;
       }
+
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+
+      const configs = this.configSignal();
+      const configJson = JSON.stringify(configs);
+
+      console.log(`💾 Saving ${configs.length} configurations to Brain2 GeneralTexts number: ${BRAIN2_CONFIG_NUMBER}`);
+
+      // Save to Brain2 GeneralTexts API
+      await firstValueFrom(
+        this.http.post(
+          `${baseUrl}/extensions/api/GeneralTexts/CreateOrOverwrite`,
+          {
+            number: BRAIN2_CONFIG_NUMBER,
+            textValue: configJson,
+            sendFormat: false
+          },
+          { headers }
+        )
+      );
+
+      console.log('✅ Saved action configs to Brain2 successfully');
+    } catch (e) {
+      console.error('❌ Failed to save action configs to Brain2:', e);
+      throw e; // Re-throw so caller knows it failed
     }
   }
 

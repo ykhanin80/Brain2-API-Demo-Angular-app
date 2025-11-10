@@ -32,11 +32,7 @@
       
       <!-- Local User Info -->
       <div class="user-info" *ngIf="localUser()">
-        <span class="user-name">{{ localUser()!.displayName }}</span>
-        <span class="user-role" 
-              [style.background]="(canEditMasterData() || canEditOrders()) ? '#28a745' : '#6c757d'">
-          {{ (canEditMasterData() || canEditOrders()) ? 'Editor' : 'Viewer' }}
-        </span>
+        <span class="user-name">Hello, {{ localUser()!.displayName }}</span>
       </div>
       
       <!-- Login/Logout -->
@@ -89,12 +85,21 @@
             </a>
           </li>
         }
-        @if (canViewMasterData()) {
+        @if (canViewActions()) {
           <li>
             <a [routerLink]="['/actions']" (click)="closeMenu()" 
                [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
               <i>⚡</i>
               <span>Actions</span>
+            </a>
+          </li>
+        }
+        @if (canConfigureActions()) {
+          <li>
+            <a [routerLink]="['/admin']" (click)="closeMenu()" 
+               [style.color]="darkMode() ? '#e2e8f0' : '#2d3748'">
+              <i>⚙️</i>
+              <span>Actions Configuration</span>
             </a>
           </li>
         }

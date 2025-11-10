@@ -1,7 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
+import { Auth } from './auth';
 
 // Brain2 User Rights
 export type Brain2Right = 
@@ -17,7 +18,8 @@ export type Brain2Right =
   | 'CustomerDisplay'
   | 'CustomerEdit'
   | 'DeviceParametersDisplay'
-  | 'DeviceParametersEdit';
+  | 'DeviceParametersEdit'
+  | 'SchedulerConfiguration'; // For Actions/Jobs page
 
 export interface Brain2UserRights {
   username: string;
@@ -47,6 +49,7 @@ export class UserService {
    * - OrderEdit: Edit/start/stop/delete orders
    * - CaptureDisplay: Access capture page
    * - LabelDesignerDisplay: Access label preview
+   * - SchedulerConfiguration: Access Actions/Jobs page
    * - SystemConfigurationDisplay: Future use
    * - SystemConfigurationEdit: Future use
    * - OeeDisplay: Future use
@@ -56,6 +59,7 @@ export class UserService {
    * - DeviceParametersEdit: Future use
    */
   private http = inject(HttpClient);
+  private auth = inject(Auth);
   private brain2ApiUrl = 'http://localhost:9997'; // Brain2 API base URL
   private currentUserSignal = signal<AuthSession | null>(null);
   
@@ -81,15 +85,39 @@ export class UserService {
    */
   async checkUserRights(username: string, rights: Brain2Right[]): Promise<Record<Brain2Right, boolean>> {
     try {
+      // Get the Bearer token from auth service
+      const token = this.auth.getToken();
+      if (!token) {
+        console.error('No authentication token available');
+        const result: any = {};
+        rights.forEach(right => result[right] = false);
+        return result;
+      }
+
+      // Include Bearer token in headers
+      const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+
       const response = await firstValueFrom(
-        this.http.post<Record<Brain2Right, boolean>>(
+        this.http.post<any>(
           `${this.brain2ApiUrl}/extensions/api/UserRights/CheckMultipleRights`,
-          { username, rights }
+          { username, rights },
+          { headers }
         )
       );
-      return response;
+      
+      console.log('✅ Brain2 rights response:', response);
+      
+      // Brain2 returns nested structure: { username, requestedRights, grantedRights, deniedRights, rights: {...} }
+      // Extract the actual rights object
+      const actualRights = response.rights || response;
+      console.log('📦 Extracted rights:', actualRights);
+      
+      return actualRights as Record<Brain2Right, boolean>;
     } catch (error) {
-      console.error('Error checking user rights:', error);
+      console.error('❌ Error checking user rights:', error);
       // Return all rights as false on error
       const result: any = {};
       rights.forEach(right => result[right] = false);
@@ -116,10 +144,14 @@ export class UserService {
         'CustomerDisplay',
         'CustomerEdit',
         'DeviceParametersDisplay',
-        'DeviceParametersEdit'
+        'DeviceParametersEdit',
+        'SchedulerConfiguration' // For Actions/Jobs page
       ];
 
       const rights = await this.checkUserRights(username, allRights);
+      console.log('📦 Rights received from Brain2:', rights);
+      console.log('📦 Rights type:', typeof rights);
+      console.log('📦 Rights keys:', Object.keys(rights));
 
       const session: AuthSession = {
         username,
@@ -127,6 +159,9 @@ export class UserService {
         rights,
         loginTime: Date.now()
       };
+
+      console.log('📦 Session created:', session);
+      console.log('📦 Session rights:', session.rights);
 
       this.currentUserSignal.set(session);
       this.saveSession(session);
@@ -207,6 +242,13 @@ export class UserService {
   }
 
   /**
+   * Check if user can access Actions/Jobs page
+   */
+  canViewActions(): boolean {
+    return this.hasRight('SchedulerConfiguration');
+  }
+
+  /**
    * Save session to localStorage
    */
   private saveSession(session: AuthSession): void {
@@ -218,9 +260,12 @@ export class UserService {
    */
   private restoreSession(): void {
     const stored = localStorage.getItem('authSession');
+    console.log('🔄 Restoring session from localStorage:', stored);
     if (stored) {
       try {
         const session = JSON.parse(stored) as AuthSession;
+        console.log('🔄 Parsed session:', session);
+        console.log('🔄 Session rights:', session.rights);
         
         // Optional: Check if session is expired (e.g., 8 hours)
         const maxAge = 8 * 60 * 60 * 1000; // 8 hours
@@ -228,14 +273,19 @@ export class UserService {
         
         if (age < maxAge) {
           this.currentUserSignal.set(session);
+          console.log('✅ Session restored successfully');
         } else {
           // Session expired
+          console.log('⏰ Session expired');
           localStorage.removeItem('authSession');
         }
       } catch (e) {
         // Invalid session data
+        console.error('❌ Failed to restore session:', e);
         localStorage.removeItem('authSession');
       }
+    } else {
+      console.log('ℹ️ No session in localStorage');
     }
   }
 }

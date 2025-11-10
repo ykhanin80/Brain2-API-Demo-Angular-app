@@ -10,7 +10,8 @@ const PAGE_TO_RIGHT_MAP: Record<string, Brain2Right> = {
   'data-maintenance': 'MasterDataDisplay',
   'create-order': 'OrderEdit',
   'all-orders': 'OrderDisplay',
-  'actions': 'MasterDataDisplay',
+  'actions': 'SchedulerConfiguration',
+  'admin': 'SystemConfigurationEdit',  // Admin page for configuring action buttons
   'package-record': 'OrderDisplay',
   'label-preview': 'LabelDesignerDisplay',
   'settings': 'SystemConfigurationDisplay'

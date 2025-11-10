@@ -44,6 +44,14 @@ export class App implements OnInit, OnDestroy {
     return this.userService.canViewLabelDesigner();
   }
   
+  canViewActions(): boolean {
+    return this.userService.canViewActions();
+  }
+  
+  canConfigureActions(): boolean {
+    return this.userService.hasRight('SystemConfigurationEdit');
+  }
+  
   canEditMasterData(): boolean {
     return this.userService.canEditMasterData();
   }

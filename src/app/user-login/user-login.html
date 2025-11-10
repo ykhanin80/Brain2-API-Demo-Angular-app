@@ -46,6 +46,70 @@
         />
       </div>
 
+      <!-- Server Configuration Section -->
+      <div class="server-config-section">
+        <h3 class="section-title">🌐 Brain2 Server Configuration</h3>
+        
+        <div class="form-group">
+          <label for="host">Server Host/IP</label>
+          <input
+            type="text"
+            id="host"
+            [value]="host()"
+            (input)="onHostInput($event)"
+            placeholder="localhost"
+            [disabled]="isLoading()"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="port">Port</label>
+          <input
+            type="number"
+            id="port"
+            [value]="port()"
+            (input)="onPortInput($event)"
+            placeholder="9997 or 9998"
+            [disabled]="isLoading()"
+          />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="useHttps()"
+              (change)="onHttpsChange($event)"
+              [disabled]="isLoading()"
+            />
+            <span>Use HTTPS</span>
+          </label>
+        </div>
+
+        <p class="hint-text">💡 Port 9997 defaults to HTTP, 9998 defaults to HTTPS</p>
+
+        <!-- Test Connection Button -->
+        <button
+          type="button"
+          class="btn btn-secondary btn-test"
+          (click)="testConnection()"
+          [disabled]="isTestingConnection() || isLoading()"
+        >
+          @if (isTestingConnection()) {
+            <span class="spinner"></span>
+            <span>Testing...</span>
+          } @else {
+            <span>🔌 Test Connection</span>
+          }
+        </button>
+
+        @if (testStatus()) {
+          <div class="test-status" [class.success]="testStatus().startsWith('✅')" [class.error]="testStatus().startsWith('❌')">
+            {{ testStatus() }}
+          </div>
+        }
+      </div>
+
       <!-- Login Button -->
       <button
         type="submit"

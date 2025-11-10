@@ -1,5 +1,5 @@
 // Development environment
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:4200/api'  // Will be proxied to localhost:3000/api
+  production: false
+  // Note: No longer using local API - all data now stored in Brain2 via GeneralTexts API
 };
