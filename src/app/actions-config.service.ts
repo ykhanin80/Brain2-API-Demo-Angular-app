@@ -26,14 +26,32 @@ export class ActionsConfigService {
   // Signal to hold all action button configurations
   private configSignal = signal<ActionButtonConfig[]>([]);
   
+  // Signal to track if initial load is complete
+  private loadingSignal = signal<boolean>(true);
+  
   constructor() {
-    this.loadConfigs();
+    // Subscribe to auth state and load configs when authenticated
+    this.auth.isAuthenticated$.subscribe(isAuth => {
+      if (isAuth) {
+        // Add small delay to ensure token is fully set
+        setTimeout(() => this.loadConfigs(), 50);
+      } else {
+        // Clear configs when logged out
+        this.configSignal.set([]);
+        this.loadingSignal.set(false);
+      }
+    });
   }
 
   /**
    * Get all action button configurations
    */
   configs = this.configSignal.asReadonly();
+
+  /**
+   * Check if initial load is complete
+   */
+  isLoading = this.loadingSignal.asReadonly();
 
   /**
    * Get configurations as array (for non-reactive use)
@@ -95,12 +113,14 @@ export class ActionsConfigService {
    */
   private async loadConfigs(): Promise<void> {
     try {
+      this.loadingSignal.set(true);
       const baseUrl = this.apiConfig.getBaseUrl();
       const token = this.auth.getToken();
       
       if (!token) {
-        console.error('❌ No authentication token available for loading action configs');
+        console.log('ℹ️ No authentication token available, skipping action config load');
         this.configSignal.set([]);
+        this.loadingSignal.set(false);
         return;
       }
 
@@ -131,15 +151,28 @@ export class ActionsConfigService {
         console.log('ℹ️ No existing configuration, starting with empty array');
         this.configSignal.set([]);
       }
+      this.loadingSignal.set(false);
     } catch (e: any) {
       // If 404, it means no text exists yet - this is normal for first time
       if (e.status === 404) {
         console.log('ℹ️ No configuration exists yet (404), starting with empty array');
         this.configSignal.set([]);
+      } else if (e.status === 400) {
+        // 400 often means user doesn't have permission to access GeneralTexts
+        console.log('ℹ️ User does not have permission to read action configurations (400). This is normal for users without SystemConfigurationDisplay rights.');
+        this.configSignal.set([]);
+      } else if (e.status === 401 || e.status === 403) {
+        // Auth error - token might be invalid
+        console.warn('⚠️ Authentication error (status ' + e.status + '). Please re-login.');
+        this.configSignal.set([]);
+        // Trigger re-authentication by clearing the token
+        console.log('🔄 Clearing invalid token to trigger re-login');
+        this.auth.logout();
       } else {
         console.error('❌ Failed to load action configs from Brain2:', e);
         this.configSignal.set([]);
       }
+      this.loadingSignal.set(false);
     }
   }
 

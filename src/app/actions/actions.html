@@ -5,7 +5,12 @@
   </header>
 
   <!-- Quick Action Buttons -->
-  @if (configuredActions().length > 0) {
+  @if (isLoadingConfigs()) {
+    <section class="quick-actions">
+      <h3>Start custom job</h3>
+      <div class="loading-message">Loading action buttons...</div>
+    </section>
+  } @else if (configuredActions().length > 0) {
     <section class="quick-actions">
       <h3>Start custom job</h3>
       <div class="action-buttons-grid">

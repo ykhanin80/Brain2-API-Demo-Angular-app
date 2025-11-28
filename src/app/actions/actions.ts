@@ -40,6 +40,7 @@ export class ActionsComponent {
 
   // Configured action buttons
   configuredActions = this.actionsConfigService.configs;
+  isLoadingConfigs = this.actionsConfigService.isLoading;
 
   // Form model
   newJob: JobRequest = { jobType: '', parameters: {} };

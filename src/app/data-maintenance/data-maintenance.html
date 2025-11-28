@@ -1065,7 +1065,7 @@
               <!-- Device Parameters -->
               <div class="form-row">
                 <div class="form-group">
-                  <label for="newLabelParameter">Label Parameter #</label>
+                  <label for="newLabelParameter">Label Parameter Set#</label>
                   <input
                     type="number"
                     id="newLabelParameter"
@@ -1076,7 +1076,7 @@
                 </div>
                 
                 <div class="form-group">
-                  <label for="newAutoLabelParam">Auto Label Parameter</label>
+                  <label for="newAutoLabelParam">Automatic Labeler Parameter Set#</label>
                   <input
                     type="number"
                     id="newAutoLabelParam"
@@ -1599,6 +1599,11 @@
                 <div class="mini-group"><label for="editMaxWeight">Max Wt</label><input type="number" id="editMaxWeight" [value]="selectedArticle()?.articlePLU?.maxWeightValue || 0" (input)="updateSelectedArticlePLUField('maxWeightValue', $event)" step="any" min="0" /></div>
                 <div class="mini-group"><label for="editTareWeight">Tare</label><input type="number" id="editTareWeight" [value]="selectedArticle()?.articlePLU?.tareWeightValue || 0" (input)="updateSelectedArticlePLUField('tareWeightValue', $event)" step="any" min="0" /></div>
                 <div class="mini-group labeling-mode-group"><label for="editLabelingMode">Labeling Mode</label><select id="editLabelingMode" [value]="selectedArticle()?.articlePLU?.labelingMode || 'fixedWeight'" (change)="updateSelectedArticlePLUField('labelingMode', $event)"><option value="weight">Weight</option><option value="fixedPrice">Fixed Price</option><option value="fixedWeight">Fixed Weight</option><option value="fixedValue">Fixed Value</option></select></div>
+              </div>
+              <div class="labeler-inline-row hide-labeler-checkboxes tare-mode-row">
+                <div class="mini-group"><label for="editLabelParameter">Label Parameter Set#</label><input type="number" id="editLabelParameter" [value]="selectedArticle()?.articlePLU?.labelParameter || 0" (input)="updateSelectedArticlePLUField('labelParameter', $event)" min="0" /></div>
+                <div class="mini-group"><label for="editAutomaticLabelParameter">Automatic Labeler Parameter Set#</label><input type="number" id="editAutomaticLabelParameter" [value]="selectedArticle()?.articlePLU?.automaticLabelParameter || 0" (input)="updateSelectedArticlePLUField('automaticLabelParameter', $event)" min="0" /></div>
+                <div class="mini-group"><label for="editWeightClass">Weight Class #</label><input type="number" id="editWeightClass" [value]="selectedArticle()?.articlePLU?.weightClass || 0" (input)="updateSelectedArticlePLUField('weightClass', $event)" min="0" /></div>
               </div>
               <div class="form-subsection">
                 <h4 class="subsection-title">💰 General (Pricing & Shelf Life)</h4>

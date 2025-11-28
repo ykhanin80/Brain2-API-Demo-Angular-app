@@ -530,6 +530,24 @@ button {
     font-size: 1.3rem;
   }
 
+  .loading-message {
+    padding: 2rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    
+    &::before {
+      content: "⟳";
+      animation: spin 1s linear infinite;
+      font-size: 1.5rem;
+      color: #007bff;
+    }
+  }
+
   .status-messages {
     margin-top: 1.5rem;
   }

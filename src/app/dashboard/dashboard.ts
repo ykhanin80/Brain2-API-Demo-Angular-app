@@ -18,7 +18,8 @@ export class Dashboard {
 
   // Check if user can view master data (for Data Maintenance)
   canViewMasterData(): boolean {
-    return this.userService.canViewMasterData();
+    // Require BOTH MasterDataDisplay AND MasterDataEdit rights
+    return this.userService.hasRight('MasterDataDisplay') && this.userService.hasRight('MasterDataEdit');
   }
   
   // Check if user can view orders
