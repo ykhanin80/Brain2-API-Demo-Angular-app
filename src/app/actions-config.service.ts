@@ -12,8 +12,10 @@ export interface ActionButtonConfig {
   order: number; // Display order on Actions page
 }
 
-// Brain2 GeneralTexts number for action configurations
-const BRAIN2_CONFIG_NUMBER = 999999999;
+// Brain2 Configuration API settings for action configurations
+const CONFIG_NAME = 'DemoApp';
+const CONFIG_KEY = 'ActionButtons';
+const CONFIG_SUBKEY = 'Setting1';
 
 @Injectable({
   providedIn: 'root'
@@ -109,7 +111,7 @@ export class ActionsConfigService {
   }
 
   /**
-   * Load configurations from Brain2 GeneralTexts
+   * Load configurations from Brain2 Configuration API
    */
   private async loadConfigs(): Promise<void> {
     try {
@@ -129,23 +131,35 @@ export class ActionsConfigService {
         'Content-Type': 'application/json'
       });
 
-      // Read from Brain2 GeneralTexts API
-      console.log(`📖 Loading from Brain2 GeneralTexts number: ${BRAIN2_CONFIG_NUMBER}`);
+      // Read from Brain2 Configuration API
+      console.log(`📖 Loading from Brain2 Configuration: ${CONFIG_NAME}/${CONFIG_KEY}/${CONFIG_SUBKEY}`);
+      
+      const params = {
+        name: CONFIG_NAME,
+        key: CONFIG_KEY,
+        subkey: CONFIG_SUBKEY
+      };
       
       const response = await firstValueFrom(
         this.http.get<any>(
-          `${baseUrl}/extensions/api/GeneralTexts/Read?textNumber=${BRAIN2_CONFIG_NUMBER}`,
-          { headers }
+          `${baseUrl}/extensions/api/configuration`,
+          { headers, params }
         )
       );
 
       console.log('✅ Loaded action configs from Brain2:', response);
 
-      // Parse the textValue which contains the JSON configuration
-      if (response && response.textValue) {
-        const configs = JSON.parse(response.textValue) as ActionButtonConfig[];
-        this.configSignal.set(configs);
-        console.log(`✅ Parsed ${configs.length} action configurations`);
+      // Parse the configurations array from the response
+      if (response && response.configurations && response.configurations.length > 0) {
+        const configValue = response.configurations[0].value;
+        if (configValue) {
+          const configs = JSON.parse(configValue) as ActionButtonConfig[];
+          this.configSignal.set(configs);
+          console.log(`✅ Parsed ${configs.length} action configurations`);
+        } else {
+          console.log('ℹ️ Configuration exists but value is empty, starting with empty array');
+          this.configSignal.set([]);
+        }
       } else {
         // No configuration exists yet, start with empty array
         console.log('ℹ️ No existing configuration, starting with empty array');
@@ -153,12 +167,12 @@ export class ActionsConfigService {
       }
       this.loadingSignal.set(false);
     } catch (e: any) {
-      // If 404, it means no text exists yet - this is normal for first time
+      // If 404, it means no configuration exists yet - this is normal for first time
       if (e.status === 404) {
         console.log('ℹ️ No configuration exists yet (404), starting with empty array');
         this.configSignal.set([]);
       } else if (e.status === 400) {
-        // 400 often means user doesn't have permission to access GeneralTexts
+        // 400 often means user doesn't have permission to access Configuration
         console.log('ℹ️ User does not have permission to read action configurations (400). This is normal for users without SystemConfigurationDisplay rights.');
         this.configSignal.set([]);
       } else if (e.status === 401 || e.status === 403) {
@@ -184,7 +198,7 @@ export class ActionsConfigService {
   }
 
   /**
-   * Save configurations to Brain2 GeneralTexts
+   * Save configurations to Brain2 Configuration API
    */
   private async saveConfigs(): Promise<void> {
     try {
@@ -204,22 +218,23 @@ export class ActionsConfigService {
       const configs = this.configSignal();
       const configJson = JSON.stringify(configs);
 
-      console.log(`💾 Saving ${configs.length} configurations to Brain2 GeneralTexts number: ${BRAIN2_CONFIG_NUMBER}`);
+      console.log(`💾 Saving ${configs.length} configurations to Brain2 Configuration: ${CONFIG_NAME}/${CONFIG_KEY}/${CONFIG_SUBKEY}`);
 
-      // Save to Brain2 GeneralTexts API
+      // Save to Brain2 Configuration API
       await firstValueFrom(
         this.http.post(
-          `${baseUrl}/extensions/api/GeneralTexts/CreateOrOverwrite`,
+          `${baseUrl}/extensions/api/configuration`,
           {
-            number: BRAIN2_CONFIG_NUMBER,
-            textValue: configJson,
-            sendFormat: false
+            name: CONFIG_NAME,
+            key: CONFIG_KEY,
+            subkey: CONFIG_SUBKEY,
+            value: configJson
           },
           { headers }
         )
       );
 
-      console.log('✅ Saved action configs to Brain2 successfully');
+      console.log('✅ Saved action configs to Brain2 Configuration successfully');
     } catch (e) {
       console.error('❌ Failed to save action configs to Brain2:', e);
       throw e; // Re-throw so caller knows it failed
