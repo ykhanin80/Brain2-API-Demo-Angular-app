@@ -38,9 +38,9 @@ export interface AuthSession {
 })
 export class UserService {
   /**
-   * User authentication now relies entirely on Brain2 User Rights API
+   * User authentication now relies on JWT token claims for user rights
    * 
-   * Rights are checked via: /extensions/api/UserRights/CheckMultipleRights
+   * Rights are extracted from JWT token payload instead of API endpoint
    * 
    * Available Rights:
    * - MasterDataDisplay: View PLU articles, texts
@@ -60,7 +60,6 @@ export class UserService {
    */
   private http = inject(HttpClient);
   private auth = inject(Auth);
-  private brain2ApiUrl = 'http://localhost:9997'; // Brain2 API base URL
   private currentUserSignal = signal<AuthSession | null>(null);
   
   constructor() {
@@ -81,52 +80,72 @@ export class UserService {
   }
 
   /**
-   * Check user rights from Brain2 API
+   * Extract user rights from JWT token
    */
-  async checkUserRights(username: string, rights: Brain2Right[]): Promise<Record<Brain2Right, boolean>> {
+  private extractRightsFromToken(allRights: Brain2Right[]): Record<Brain2Right, boolean> {
     try {
       // Get the Bearer token from auth service
       const token = this.auth.getToken();
       if (!token) {
         console.error('No authentication token available');
         const result: any = {};
-        rights.forEach(right => result[right] = false);
+        allRights.forEach(right => result[right] = false);
         return result;
       }
 
-      // Include Bearer token in headers
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      });
+      // Decode JWT token to extract rights
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.error('Invalid JWT token format');
+        const result: any = {};
+        allRights.forEach(right => result[right] = false);
+        return result;
+      }
 
-      const response = await firstValueFrom(
-        this.http.post<any>(
-          `${this.brain2ApiUrl}/extensions/api/UserRights/CheckMultipleRights`,
-          { username, rights },
-          { headers }
-        )
-      );
+      const payload = JSON.parse(atob(parts[1]));
+      console.log('✅ JWT payload decoded:', payload);
+
+      // Extract rights from JWT payload
+      // Check multiple possible property names (case-insensitive)
+      const tokenRights = payload.Rights || payload.rights || payload.permissions || payload.Permissions || payload.role || payload.Role;
+      console.log('📦 Extracted rights from JWT:', tokenRights);
+
+      // Build the rights object
+      const result: any = {};
       
-      console.log('✅ Brain2 rights response:', response);
-      
-      // Brain2 returns nested structure: { username, requestedRights, grantedRights, deniedRights, rights: {...} }
-      // Extract the actual rights object
-      const actualRights = response.rights || response;
-      console.log('📦 Extracted rights:', actualRights);
-      
-      return actualRights as Record<Brain2Right, boolean>;
+      if (Array.isArray(tokenRights)) {
+        // If rights are stored as an array of strings, check if each right is in the array
+        console.log('📦 Rights is an array with', tokenRights.length, 'items');
+        allRights.forEach(right => {
+          result[right] = tokenRights.includes(right);
+        });
+      } else if (typeof tokenRights === 'object' && tokenRights !== null) {
+        // If rights are stored as an object with boolean values
+        console.log('📦 Rights is an object');
+        allRights.forEach(right => {
+          result[right] = tokenRights[right] === true || tokenRights[right] === 'true';
+        });
+      } else {
+        // No rights found or unsupported format
+        console.warn('⚠️ Rights not found or unsupported format in JWT token');
+        allRights.forEach(right => {
+          result[right] = false;
+        });
+      }
+
+      console.log('📦 Final rights object:', result);
+      return result as Record<Brain2Right, boolean>;
     } catch (error) {
-      console.error('❌ Error checking user rights:', error);
+      console.error('❌ Error extracting rights from JWT token:', error);
       // Return all rights as false on error
       const result: any = {};
-      rights.forEach(right => result[right] = false);
+      allRights.forEach(right => result[right] = false);
       return result;
     }
   }
 
   /**
-   * Login user - authenticate with Brain2 and fetch their rights
+   * Login user - authenticate with Brain2 and extract rights from JWT token
    */
   async login(username: string, displayName?: string): Promise<{ success: boolean; message: string }> {
     try {
@@ -148,8 +167,9 @@ export class UserService {
         'SchedulerConfiguration' // For Actions/Jobs page
       ];
 
-      const rights = await this.checkUserRights(username, allRights);
-      console.log('📦 Rights received from Brain2:', rights);
+      // Extract rights from JWT token instead of API call
+      const rights = this.extractRightsFromToken(allRights);
+      console.log('📦 Rights extracted from JWT token:', rights);
       console.log('📦 Rights type:', typeof rights);
       console.log('📦 Rights keys:', Object.keys(rights));
 
