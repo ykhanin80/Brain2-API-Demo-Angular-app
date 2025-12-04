@@ -119,11 +119,66 @@
   border: 1px solid #e2e8f0;
   margin: 4px 0;
 
+  .section-header-with-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
   .section-title {
-    margin: 0 0 16px;
+    margin: 0;
     font-size: 16px;
     font-weight: 600;
     color: #4a5568;
+  }
+
+  .version-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .toggle-label {
+      font-size: 13px;
+      color: #718096;
+      font-weight: 500;
+    }
+
+    .btn-toggle {
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid;
+      min-width: 60px;
+
+      &.v3 {
+        background: #10b981;
+        border-color: #059669;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #059669;
+        }
+      }
+
+      &.v2 {
+        background: #f59e0b;
+        border-color: #d97706;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #d97706;
+        }
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
   }
 
   .checkbox-group {

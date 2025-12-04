@@ -48,7 +48,23 @@
 
       <!-- Server Configuration Section -->
       <div class="server-config-section">
-        <h3 class="section-title">🌐 Brain2 Server Configuration</h3>
+        <div class="section-header-with-toggle">
+          <h3 class="section-title">🌐 Brain2 Server Configuration</h3>
+          <div class="version-toggle">
+            <label class="toggle-label">Version:</label>
+            <button
+              type="button"
+              class="btn-toggle"
+              [class.v2]="brain2Version() === 'v2'"
+              [class.v3]="brain2Version() === 'v3'"
+              (click)="toggleBrain2Version()"
+              [disabled]="isLoading()"
+              title="Toggle between Brain2 v2.xx and v3.xx"
+            >
+              {{ brain2Version() === 'v2' ? 'v2.xx' : 'v3.xx' }}
+            </button>
+          </div>
+        </div>
         
         <div class="form-group">
           <label for="host">Server Host/IP</label>

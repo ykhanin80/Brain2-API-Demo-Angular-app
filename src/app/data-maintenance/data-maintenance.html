@@ -11,13 +11,13 @@
     <div class="dm-toolbar">
       <div class="sub-tabs">
         <button class="sub-tab" [class.active]="currentSubPage()==='articles'" (click)="goToArticlesSubPage()">Articles</button>
-        <button class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
-        <button class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
+        <button *ngIf="supportsExtensions()" class="sub-tab" [class.active]="currentSubPage()==='static-texts'" (click)="goToStaticTextsSubPage()">Static Texts</button>
+        <button *ngIf="supportsExtensions()" class="sub-tab" [class.active]="currentSubPage()==='customers'" (click)="goToCustomersSubPage()">Customers</button>
         <!-- <button class="sub-tab" [class.active]="currentSubPage()==='devices'" (click)="goToDevicesSubPage()">Devices</button> -->
         <button class="sub-tab" [class.active]="currentSubPage()==='exceptions'" (click)="goToExceptionsSubPage()">Exceptions</button>
         <!-- Parameters tabs -->
-        <button class="sub-tab" [class.active]="currentSubPage()==='label-parameters'" (click)="goToLabelParametersSubPage()">Labeler Parameters</button>
-        <button class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Auto Labeler Parameters</button>
+        <button *ngIf="supportsExtensions()" class="sub-tab" [class.active]="currentSubPage()==='label-parameters'" (click)="goToLabelParametersSubPage()">Labeler Parameters</button>
+        <button *ngIf="supportsExtensions()" class="sub-tab" [class.active]="currentSubPage()==='device-parameters'" (click)="goToDeviceParametersSubPage()">Auto Labeler Parameters</button>
       </div>
       <div class="toolbar-actions">
         <ng-container *ngIf="currentSubPage()==='articles'">
@@ -1666,7 +1666,7 @@
       </form>
       <div class="form-actions">
         <button class="btn btn-secondary" (click)="goToListPage()">Cancel</button>
-        <button class="btn btn-primary" (click)="updateArticle(selectedArticle()!)">Update Article</button>
+        <!-- <button class="btn btn-primary" (click)="updateArticle(selectedArticle()!)">Update Article</button> -->
       </div>
     </div>
   </div> <!-- End Edit Article Page -->

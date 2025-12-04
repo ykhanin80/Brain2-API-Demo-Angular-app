@@ -410,6 +410,9 @@ export class DataMaintenanceComponent implements OnInit {
   // Check if current user can edit device parameters (for Label/Auto-labeler params)
   canEditDeviceParameters = () => this.userService.hasRight('DeviceParametersEdit');
 
+  // Check if Brain2 backend supports extensions/api endpoints (v3+)
+  supportsExtensions = () => this.apiConfig.supportsExtensions();
+
   // Dark mode detection
   readonly isDarkMode = signal(false);
 

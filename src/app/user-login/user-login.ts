@@ -19,6 +19,7 @@ export class UserLoginComponent {
   host = signal('');
   port = signal(0);
   useHttps = signal(false);
+  brain2Version = signal<'v2' | 'v3'>('v3');
   errorMessage = signal('');
   isLoading = signal(false);
   isTestingConnection = signal(false);
@@ -41,6 +42,13 @@ export class UserLoginComponent {
     this.host.set(this.apiConfig.state.host);
     this.port.set(this.apiConfig.state.port);
     this.useHttps.set(this.apiConfig.state.useHttps);
+    this.brain2Version.set(this.apiConfig.getBrain2Version());
+  }
+
+  toggleBrain2Version(): void {
+    const newVersion = this.brain2Version() === 'v2' ? 'v3' : 'v2';
+    this.brain2Version.set(newVersion);
+    this.apiConfig.setBrain2Version(newVersion);
   }
 
   onUsernameInput(event: Event): void {

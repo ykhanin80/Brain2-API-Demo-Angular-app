@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../environments/environment';
 import { Auth } from './auth';
+import { ApiConfig } from './api-config';
 
 // Brain2 User Rights
 export type Brain2Right = 
@@ -60,6 +61,7 @@ export class UserService {
    */
   private http = inject(HttpClient);
   private auth = inject(Auth);
+  private apiConfig = inject(ApiConfig);
   private currentUserSignal = signal<AuthSession | null>(null);
   
   constructor() {
@@ -145,6 +147,44 @@ export class UserService {
   }
 
   /**
+   * Filter rights based on Brain2 backend version
+   * v2 backends don't support certain extensions/api endpoints
+   */
+  private applyVersionRestrictions(rights: Record<Brain2Right, boolean>): Record<Brain2Right, boolean> {
+    // If running on v3+, all rights are allowed as-is
+    if (this.apiConfig.supportsExtensions()) {
+      return rights;
+    }
+
+    // For v2, disable rights that require extensions/api endpoints
+    // Keep only core v1 API rights and configuration (which exists in both versions)
+    const restrictedRights = { ...rights };
+
+    // Disable features that use extensions/api (except configuration):
+    // - Static Texts (extensions/api)
+    // - Customers (extensions/api)
+    // - Device Parameters (extensions/api)
+    // - Order Management features that use extensions
+    
+    // Note: We're being conservative here - disabling features that likely won't work
+    // Articles and basic features should still work as they use v1 API
+    
+    console.log('⚠️ Brain2 v2.xx detected - restricting features that require extensions/api');
+    
+    // These rights use extensions/api endpoints and should be disabled for v2:
+    restrictedRights.CustomerDisplay = false;
+    restrictedRights.CustomerEdit = false;
+    restrictedRights.DeviceParametersDisplay = false;
+    restrictedRights.DeviceParametersEdit = false;
+    
+    // Order management uses extensions for some operations - disable to be safe
+    restrictedRights.OrderDisplay = false;
+    restrictedRights.OrderEdit = false;
+    
+    return restrictedRights;
+  }
+
+  /**
    * Login user - authenticate with Brain2 and extract rights from JWT token
    */
   async login(username: string, displayName?: string): Promise<{ success: boolean; message: string }> {
@@ -168,8 +208,12 @@ export class UserService {
       ];
 
       // Extract rights from JWT token instead of API call
-      const rights = this.extractRightsFromToken(allRights);
+      let rights = this.extractRightsFromToken(allRights);
       console.log('📦 Rights extracted from JWT token:', rights);
+      
+      // Apply version-based restrictions
+      rights = this.applyVersionRestrictions(rights);
+      console.log('📦 Rights after version restrictions:', rights);
       console.log('📦 Rights type:', typeof rights);
       console.log('📦 Rights keys:', Object.keys(rights));
 
