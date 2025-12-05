@@ -149,19 +149,26 @@ export class ActionsConfigService {
 
       console.log('✅ Loaded action configs from Brain2:', response);
 
-      // Parse the configurations array from the response
-      if (response && response.configurations && response.configurations.length > 0) {
-        const configValue = response.configurations[0].value;
-        if (configValue) {
-          const configs = JSON.parse(configValue) as ActionButtonConfig[];
-          this.configSignal.set(configs);
-          console.log(`✅ Parsed ${configs.length} action configurations`);
-        } else {
-          console.log('ℹ️ Configuration exists but value is empty, starting with empty array');
-          this.configSignal.set([]);
+      // Handle both v2 (direct array) and v3 (wrapped in configurations property) formats
+      let configValue: string | undefined;
+      
+      if (Array.isArray(response)) {
+        // v2 format: response is a direct array
+        console.log('📦 Detected v2 API format (direct array)');
+        if (response.length > 0) {
+          configValue = response[0].value;
         }
+      } else if (response && response.configurations && response.configurations.length > 0) {
+        // v3 format: response has configurations property
+        console.log('📦 Detected v3 API format (configurations wrapper)');
+        configValue = response.configurations[0].value;
+      }
+
+      if (configValue) {
+        const configs = JSON.parse(configValue) as ActionButtonConfig[];
+        this.configSignal.set(configs);
+        console.log(`✅ Parsed ${configs.length} action configurations`);
       } else {
-        // No configuration exists yet, start with empty array
         console.log('ℹ️ No existing configuration, starting with empty array');
         this.configSignal.set([]);
       }
